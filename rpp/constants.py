@@ -1,12 +1,17 @@
 """
 Constants used throughout the project.
 """
+
 import enum
 
 LOG_FILENAME = "presenceplus.log"
 
 
 class LogLevel(enum.Enum):
+    """
+    The level of logging to use.
+    """
+
     INFO = 0
     WARNING = 1
     ERROR = 2
@@ -15,6 +20,10 @@ class LogLevel(enum.Enum):
 
 
 class RunMode(enum.Enum):
+    """
+    The mode in which the application is running.
+    """
+
     BOTH = 0
     WEB = 1
     DESKTOP = 2
