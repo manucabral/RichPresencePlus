@@ -7,12 +7,12 @@ Example:
     [01/01/1970|00:00:00] @ INFO main: Hello, world!
 """
 import time
-import enum
 import typing
 import inspect
 from .constants import LogLevel, LOG_FILENAME
 
 
+# pylint: disable=redefined-outer-name
 def log(
     text: typing.Optional[str] = None,
     level: typing.Optional[str] = LogLevel.INFO.name,
@@ -42,8 +42,9 @@ def log(
         caller_filename = src
     else:
         caller_filename = inspect.stack()[1].filename.split("\\")[-1].replace(".py", "")
+    # pylint: disable=pointless-string-statement
     """
-    # for future Linux support
+    for future Linux support
     caller_filename = caller.filename.split("/")[-1]
     """
     date = time.strftime("[%d/%m/%Y|%H:%M:%S]")
