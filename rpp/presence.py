@@ -48,25 +48,10 @@ class Presence:
         self.__running = self.__connected = self.__code_running = False
         self.__rpc_data = {}
 
-    def connect(self) -> None:
-        """
-        Connect to the Discord client.
-        """
-        if self.__connected:
-            log(f"{self.__metadata['name']} is already connected.", level="WARNING")
-            return
-        log(f"Connecting to {self.__metadata['name']}...")
-        try:
-            self.__rpc.connect()
-            self.__connected = True
-            log(f"Connected to {self.__metadata['name']}!")
-        except Exception as exc:
-            log(
-                f"{self.__metadata['name']} failed because {exc}",
-                level="ERROR",
-            )
-
     def __repr__(self):
+        """
+        Return the representation of the object.
+        """
         return f"<Presence {self.__metadata['name']}>"
 
     def __code_update(self) -> None:
@@ -108,7 +93,7 @@ class Presence:
         try:
             while self.__connected:
                 self.__rpc.update(**self.__rpc_data)
-                log(f"Updated {self.__metadata['name']}.")
+                log("Updated", src=self.__metadata["name"])
                 time.sleep(15)
         except Exception as exc:
             log(
@@ -117,6 +102,24 @@ class Presence:
             )
         finally:
             self.__connected = False
+
+    def connect(self) -> None:
+        """
+        Connect to the Discord client.
+        """
+        if self.__connected:
+            log(f"{self.__metadata['name']} is already connected.", level="WARNING")
+            return
+        log(f"Connecting to {self.__metadata['name']}...")
+        try:
+            self.__rpc.connect()
+            self.__connected = True
+            log(f"Connected to {self.__metadata['name']}!")
+        except Exception as exc:
+            log(
+                f"{self.__metadata['name']} failed because {exc}",
+                level="ERROR",
+            )
 
     def update(self, **kwargs) -> None:
         """
