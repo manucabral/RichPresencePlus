@@ -5,6 +5,15 @@ Constants used throughout the project.
 import enum
 
 LOG_FILENAME = "presenceplus.log"
+RESTRICTED_GLOBALS = [
+    "input",
+    "open",
+    "eval",
+    "exec",
+    "compile",
+    "exit",
+    "quit",
+]
 
 
 class LogLevel(enum.Enum):
