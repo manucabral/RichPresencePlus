@@ -6,11 +6,12 @@ import time
 import threading
 import pypresence as pp
 from .logger import log
+from .utils import restrict_globals
 
 
 class Presence:
     """
-    Rich Presence manager.
+    Presence manager class.
     """
 
     __slots__ = [
@@ -164,38 +165,3 @@ class Presence:
         self.__thread_code.join()
         self.__thread_rpc.join()
         log(f"Stopped {self.__metadata['name']}!")
-
-
-# temporary, will be moved to a separate file
-class RestrictedUse:
-    """
-    A class that raises an error when called.
-    """
-
-    def __init__(self, name: str) -> None:
-        """
-        Create a new RestrictedUse object.
-        """
-        self.name = name
-
-    def __call__(self, *args, **kwargs):
-        """
-        Raise an error.
-        """
-        raise RuntimeError(f"{self.name} is not allowed for security reasons.")
-
-
-# temporary, will be moved to a separate file
-def restrict_globals(_origin: dict, src: Presence) -> None:
-    not_allowed = [
-        "input",
-        "open",
-        "eval",
-        "exec",
-        "compile",
-        "exit",
-        "quit",
-    ]
-    for name in not_allowed:
-        _origin[name] = lambda: src.stop() and RestrictedUse(name)
-    return _origin
