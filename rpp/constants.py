@@ -16,6 +16,15 @@ RESTRICTED_GLOBALS = [
 ]
 
 
+class TimeLimit(enum.Enum):
+    """
+    Times limits used throughout the project.
+    """
+
+    DISCORD = 15
+    RPP = 0.1
+
+
 class LogLevel(enum.Enum):
     """
     The level of logging to use.
