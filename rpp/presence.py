@@ -5,8 +5,9 @@ import os
 import time
 import threading
 import pypresence as pp
-from .logger import log
+from .constants import TimeLimit
 from .utils import restrict_globals
+from .logger import log
 
 
 class Presence:
@@ -76,7 +77,7 @@ class Presence:
         try:
             while self.__code_running:
                 exec(self.__code, _globals)
-                time.sleep(0.1)
+                time.sleep(TimeLimit.RPP.value)
         except Exception as exc:
             print(exc)
             log(
@@ -94,8 +95,8 @@ class Presence:
         try:
             while self.__connected:
                 self.__rpc.update(**self.__rpc_data)
-                log("Updated", src=self.__metadata["name"])
-                time.sleep(15)
+                log("Updated.", src=self.__metadata["name"])
+                time.sleep(TimeLimit.DISCORD.value)
         except Exception as exc:
             log(
                 f"{self.__metadata['name']} failed because RPC {exc}",
@@ -106,52 +107,44 @@ class Presence:
 
     def connect(self) -> None:
         """
-        Connect to the Discord client.
+        Connect to the Discord client and start the RPC thread.
         """
         if self.__connected:
             log(f"{self.__metadata['name']} is already connected.", level="WARNING")
             return
-        log(f"Connecting to {self.__metadata['name']}...")
         try:
             self.__rpc.connect()
             self.__connected = True
-            log(f"Connected to {self.__metadata['name']}!")
+            self.__thread_rpc = threading.Thread(target=self.__rpc_update)
+            self.__thread_rpc.start()
+            log(f"Connected to discord.", src=self.__metadata["name"])
         except Exception as exc:
             log(
-                f"{self.__metadata['name']} failed because {exc}",
+                f"{self.__metadata['name']} failed on connect to Discord because {exc}",
                 level="ERROR",
             )
 
     def update(self, **kwargs) -> None:
         """
-        Update the presence data.
+        Simply update the RPC data.
         """
-        if not self.__connected:
-            log(f"Can't update {self.__metadata['name']} because it's not connected.")
-            return
         self.__rpc_data = kwargs
 
     def start(self) -> None:
         """
-        Start the presence in two threads.
-        1. The code thread.
-        2. The RPC thread.
+        Start the presence code thread.
         """
-        if not self.__connected:
-            log(f"Can't start {self.__metadata['name']} because it's not connected.")
-            return
         self.__running = True
         self.__thread_code = threading.Thread(target=self.__code_update)
-        self.__thread_rpc = threading.Thread(target=self.__rpc_update)
-        self.__thread_rpc.start()
         self.__thread_code.start()
+        log(f"Code loop started.", src=self.__metadata["name"])
 
     def stop(self) -> None:
         """
         Stop the presence.
         """
         self.__code_running = self.__running = False
-        log(f"Stopping {self.__metadata['name']}...")
+        log("Stopping...", src=self.__metadata["name"])
         try:
             self.__rpc.clear()
             self.__rpc.close()
@@ -164,4 +157,4 @@ class Presence:
         self.__connected = False
         self.__thread_code.join()
         self.__thread_rpc.join()
-        log(f"Stopped {self.__metadata['name']}!")
+        log(f"Stopped.", src=self.__metadata["name"])
