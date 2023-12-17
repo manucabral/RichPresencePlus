@@ -8,12 +8,13 @@ author:
   name: manucabral
   email: cabral.manuel@yandex.com
 color: "#ABADC5"
-category: other
+category: desktop
 contributors: null
 use_browser: false
 tags:
   - pc
   - ram
   - usage
-modules:
+libs:
   - psutil
+modules: null
