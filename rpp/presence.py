@@ -17,6 +17,7 @@ class Presence:
 
     __slots__ = [
         "__metadata",
+        "__enabled",
         "__code",
         "__rpc",
         "__rpc_data",
@@ -47,6 +48,7 @@ class Presence:
                 level="ERROR",
             )
             return
+        self.__enabled = True
         self.__running = self.__connected = self.__code_running = False
         self.__rpc_data = {}
 
@@ -109,8 +111,11 @@ class Presence:
         """
         Connect to the Discord client and start the RPC thread.
         """
+        if not self.__enabled:
+            log(f"Presence {self.__metadata['name']} is disabled.")
+            return
         if self.__connected:
-            log(f"{self.__metadata['name']} is already connected.", level="WARNING")
+            log(f"Already connected to discord.", src=self.__metadata["name"])
             return
         try:
             self.__rpc.connect()
@@ -134,6 +139,9 @@ class Presence:
         """
         Start the presence code thread.
         """
+        if not self.__enabled:
+            log("Please enable the presence first.", src=self.__metadata["name"])
+            return
         self.__running = True
         self.__thread_code = threading.Thread(target=self.__code_update)
         self.__thread_code.start()
@@ -143,6 +151,11 @@ class Presence:
         """
         Stop the presence.
         """
+        if not self.__enabled:
+            log("Nothing to stop.", src=self.__metadata["name"])
+            return
+        if not self.__running:
+            log(f"First start the presence.")
         self.__code_running = self.__running = False
         log("Stopping...", src=self.__metadata["name"])
         try:
@@ -158,3 +171,31 @@ class Presence:
         self.__thread_code.join()
         self.__thread_rpc.join()
         log(f"Stopped.", src=self.__metadata["name"])
+
+    @property
+    def enabled(self) -> bool:
+        """
+        Return whether the presence is enabled.
+        """
+        return self.__enabled
+
+    @enabled.setter
+    def enabled(self, value: bool) -> None:
+        """
+        Set whether the presence is enabled.
+        """
+        if self.__running:
+            log("Please stop the presence first.", src=self.__metadata["name"])
+            return
+        self.__enabled = value
+        if value:
+            log(f"Enabled.", src=self.__metadata["name"])
+        else:
+            log(f"Disabled.", src=self.__metadata["name"])
+
+    @property
+    def metadata(self) -> dict:
+        """
+        Return the metadata of the presence.
+        """
+        return self.__metadata
