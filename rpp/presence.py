@@ -71,9 +71,21 @@ class Presence:
             "presence_metadata": self.__metadata,
             "time": time,
         }
-        if self.__metadata["modules"] is not None:
-            for module in self.__metadata["modules"]:
-                _globals[module] = __import__(module)
+        # import libraries of the presence
+        if (
+            "libs" in self.__metadata
+            and self.__metadata["libs"] is not None
+            and isinstance(self.__metadata["libs"], list)
+        ):
+            for lib in self.__metadata["libs"]:
+                try:
+                    _globals[lib] = __import__(lib)
+                except Exception as exc:
+                    log(
+                        "Failed to import " + lib + " because " + str(exc),
+                        level="ERROR",
+                        src=self.__metadata["name"],
+                    )
         _globals = restrict_globals(_globals, self)
         self.__code_running = True
         try:
