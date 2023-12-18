@@ -1,6 +1,7 @@
 """
 Utilities methods and classes used by the RPP.
 """
+import os
 from .constants import RESTRICTED_GLOBALS
 
 
@@ -46,3 +47,17 @@ def import_modules(_origin: dict) -> dict:
                 level="ERROR",
             )
     return _origin
+
+
+def is_dir(path) -> bool:
+    """
+    Check if a path is a directory.
+    """
+    return os.path.isdir(path)
+
+
+def list_dir(path) -> list:
+    """
+    List the contents of a directory.
+    """
+    return os.listdir(path)
