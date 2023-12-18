@@ -161,13 +161,13 @@ class Presence:
         self.__code_running = self.__running = False
         log("Stopping...", src=self.__metadata["name"])
         try:
-            self.__rpc.clear()
-            self.__rpc.close()
+            if self.__rpc is not None:
+                self.__rpc.clear()
+                self.__rpc.close()
         except Exception as exc:
-            print(exc)
             log(
                 f"{self.__metadata['name']} CON failed because {exc}",
-                level="ERROR",
+                level="WARNING",
             )
         self.__connected = False
         self.__thread_code.join()
