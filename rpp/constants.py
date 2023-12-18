@@ -5,6 +5,8 @@ Constants used throughout the project.
 import enum
 
 LOG_FILENAME = "presenceplus.log"
+REMOTE_URL = "http://localhost:{port}/json"
+
 RESTRICTED_GLOBALS = [
     "input",
     "open",
