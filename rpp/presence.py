@@ -6,7 +6,7 @@ import time
 import threading
 import pypresence as pp
 from .constants import TimeLimit
-from .utils import restrict_globals
+from .utils import restrict_globals, import_modules
 from .logger import log
 
 
@@ -64,6 +64,7 @@ class Presence:
         """
         _globals = {
             "__builtins__": __builtins__,
+            "__name__": "presences",
             "log": lambda text, **kwargs: log(
                 text, src=self.__metadata["name"], **kwargs
             ),
@@ -72,20 +73,9 @@ class Presence:
             "time": time,
         }
         # import libraries of the presence
-        if (
-            "libs" in self.__metadata
-            and self.__metadata["libs"] is not None
-            and isinstance(self.__metadata["libs"], list)
-        ):
-            for lib in self.__metadata["libs"]:
-                try:
-                    _globals[lib] = __import__(lib)
-                except Exception as exc:
-                    log(
-                        "Failed to import " + lib + " because " + str(exc),
-                        level="ERROR",
-                        src=self.__metadata["name"],
-                    )
+        if "libs" in self.__metadata:
+            _globals = import_modules(_globals)
+        # restrict the globals
         _globals = restrict_globals(_globals, self)
         self.__code_running = True
         try:
