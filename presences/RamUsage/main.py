@@ -1,3 +1,6 @@
+import psutil
+
+
 def get_ram_usage():
     """Get the RAM usage of the system."""
     return psutil.virtual_memory().percent
