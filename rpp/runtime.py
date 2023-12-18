@@ -31,7 +31,8 @@ class Runtime:
         Connect to the browser.
         """
         try:
-            return httpx.get(REMOTE_URL.format(port=self.__port)).json()
+            # set timeout to 5 seconds
+            return httpx.get(REMOTE_URL.format(port=self.__port), timeout=5).json()
         except Exception as exc:
             raise exc
 
@@ -70,17 +71,24 @@ class Runtime:
         self.__update()
         return self.__current_tab
 
+    @property
+    def connected(self) -> bool:
+        """
+        Return if the runtime is connected.
+        """
+        return self.__connected
+
     def connect(self) -> bool:
         """
         Connect to the browser.
         """
         if self.__connected:
             return True
-        self.__connected = True
         try:
             self.__req()
             log("Connected to the browser.")
-            return True
+            self.__connected = True
+            return self.__connected
         except Exception as exc:
             self.__connected = False
             log(
