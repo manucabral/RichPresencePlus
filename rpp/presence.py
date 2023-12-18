@@ -5,6 +5,7 @@ import os
 import time
 import threading
 import pypresence as pp
+from .runtime import Runtime
 from .constants import TimeLimit
 from .utils import restrict_globals, import_modules
 from .logger import log
@@ -26,6 +27,7 @@ class Presence:
         "__code_running",
         "__thread_code",
         "__thread_rpc",
+        "__runtime",
     ]
 
     def __init__(self, **metadata):
@@ -50,6 +52,7 @@ class Presence:
             return
         self.__enabled = True
         self.__running = self.__connected = self.__code_running = False
+        self.__runtime = None
         self.__rpc_data = {}
 
     def __repr__(self):
@@ -70,6 +73,7 @@ class Presence:
             ),
             "presence_update": self.update,
             "presence_metadata": self.__metadata,
+            "runtime": self.__runtime,
             "time": time,
         }
         # import libraries of the presence
@@ -135,6 +139,9 @@ class Presence:
         """
         Simply update the RPC data.
         """
+        for key in list(kwargs.keys()):
+            if not kwargs[key]:
+                del kwargs[key]
         self.__rpc_data = kwargs
 
     def start(self) -> None:
@@ -201,3 +208,21 @@ class Presence:
         Return the metadata of the presence.
         """
         return self.__metadata
+
+    @property
+    def runtime(self) -> Runtime:
+        """
+        Return the runtime of the presence.
+        """
+        return self.__runtime
+
+    @runtime.setter
+    def runtime(self, value: Runtime) -> None:
+        """
+        Set the runtime of the presence.
+        """
+        if not self.__metadata["use_browser"]:
+            log("This presence does not use the browser.", src=self.__metadata["name"])
+            return
+        self.__runtime = value
+        log("Connected to the browser.", src=self.__metadata["name"])
