@@ -60,7 +60,7 @@ class Presence:
                 level="ERROR",
             )
             return
-        self.__enabled = True
+        self.__enabled = False
         self.__running = self.__connected = self.__code_running = False
         self.__runtime = None
         self.__rpc_data = {}
@@ -243,6 +243,13 @@ class Presence:
         Return the metadata of the presence.
         """
         return self.__metadata
+
+    @property
+    def name(self) -> str:
+        """
+        Return the name of the presence.
+        """
+        return self.__metadata["name"]
 
     @property
     def runtime(self) -> Runtime:
