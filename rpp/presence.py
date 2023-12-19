@@ -5,8 +5,9 @@ import os
 import time
 import threading
 import pypresence as pp
+import httpx
 from .runtime import Runtime
-from .constants import TimeLimit
+from .constants import TimeLimit, PRESENCES_URL
 from .utils import restrict_globals, import_modules
 from .logger import log
 
@@ -106,6 +107,15 @@ class Presence:
         finally:
             self.__code_running = False
             self.__connected = False
+
+    def existence(self) -> bool:
+        """
+        Return whether the presence exists.
+        """
+        repo = httpx.get(PRESENCES_URL.format(name=self.__metadata["name"]))
+        if self.__metadata["name"] not in repo.text:
+            return False
+        return True
 
     def force_sync(self) -> None:
         """
@@ -268,3 +278,18 @@ class Presence:
             return
         self.__runtime = value
         log("Connected to the browser.", src=self.__metadata["name"])
+    
+    @property
+    def custom(self) -> bool:
+        """
+        Return whether the presence is custom.
+        """
+        return self.__custom
+    
+    @custom.setter
+    def custom(self, value: bool) -> None:
+        """
+        Set whether the presence is custom.
+        """
+        self.__custom = value
+        log("Custom presence detected.", src=self.__metadata["name"])
