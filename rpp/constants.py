@@ -4,6 +4,7 @@ Constants used throughout the project.
 
 import enum
 
+PRESENCES_URL = "https://github.com/manucabral/RichPresencePlus/tree/4497a5a7b97d04395f0cf242952d8fd22edd8d70/presences/{name}"
 LOG_FILENAME = "presenceplus.log"
 REMOTE_URL = "http://localhost:{port}/json"
 
