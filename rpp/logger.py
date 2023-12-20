@@ -30,6 +30,7 @@ def log(
     Other Kwargs:
         console (bool): Whether to log to the console. Defaults to True.
         file (bool): Whether to log to a file. Defaults to True.
+        dev_mode (bool): Whether to log in dev mode. Defaults to False.
 
     Raises:
         ValueError: If the level is not valid.
@@ -52,5 +53,9 @@ def log(
     if kwargs.get("console", True):
         print(log)
     if kwargs.get("file", True):
-        with open(LOG_FILENAME, "a", encoding="utf-8") as log_file:
+        with open(
+            "dev.log" if kwargs.get("dev_mode", False) else LOG_FILENAME,
+            "a",
+            encoding="utf-8",
+        ) as log_file:
             log_file.write(log + "\n")
