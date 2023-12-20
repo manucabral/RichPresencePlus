@@ -22,6 +22,7 @@ class Presence:
         "__code",
         "__rpc",
         "__rpc_data",
+        "__dev_mode",
         "__running",
         "__connected",
         "__last_update",
@@ -37,9 +38,13 @@ class Presence:
         Create a new Presence object.
         """
         self.__metadata = metadata
+        self.__dev_mode = metadata.get("dev_mode", False)
         self.__custom = metadata.get("custom", False)
         try:
-            self.__rpc = pp.Presence(self.__metadata["client_id"])
+            if not self.__dev_mode:
+                self.__rpc = pp.Presence(self.__metadata["client_id"])
+            else:
+                self.__rpc = None
             if not self.__custom:
                 main_path = os.path.join(metadata["path"], "main.py")
                 with open(main_path) as _file:
@@ -146,6 +151,9 @@ class Presence:
         if not self.__enabled:
             log(f"Presence {self.__metadata['name']} is disabled.")
             return
+        if self.__dev_mode:
+            log(f"Presence {self.__metadata['name']} cannot be connected in dev mode.")
+            return
         if self.__connected:
             log(f"Already connected to discord.", src=self.__metadata["name"])
             return
@@ -167,9 +175,19 @@ class Presence:
         """
         Simply update the RPC data.
         """
+        _log = kwargs.pop("log", True)
         for key in list(kwargs.keys()):
             if not kwargs[key]:
                 del kwargs[key]
+        if not kwargs:
+            log(
+                "Nothing to update.",
+                src=self.__metadata["name"],
+                dev_mode=self.__dev_mode,
+            )
+            return
+        if _log:
+            log(kwargs, src=self.__metadata["name"], dev_mode=self.__dev_mode)
         self.__rpc_data = kwargs
 
     def start(self) -> None:
@@ -213,7 +231,8 @@ class Presence:
         if not self.__custom:
             self.__connected = False
             self.__thread_code.join()
-            self.__thread_rpc.join()
+            if not self.__dev_mode:
+                self.__thread_rpc.join()
         log(f"Stopped.", src=self.__metadata["name"])
 
     @property
