@@ -76,6 +76,8 @@ def load_local_presences_metadata(dev_mode: bool = False) -> list:
         list: A list of Presence objects.
     """
     presences = []
+    if not is_dir("presences"):
+        return presences
     for file in list_dir("presences"):
         subdir = os.path.join("presences", file)
         if not is_dir(subdir):
