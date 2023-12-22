@@ -225,6 +225,8 @@ class App(customtkinter.CTk):
         """
         self.__presences = load_local_presences(self.__runtime.connected)
         for presence in self.__presences:
+            if self.__runtime.connected and presence.metadata["use_browser"]:
+                presence.runtime = self.__runtime
             self.scrollable_frame.add_item(presence.name)
 
     def get_presence(self, name: str) -> rpp.Presence:
