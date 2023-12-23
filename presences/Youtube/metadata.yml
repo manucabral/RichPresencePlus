@@ -14,5 +14,8 @@ use_browser: true
 tags:
   - video
   - media
+variables:
+  - name: last_video
+    default: unknown
 libs: null
 modules: null
