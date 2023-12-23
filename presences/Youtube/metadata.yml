@@ -17,5 +17,7 @@ tags:
 variables:
   - name: last_video
     default: unknown
+  - name: start_time
+    default: 0
 libs: null
 modules: null

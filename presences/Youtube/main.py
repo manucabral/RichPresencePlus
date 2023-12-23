@@ -1,19 +1,36 @@
+def on_studio(url: str):
+    """
+    Handles the YouTube Studio sections.
+    """
+    details = "Dashboard"
+
+    if "analytics" in url:
+        details = "Analytics"
+    elif "comments" in url:
+        details = "Viewing comments"
+
+    return presence_update(state="Studio", details=details)
+
+
 def main():
     # Checks if the presence is starting using the last_video global variable.
-    # Note: last_video is defined in the presence metadata.
-    global last_video
+    # Note: last_video and start_time are global variables defined in the metadata.yml file.
+    global last_video, start_time
     if last_video == "unknown":
-        presence_update(state="Starting...")
         last_video = None
-        return
+        start_time = time.time()
+        return presence_update(state="Starting...", start=start_time)
 
     # Get the current tab
     tab = runtime.current_tab
 
     # if the tab is not in YouTube, then the user is not watching a video.
-    if not "www.youtube.com" in tab.url:
-        presence_update(state="Not watching.")
-        return
+    if not "youtube.com" in tab.url:
+        return presence_update(state="Not watching.")
+
+    # if user is in YouTube Studio, then call the on_studio function which handles the different sections.
+    if "studio.youtube.com" in tab.url:
+        return on_studio(tab.url)
 
     # Get the media session
     media_session = tab.media_session()
@@ -23,12 +40,13 @@ def main():
 
     # If the media session is not active that means the user is browsing in YouTube.
     if not active:
-        presence_update(state="Browsing...")
-        return
+        return presence_update(state="Browsing...")
 
     # Get the media session data
     paused = media_session.state == "paused"
-    channel = tab.exec("document.querySelector('#text > a').href")
+    channel = tab.exec(
+        "document.querySelector('#top-row ytd-video-owner-renderer > a').href"
+    )
     state = media_session.title
     details = media_session.artist
     large_image = media_session.artwork
@@ -40,17 +58,18 @@ def main():
 
     # if the last video is not the current video, then the user is watching a new video.
     if tab.url != last_video:
-        start = time.time()
+        log("New video detected.")
+        start_time = time.time()
         last_video = tab.url
 
     # Update the presence.
-    presence_update(
+    return presence_update(
         state=state,
         details=details,
         large_image=large_image,
         small_image=small_image,
         buttons=buttons,
-        start=start,
+        start=start_time,
     )
 
 
