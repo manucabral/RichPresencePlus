@@ -31,8 +31,7 @@ class Runtime:
         Connect to the browser.
         """
         try:
-            # set timeout to 5 seconds
-            return httpx.get(REMOTE_URL.format(port=self.__port), timeout=5).json()
+            return httpx.get(REMOTE_URL.format(port=self.__port), timeout=1).json()
         except Exception as exc:
             raise exc
 
