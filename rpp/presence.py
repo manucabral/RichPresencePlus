@@ -95,6 +95,10 @@ class Presence:
         # import libraries of the presence
         if "libs" in self.__metadata:
             _globals = import_modules(_globals)
+        # define custom variables of the presence
+        if "variables" in self.__metadata:
+            for var in self.__metadata["variables"]:
+                _globals[var["name"]] = var["default"]
         # restrict the globals
         _globals = restrict_globals(_globals, self)
         self.__code_running = True
@@ -179,6 +183,7 @@ class Presence:
         for key in list(kwargs.keys()):
             if not kwargs[key]:
                 del kwargs[key]
+        kwargs["large_text"] = "Rich Presence Plus"
         if not kwargs:
             log(
                 "Nothing to update.",
