@@ -32,6 +32,9 @@ def main():
     if "studio.youtube.com" in tab.url:
         return on_studio(tab.url)
 
+    if "shorts" in tab.url:
+        return presence_update(state="Watching Shorts...")
+
     # Get the media session
     media_session = tab.media_session()
 
