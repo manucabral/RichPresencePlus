@@ -174,6 +174,7 @@ class Presence:
                 f"{self.__metadata['name']} failed on connect to Discord because {exc}",
                 level="ERROR",
             )
+            raise exc
 
     def update(self, **kwargs) -> None:
         """
