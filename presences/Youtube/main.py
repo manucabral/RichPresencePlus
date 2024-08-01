@@ -1,83 +1,47 @@
-def on_studio(url: str):
-    """
-    Handles the YouTube Studio sections.
-    """
-    details = "Dashboard"
-
-    if "analytics" in url:
-        details = "Analytics"
-    elif "comments" in url:
-        details = "Viewing comments"
-
-    return presence_update(state="Studio", details=details)
+import time
+import rpp
 
 
-def main():
-    # Checks if the presence is starting using the last_video global variable.
-    # Note: last_video and start_time are global variables defined in the metadata.yml file.
-    global last_video, start_time
-    if last_video == "unknown":
-        last_video = None
-        start_time = time.time()
-        return presence_update(state="Starting...", start=start_time)
+@rpp.extension
+class Youtube(rpp.Presence):
 
-    # Get the current tab
-    tab = runtime.current_tab
+    def __init__(self):
+        self.name = "Youtube"
+        self.version = "0.0.1"
+        self.clientId = 1113646725408772176
+        self.usingWeb = True
 
-    # if the tab is not in YouTube, then the user is not watching a video.
-    if not "youtube.com" in tab.url:
-        return presence_update(state="Not watching.")
+    def on_load(self):
+        self.state = "Idle"
+        self.details = "Idle"
+        print("Started Youtube Presence")
 
-    # if user is in YouTube Studio, then call the on_studio function which handles the different sections.
-    if "studio.youtube.com" in tab.url:
-        return on_studio(tab.url)
+    def on_update(self, context: rpp.Runtime):
 
-    if "shorts" in tab.url:
-        return presence_update(state="Watching Shorts...")
+        # Get all tabs of the browser
+        tabs = context.tabs()
+        youtubeTab = None
 
-    # Get the media session
-    media_session = tab.media_session()
+        # Find last opened youtube tab
+        for tab in tabs:
+            if "youtube.com" in tab.url:
+                youtubeTab = tab
+                break
 
-    # Check if the media session is active
-    active = media_session and media_session.state != "none"
+        # If youtube tab is not found, set presence to idle
+        if youtubeTab is None:
+            self.state = "Idle"
+            self.details = "Idle"
+            return
 
-    # If the media session is not active that means the user is browsing in YouTube.
-    if not active:
-        return presence_update(state="Browsing...")
+        # Set presence to watching youtube
+        self.state = youtubeTab.execute(
+            "document.querySelector('#title > h1 > yt-formatted-string').textContent"
+        )
+        self.details = "Watching Youtube"
+        self.buttons = [{"label": "Open Youtube", "url": youtubeTab.url}]
 
-    # Get the media session data
-    paused = media_session.state == "paused"
-    channel = tab.exec(
-        "document.querySelector('#top-row ytd-video-owner-renderer > a').href"
-    )
-    state = media_session.title
-    details = media_session.artist
-    large_image = media_session.artwork
-    small_image = "pause" if paused else "play"
-    buttons = [
-        {"label": "Watch", "url": tab.url},
-        {"label": "Channel", "url": channel},
-    ]
+        time.sleep(1)
 
-    # if the last video is not the current video, then the user is watching a new video.
-    if tab.url != last_video:
-        log("New video detected.")
-        start_time = time.time()
-        last_video = tab.url
-
-    # Update the presence.
-    return presence_update(
-        state=state,
-        details=details,
-        large_image=large_image,
-        small_image=small_image,
-        buttons=buttons,
-        start=start_time,
-    )
-
-
-# Calls the main function.
-main()
-
-# Updates the presence every 5 seconds.
-time.sleep(5)
+    def on_close(self):
+        print("Stopped Youtube Presence")
