@@ -1,0 +1,18 @@
+{
+    "name": "Youtube",
+    "version": "1.0.0",
+    "description": {
+        "en": "Shows the currently playing video on YouTube.",
+        "pt-BR": "Mostra o vídeo atualmente sendo reproduzido no YouTube."
+    },
+    "clientId": 1113646725408772176,
+    "author": "manucabral",
+    "contributors": [],
+    "web": true,
+    "category": "Media",
+    "color": "#A56786",
+    "tags": [
+        "video",
+        "media"
+    ]
+}
