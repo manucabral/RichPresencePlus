@@ -6,6 +6,7 @@
         "pt-BR": "Mostra o vídeo atualmente sendo reproduzido no YouTube."
     },
     "clientId": 1113646725408772176,
+    "updateInterval": 3,
     "author": "manucabral",
     "contributors": [],
     "web": true,
