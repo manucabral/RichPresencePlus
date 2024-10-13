@@ -1,49 +1,24 @@
 """
-Constants used throughout the project.
+Constants module for Rich Presence Plus.
 """
 
-import enum
 
-LOG_FILENAME = "presenceplus.log"
-REMOTE_URL = "http://localhost:{port}/json"
-
-RESTRICTED_GLOBALS = [
-    "input",
-    "open",
-    "eval",
-    "exec",
-    "compile",
-    "exit",
-    "quit",
-]
-
-
-class TimeLimit(enum.Enum):
+class Constants:
     """
-    Times limits used throughout the project.
+    Constants class for Rich Presence Plus.
     """
 
-    DISCORD = 15
-    RPP = 0.1
+    MAX_PRESENCES = 10
+    PRESENCES_FOLDER = "presences"
+    RUNTIME_INTERVAL = 1
+    PRESENCE_INTERVAL = 15
+    DEV_MODE = True
+    LOG_FILE = "rpp.log"
 
-
-class LogLevel(enum.Enum):
-    """
-    The level of logging to use.
-    """
-
-    INFO = 0
-    WARNING = 1
-    ERROR = 2
-    CRITICAL = 3
-    DEBUG = 4
-
-
-class RunMode(enum.Enum):
-    """
-    The mode in which the application is running.
-    """
-
-    BOTH = 0
-    WEB = 1
-    DESKTOP = 2
+    USER_CHOICE = (
+        r"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice"
+    )
+    FIND_BROWSER = "wmic process where \"name='{process}'\" get ProcessId /format:value"
+    BROWSER_PATH = "{progId}\\shell\\open\\command"
+    BROWSER_NAME = "{progId}\\Application"
+    KILL_BROWSER = "taskkill /f /im {process} /t"

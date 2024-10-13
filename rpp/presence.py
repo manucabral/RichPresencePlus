@@ -1,295 +1,71 @@
-"""
-Simply a class derived from pypresence.Presence with some extra features.
-"""
-import os
-import time
-import threading
-import pypresence as pp
-from .runtime import Runtime
-from .constants import TimeLimit
-from .utils import restrict_globals, import_modules
-from .logger import log
+from abc import ABC, abstractmethod
 
 
-class Presence:
+class Presence(ABC):
     """
-    Presence manager class.
+    Abstract class for creating a presence for Rich Presence Plus.
     """
 
-    __slots__ = [
-        "__metadata",
-        "__enabled",
-        "__code",
-        "__rpc",
-        "__rpc_data",
-        "__dev_mode",
-        "__running",
-        "__connected",
-        "__last_update",
-        "__code_running",
-        "__thread_code",
-        "__thread_rpc",
-        "__runtime",
-        "__custom",
-    ]
+    def __init__(self, metadata_file: bool = False):
+        """
+        Initialize the presence.
 
-    def __init__(self, **metadata):
-        """
-        Create a new Presence object.
-        """
-        self.__metadata = metadata
-        self.__dev_mode = metadata.get("dev_mode", False)
-        self.__custom = metadata.get("custom", False)
-        try:
-            if not self.__dev_mode:
-                self.__rpc = pp.Presence(self.__metadata["client_id"])
-            else:
-                self.__rpc = None
-            if not self.__custom:
-                main_path = os.path.join(metadata["path"], "main.py")
-                with open(main_path) as _file:
-                    self.__code = compile(_file.read(), main_path, "exec")
-                log(
-                    "Compiled successfully v" + metadata["version"],
-                    src=metadata["name"],
-                )
-            else:
-                self.__code = None
-                log(
-                    "Custom presence detected.",
-                    src=metadata["name"],
-                )
-        except Exception as exc:
-            log(
-                f"{metadata['name']} failed because {exc}",
-                level="ERROR",
-            )
-            return
-        self.__enabled = False
-        self.__running = self.__connected = self.__code_running = False
-        self.__runtime = None
-        self.__rpc_data = {}
-        self.__last_update = 0
+        Args:
+            metadata_file (bool): Whether the presence is being loaded from a metadata (json) file.
 
-    def __repr__(self):
         """
-        Return the representation of the object.
-        """
-        return f"<Presence {self.__metadata['name']}>"
+        self.name = None
+        self.author = "Unknown"
+        self.version = "1.0.0"
+        self.web = False
+        self.enabled = True
+        self.update_interval = 3
+        self.metadata_file = metadata_file
+        self.dev_mode = True
+        self.client_id = None
+        self.log = None
 
-    def __code_update(self) -> None:
-        """
-        Run the presence code.
-        """
-        _globals = {
-            "__builtins__": __builtins__,
-            "__name__": "presences",
-            "log": lambda text, **kwargs: log(
-                text, src=self.__metadata["name"], **kwargs
-            ),
-            "presence_update": self.update,
-            "presence_metadata": self.__metadata,
-            "runtime": self.__runtime,
-            "time": time,
-        }
-        # import libraries of the presence
-        if "libs" in self.__metadata:
-            _globals = import_modules(_globals)
-        # define custom variables of the presence
-        if "variables" in self.__metadata:
-            for var in self.__metadata["variables"]:
-                _globals[var["name"]] = var["default"]
-        # restrict the globals
-        _globals = restrict_globals(_globals, self)
-        self.__code_running = True
-        try:
-            while self.__code_running:
-                exec(self.__code, _globals)
-                time.sleep(TimeLimit.RPP.value)
-        except Exception as exc:
-            print(exc)
-            log(
-                f"{self.__metadata['name']} failed because {exc}",
-                level="ERROR",
-            )
-        finally:
-            self.__code_running = False
-            self.__connected = False
+        # Presence data
+        self.title = None
+        self.details = None
+        self.state = None
+        self.large_image = None
+        self.small_image = None
+        self.small_text = "Rich Presence Plus"
+        self.buttons = None
+        self.start = None
+        self.end = None
 
-    def force_sync(self) -> None:
+    @abstractmethod
+    def on_load(self) -> None:
         """
-        Force the sync of the presence with Discord.
+        Called when the presence is loaded.
         """
-        if time.time() - self.__last_update < TimeLimit.DISCORD.value:
-            log(
-                "Please wait a few seconds before updating again.",
-                level="WARNING",
-                src=self.__metadata["name"],
-            )
-            return
-        self.__rpc.update(**self.__rpc_data)
-        log("Force sync.", src=self.__metadata["name"])
-        self.__last_update = time.time()
+        pass
 
-    def __rpc_loop_update(self) -> None:
+    @abstractmethod
+    def on_update(self, **context) -> None:
         """
-        Update the RPC connection.
-        """
-        try:
-            while self.__connected:
-                self.__rpc.update(**self.__rpc_data)
-                log("Loop updated.", src=self.__metadata["name"])
-                time.sleep(TimeLimit.DISCORD.value)
-        except Exception as exc:
-            log(
-                f"{self.__metadata['name']} failed because RPC {exc}",
-                level="ERROR",
-            )
-        finally:
-            self.__connected = False
+        Called when the presence is updated.
 
-    def connect(self) -> None:
-        """
-        Connect to the Discord client and start the RPC loop if needed.
-        """
-        if not self.__enabled:
-            log(f"Presence {self.__metadata['name']} is disabled.")
-            return
-        if self.__dev_mode:
-            log(f"Presence {self.__metadata['name']} cannot be connected in dev mode.")
-            return
-        if self.__connected:
-            log(f"Already connected to discord.", src=self.__metadata["name"])
-            return
-        try:
-            self.__rpc.connect()
-            self.__connected = True
-            self.__last_update = time.time()
-            if not self.__custom:
-                self.__thread_rpc = threading.Thread(target=self.__rpc_loop_update)
-                self.__thread_rpc.start()
-            log(f"Connected to discord.", src=self.__metadata["name"])
-        except Exception as exc:
-            log(
-                f"{self.__metadata['name']} failed on connect to Discord because {exc}",
-                level="ERROR",
-            )
-            raise exc
+        Args:
+            context: The context of the update.
 
-    def update(self, **kwargs) -> None:
+        Context:
+            runtime: The runtime instance.
         """
-        Simply update the RPC data.
-        """
-        _log = kwargs.pop("log", True)
-        for key in list(kwargs.keys()):
-            if not kwargs[key]:
-                del kwargs[key]
-        kwargs["large_text"] = "Rich Presence Plus"
-        if not kwargs:
-            log(
-                "Nothing to update.",
-                src=self.__metadata["name"],
-                dev_mode=self.__dev_mode,
-            )
-            return
-        if _log:
-            log(kwargs, src=self.__metadata["name"], dev_mode=self.__dev_mode)
-        self.__rpc_data = kwargs
+        pass
 
-    def start(self) -> None:
+    @abstractmethod
+    def on_close(self) -> None:
         """
-        Start the presence code thread.
+        Called when the presence is closed.
         """
-        if not self.__enabled:
-            log("Please enable the presence first.", src=self.__metadata["name"])
-            return
-        if self.__custom:
-            log(
-                "A custom presence does not need to be started.",
-                src=self.__metadata["name"],
-            )
-            return
-        self.__running = True
-        self.__thread_code = threading.Thread(target=self.__code_update)
-        self.__thread_code.start()
-        log(f"Code loop started.", src=self.__metadata["name"])
+        pass
 
-    def stop(self) -> None:
+    @abstractmethod
+    def force_update(self):
         """
-        Stop the presence.
+        Force update the presence.
         """
-        if not self.__enabled:
-            log("Nothing to stop.", src=self.__metadata["name"])
-            return
-        if not self.__running:
-            log(f"First start the presence.")
-        self.__code_running = self.__running = False
-        log("Stopping...", src=self.__metadata["name"])
-        try:
-            if self.__rpc is not None:
-                self.__rpc.clear()
-                self.__rpc.close()
-        except Exception as exc:
-            log(
-                f"{self.__metadata['name']} CON failed because {exc}",
-                level="WARNING",
-            )
-        if not self.__custom:
-            self.__connected = False
-            self.__thread_code.join()
-            if not self.__dev_mode:
-                self.__thread_rpc.join()
-        log(f"Stopped.", src=self.__metadata["name"])
-
-    @property
-    def enabled(self) -> bool:
-        """
-        Return whether the presence is enabled.
-        """
-        return self.__enabled
-
-    @enabled.setter
-    def enabled(self, value: bool) -> None:
-        """
-        Set whether the presence is enabled.
-        """
-        if self.__running:
-            log("Please stop the presence first.", src=self.__metadata["name"])
-            return
-        self.__enabled = value
-        if value:
-            log(f"Enabled.", src=self.__metadata["name"])
-        else:
-            log(f"Disabled.", src=self.__metadata["name"])
-
-    @property
-    def metadata(self) -> dict:
-        """
-        Return the metadata of the presence.
-        """
-        return self.__metadata
-
-    @property
-    def name(self) -> str:
-        """
-        Return the name of the presence.
-        """
-        return self.__metadata["name"]
-
-    @property
-    def runtime(self) -> Runtime:
-        """
-        Return the runtime of the presence.
-        """
-        return self.__runtime
-
-    @runtime.setter
-    def runtime(self, value: Runtime) -> None:
-        """
-        Set the runtime of the presence.
-        """
-        if not self.__metadata["use_browser"]:
-            log("This presence does not use the browser.", src=self.__metadata["name"])
-            return
-        self.__runtime = value
-        log("Connected to the browser.", src=self.__metadata["name"])
+        pass

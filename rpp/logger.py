@@ -1,61 +1,68 @@
 """
-A simple logging module.
-
-Example:
-    >>> from rpp import log
-    >>> log("Hello, world!")
-    [01/01/1970|00:00:00] @ INFO main: Hello, world!
+This module contains the custom logger class for RPP.
 """
-import time
-import typing
-import inspect
-from .constants import LogLevel, LOG_FILENAME
+
+import logging
 
 
-# pylint: disable=redefined-outer-name
-def log(
-    text: typing.Optional[str] = None,
-    level: typing.Optional[str] = LogLevel.INFO.name,
-    src: typing.Optional[str] = None,
-    **kwargs,
-) -> None:
+class RPPLogger(logging.Logger):
     """
-    Logs a message. Defaults to INFO level.
-
-    Args:
-        text (str): The message to log.
-        level (str): The level to log at. Defaults to INFO.
-        src (str): The source file to log from. Defaults to the caller.
-
-    Other Kwargs:
-        console (bool): Whether to log to the console. Defaults to True.
-        file (bool): Whether to log to a file. Defaults to True.
-        dev_mode (bool): Whether to log in dev mode. Defaults to False.
-
-    Raises:
-        ValueError: If the level is not valid.
+    Custom logger class for RPP.
     """
-    if text is None:
-        raise ValueError("No text to log.")
-    if level not in LogLevel.__members__:
-        raise ValueError("Invalid log level: " + level)
-    if src is not None:  # if src is specified, use it.
-        caller_filename = src
-    else:
-        caller_filename = inspect.stack()[1].filename.split("\\")[-1].replace(".py", "")
-    # pylint: disable=pointless-string-statement
+
+    def __init__(self, name: str, level=logging.DEBUG, filename="rpp.log"):
+        super().__init__(name, level)
+        self.setLevel(level)
+
+        # File handler
+        file_handler = logging.FileHandler(filename)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(
+            logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        )
+        self.addHandler(file_handler)
+
+        # Console handler
+        self.console_handler = logging.StreamHandler()
+        self.console_handler.setLevel(logging.DEBUG)
+        self.console_handler.setFormatter(
+            logging.Formatter("%(name)s - %(levelname)s - %(message)s")
+        )
+        self.addHandler(self.console_handler)
+
+    def __log(
+        self, level: int, message: str, *args, console: bool = True, **kwargs
+    ) -> None:
+        """
+        Log a message with the specified level.
+        """
+        if console:
+            self.console_handler.setLevel(level)
+        else:
+            self.console_handler.setLevel(logging.CRITICAL + 1)
+        super().log(level, message, *args, **kwargs)
+
+    def info(self, message: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.INFO, message, *args, console=console, **kwargs)
+
+    def debug(self, message: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.DEBUG, message, *args, console=console, **kwargs)
+
+    def error(self, message: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.ERROR, message, *args, console=console, **kwargs)
+
+    def warning(self, message: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.WARNING, message, *args, console=console, **kwargs)
+
+    def critical(self, message: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.CRITICAL, message, *args, console=console, **kwargs)
+
+
+logging.setLoggerClass(RPPLogger)
+
+
+def get_logger(name: str, filename="rpp.log") -> RPPLogger:
     """
-    for future Linux support
-    caller_filename = caller.filename.split("/")[-1]
+    Get a custom logger for RPP.
     """
-    date = time.strftime("[%d/%m/%Y|%H:%M:%S]")
-    log = f"{date} @ {level} {caller_filename}: {text}"
-    if kwargs.get("console", True):
-        print(log)
-    if kwargs.get("file", True):
-        with open(
-            "dev.log" if kwargs.get("dev_mode", False) else LOG_FILENAME,
-            "a",
-            encoding="utf-8",
-        ) as log_file:
-            log_file.write(log + "\n")
+    return logging.getLogger(name)

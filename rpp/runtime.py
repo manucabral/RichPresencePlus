@@ -1,97 +1,91 @@
-"""
-Runtime module used for send commands to the browser.
-"""
-import httpx
+import urllib.request
+import json
+from functools import wraps
 from .tab import Tab
-from .logger import log
-from .constants import REMOTE_URL
+from .logger import get_logger, RPPLogger
 
-# pylint: disable=broad-except
+
+def check_connection(func):
+    """
+    Decorator to check if the runtime is connected before calling a method.
+    """
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if not self.connected:
+            self.log.warning(
+                "Make sure the runtime is connected to the browser before calling this method"
+            )
+            return None
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class Runtime:
     """
-    Used for send commands to the chrome browser.
+    Class to interact with the browser runtime.
     """
 
-    def __init__(self):
-        self.__tabs = []
-        self.__port = 9228
-        self.__connected = False
-        self.__current_tab = None
+    def __init__(self, port: int):
+        """
+        Initialize the runtime.
+        """
+        self.port: int = port
+        self.data: list[Tab] = []
+        self.connected: bool = False
+        self.log: RPPLogger = get_logger("Runtime")
+        self.update()
 
-    def __repr__(self):
+    def update(self):
         """
-        Return the representation of the object.
-        """
-        return f"<Runtime connected={self.__connected}>"
-
-    def __req(self) -> None:
-        """
-        Connect to the browser.
+        Update the data.
         """
         try:
-            return httpx.get(REMOTE_URL.format(port=self.__port), timeout=1).json()
+            with urllib.request.urlopen(
+                f"http://localhost:{self.port}/json", timeout=1
+            ) as url:
+                data = json.loads(url.read().decode())
+                if not data:
+                    return []
+                self.data = [Tab(**d) for d in data]
+                if not self.connected:
+                    self.connected = True
+                    self.log.info("Connected to browser successfully")
+                self.log.debug("Updated data")
         except Exception as exc:
-            raise exc
+            self.log.warning("Could not connect to browser")
+            self.connected = False
 
-    def __update(self) -> None:
+    @check_connection
+    def tabs(self) -> list[Tab]:
         """
-        Update the tabs list.
-        """
-        if not self.__connected:
-            return
-        try:
-            tabs = self.__req()
-            self.__tabs = [tab for tab in tabs if tab["type"] == "page"]
-            if len(tabs) == 0:
-                log("No tabs found.", level="WARNING")
-                return
-            self.__tabs = [Tab(**tab) for tab in tabs]
-            self.__current_tab = self.__tabs[0]
-        except Exception as exc:
-            self.__connected = False
-            self.__tabs = []
-            log(exc, level="ERROR")
+        Get the tabs.
 
-    def tabs(self, force_update: bool = True) -> list:
+        Returns:
+            list[Tab]: A list of tabs
         """
-        Return the tabs.
-        """
-        if force_update:
-            self.__update()
-        return self.__tabs
+        return self.data
 
-    @property
+    @check_connection
     def current_tab(self) -> Tab:
         """
-        Return the current tab.
-        """
-        self.__update()
-        return self.__current_tab
+        Get the current tab.
 
-    @property
-    def connected(self) -> bool:
+        Returns:
+            Tab: The current tab
         """
-        Return if the runtime is connected.
-        """
-        return self.__connected
+        return self.data[0]
 
-    def connect(self) -> bool:
+    @check_connection
+    def filter_tabs(self, url: str) -> list[Tab]:
         """
-        Connect to the browser.
+        Filter tabs by url
+
+        Args:
+            url (str): The url to filter by
+
+        Returns:
+            list[Tab]: A list of tabs that match the url
         """
-        if self.__connected:
-            return True
-        try:
-            self.__req()
-            log("Connected to the browser.")
-            self.__connected = True
-            return self.__connected
-        except Exception as exc:
-            self.__connected = False
-            log(
-                "Failed to connect to the browser because " + str(exc),
-                level="ERROR",
-            )
-            return False
+        return [tab for tab in self.data if url in tab.url]
