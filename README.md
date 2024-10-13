@@ -1,5 +1,8 @@
 <h1 align="center">Rich Presence Plus</h1>
 <p align="center">
+A simple Discord Rich Presence manager for custom desktop or web applications.
+</p>
+<p align="center">
 Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 </p>
 
