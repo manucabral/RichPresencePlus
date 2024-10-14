@@ -15,7 +15,7 @@ class RPPLogger(logging.Logger):
         self.setLevel(level)
 
         # File handler
-        file_handler = logging.FileHandler(filename)
+        file_handler = logging.FileHandler(filename, encoding="utf-8")
         file_handler.setLevel(logging.DEBUG)
         file_handler.setFormatter(
             logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
