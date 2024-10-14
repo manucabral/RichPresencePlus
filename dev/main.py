@@ -1,70 +1,119 @@
 """
-Development script for create presences.
+Rich Presence Plus Development Script
+-------------------------------------
+Development script for creating custom presences for Rich Presence Plus.
 """
-import sys
+
+__title__ = "Rich Presence Plus Development Script"
+__description__ = (
+    "Development script for creating custom presences for Rich Presence Plus."
+)
+__author__ = "Manuel Cabral"
+__version__ = "0.3.0"
+__license__ = "MIT"
+
 import argparse
+import time
 import rpp
 
-VERSION = "0.0.1"
-NAME = "Rich Presence Plus Development Script"
+
+def browser_tools(browser: rpp.Browser, log: rpp.logger.RPPLogger, port: int) -> None:
+    """
+    Browser tools for managing the browser.
+
+    Args:
+        browser (rpp.Browser): The browser instance.
+        log (rpp.logger.RPPLogger): The logger instance.
+        port (int): The port for start the remote debugging.
+    """
+    log = rpp.get_logger("Browser Tools")
+    log.info(f"Detected {browser.name} ({browser.process})")
+    log.info("Using the default browser.")
+    log.info(
+        f"{browser.name} is actually {'running' if browser.running() else 'not running'}"
+    )
+    print("------------------")
+    print("1. Force restart", browser.name)
+    print("2. Close/kill", browser.name)
+    print("3. Open", browser.name)
+    print("4. Do nothing")
+    print("------------------")
+    while True:
+        choice = input("Select an option: ")
+        if not choice.isdigit():
+            print("Invalid input.")
+            continue
+        choice = int(choice)
+        if not choice in range(1, 5):
+            print("Invalid choice.")
+            continue
+
+        log.info("Please wait...")
+        if choice == 1:
+            browser.kill()
+            time.sleep(3)
+            browser.start(remote_port=port)
+            log.info("Browser restarted.")
+            break
+        elif choice == 2:
+            browser.close()
+            log.info("Browser closed.")
+            break
+        elif choice == 3:
+            browser.start(remote_port=port)
+            log.info("Browser opened.")
+            break
+        elif choice == 4:
+            break
+
+    input("Press Enter to continue...")
 
 
-def parse_args() -> argparse.Namespace:
-    """Parse the arguments."""
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--allow-web-presences", default=False, action="store_true")
+def prepare_args() -> argparse.Namespace:
+    """
+    Prepare the arguments.
+
+    Returns:
+        argparse.Namespace: The arguments.
+    """
+    parser = argparse.ArgumentParser(description=__description__, prog=__title__)
+    parser.add_argument(
+        "-bt",
+        "--browser-tools",
+        action="store_true",
+        help="Include browser tools for managing the browser.",
+        default=False,
+    )
+    parser.add_argument(
+        "-p",
+        "--port",
+        type=int,
+        help="The port for start the remote debugging (default: 9222).",
+        default=9222,
+    )
+    parser.add_argument(
+        "-ri",
+        "--runtime-interval",
+        type=int,
+        help="The interval for updating the runtime in seconds (default: 1).",
+        default=1,
+    )
     return parser.parse_args()
 
 
 if __name__ == "__main__":
-    args = parse_args()
+    args = prepare_args()
+    log = rpp.get_logger("Main")
+    log.info(f"{__title__} v{__version__}")
+    log.info(f"Using RPP v{rpp.__version__}")
 
-    rpp.log(NAME, dev_mode=True)
-    rpp.log(f"Using v{VERSION}", dev_mode=True)
+    if args.browser_tools:
+        browser = rpp.Browser()
+        browser_tools(browser, log, args.port)
 
-    if args.allow_web_presences:
-        rpp.log("Web presences are allowed.", dev_mode=True)
-        runtime = rpp.Runtime()
-        res = runtime.connect()
-        if not res:
-            rpp.log("Cannot connect to the browser.", dev_mode=True)
-            input("Press enter to continue...")
-            sys.exit(1)
-
-    # load presences metadata
-    presences_metadata = rpp.utils.load_local_presences_metadata(dev_mode=True)
-
-    # create presences from metadata
-    presences = []
-    for presence_metadata in presences_metadata:
-        # exclude web presences if they are not allowed
-        if presence_metadata["use_browser"] and not args.allow_web_presences:
-            rpp.log(
-                f"Skipping {presence_metadata['name']} because web presences are not allowed.",
-                dev_mode=True,
-            )
-            continue
-
-        presence = rpp.Presence(**presence_metadata)
-        presence.enabled = True
-        presences.append(presence)
-
-    total = len(presences)
-    rpp.log(f"Succesfully loaded {total} presences.", dev_mode=True)
-
-    if total == 0:
-        rpp.log("No presences to run.", dev_mode=True)
-        input("Press enter to continue...")
-        sys.exit(0)
-
-    try:
-        for presence in presences:
-            if presence.metadata["use_browser"]:
-                presence.runtime = runtime
-            presence.start()
-        while True:
-            pass
-    except KeyboardInterrupt:
-        rpp.log("Stopped by user.")
-        for presence in presences:
-            presence.stop()
+    runtime = rpp.Runtime(port=args.port)
+    manager = rpp.Manager(
+        runtime=runtime, dev_mode=True, runtime_interval=args.runtime_interval
+    )
+    manager.load()
+    manager.start()
