@@ -64,5 +64,12 @@ logging.setLoggerClass(RPPLogger)
 def get_logger(name: str, filename="rpp.log") -> RPPLogger:
     """
     Get a custom logger for RPP.
+
+    Args:
+        name (str): The name of the logger.
+        filename (str): The filename for the log file.
+
+    Returns:
+        RPPLogger: The custom logger instance.
     """
-    return logging.getLogger(name)
+    return RPPLogger(name, filename=filename)
