@@ -5,7 +5,13 @@ This module provides a decorator to extend the base class of the presence for cr
 import rpp
 import json
 import time
-import pypresence
+
+try:
+    import pypresence
+except ImportError:
+    # that means dev mode is enabled
+    pypresence = None
+
 from .constants import Constants
 from .presence import Presence
 from .logger import get_logger
@@ -23,7 +29,7 @@ def extension(cls: Presence) -> Presence:
             if not self.name:
                 self.name = cls.__name__
 
-            self.log = get_logger(self.name)
+            self.log = get_logger(self.name, filename=f"{self.name}.log")
             if self.metadata_file:
                 self.log.info("Using metadata file.")
                 return
