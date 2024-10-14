@@ -124,7 +124,7 @@ class Manager:
         """
         self.log.info(f"Starting runtime thread with interval {self.runtimeInterval}")
         while not self.stop_event.is_set():
-            time.sleep(self.runtimeInterval)
+            time.sleep(self.runtime_interval)
             try:
                 self.runtime.update()
             except Exception:
