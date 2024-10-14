@@ -91,8 +91,6 @@ class Manager:
                     instance = obj()
                     instance.path = root
                     instance.set_dev_mode(self.dev_mode)
-                    if instance.web:
-                        self.web_enabled = True
                     if instance.enabled:
                         self.presences.append(instance)
         except Exception as exc:
@@ -110,10 +108,13 @@ class Manager:
         """
         Run the presence in a thread.
         """
-        if presence.web and not self.runtime.connected:
-            self.log.warning(
-                f"{presence.name} uses web features but runtime is not connected"
-            )
+        if presence.web:
+            if not self.web_enabled:
+                self.web_enabled = True
+            if not self.runtime.connected:
+                self.log.warning(
+                    f"{presence.name} uses web features but runtime is not connected"
+                )
         while not self.stop_event.is_set():
             time.sleep(presence.update_interval)
             presence.on_update(runtime=self.runtime)
@@ -122,13 +123,10 @@ class Manager:
         """
         Run the runtime in a thread.
         """
-        self.log.info(f"Starting runtime thread with interval {self.runtimeInterval}")
+        self.log.info(f"Runtime thread started (interval: {self.runtime_interval}s)")
         while not self.stop_event.is_set():
             time.sleep(self.runtime_interval)
-            try:
-                self.runtime.update()
-            except Exception:
-                self.log.warning("Failed to update runtime")
+            self.runtime.update()
 
     def __main_thread(self) -> None:
         """
