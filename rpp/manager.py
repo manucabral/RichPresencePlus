@@ -109,6 +109,7 @@ class Manager:
         """
         Run the presence in a thread.
         """
+        presence.on_load()
         if presence.web:
             if not self.web_enabled:
                 self.web_enabled = True
@@ -116,7 +117,6 @@ class Manager:
                 self.log.warning(
                     f"{presence.name} uses web features but runtime is not connected"
                 )
-        presence.on_load()
         while not self.stop_event.is_set() and presence.running:
             time.sleep(presence.update_interval)
             presence.on_update(runtime=self.runtime)
@@ -127,7 +127,11 @@ class Manager:
         """
         self.log.info(f"Runtime thread started (interval: {self.runtime_interval}s)")
         self.runtime.running = True
-        while not self.stop_event.is_set() and self.runtime.connected and self.runtime.running:
+        while (
+            not self.stop_event.is_set()
+            and self.runtime.connected
+            and self.runtime.running
+        ):
             time.sleep(self.runtime_interval)
             self.runtime.update()
         self.runtime.running = False
@@ -148,7 +152,7 @@ class Manager:
         Run all presences.
         """
         for presence in self.presences:
-            presence.on_load()
+            presence.running = True
             self.executor.submit(self.__presence_thread, presence)
         self.executor.submit(self.__main_thread)
         self.log.info("Presences started.")
