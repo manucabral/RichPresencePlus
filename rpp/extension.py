@@ -79,10 +79,7 @@ def extension(cls: Presence) -> Presence:
             except Exception as exc:
                 self.log.error(f"Failed to load metadata: {exc}")
 
-        def on_load(self) -> None:
-            """
-            Called when the presence is loaded.
-            """
+        def prepare(self) -> None:
             if self.metadata_file:
                 self.__load_metadata()
             self.log.info("Loaded.")
@@ -90,6 +87,10 @@ def extension(cls: Presence) -> Presence:
             if self.dev_mode:
                 return
 
+        def on_load(self) -> None:
+            """
+            Called when the presence is loaded.
+            """
             try:
                 self.__rpc = pypresence.Presence(self.client_id)
                 self.__rpc.connect()
