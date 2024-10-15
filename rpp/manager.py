@@ -13,6 +13,7 @@ from .constants import Constants
 from .logger import get_logger, RPPLogger
 from .presence import Presence
 from .runtime import Runtime
+from .hash import dir_md5
 
 
 class Manager:
@@ -39,6 +40,7 @@ class Manager:
         )
         self.stop_event: threading.Event = threading.Event()
         self.presences: typing.List[Presence] = []
+        self.md5: typing.Dict[str, str] = {}
         self.presence_to_stop: typing.Optional[Presence] = None
 
         self.check_folder(presences_folder)
@@ -82,6 +84,7 @@ class Manager:
             if self.checkRestrictedModules(module):
                 return
             """
+            self.md5[root.split(os.sep)[-1]] = dir_md5(root)
             for attr in dir(module):
                 obj = getattr(module, attr)
                 if (
