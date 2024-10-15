@@ -8,12 +8,14 @@ import typing
 import importlib.util
 import threading
 import concurrent.futures
+import tempfile
+import filecmp
 import time
 from .constants import Constants
 from .logger import get_logger, RPPLogger
 from .presence import Presence
 from .runtime import Runtime
-from .hash import dir_md5
+from .utils import download_github_folder, exist_github_folder
 
 
 class Manager:
@@ -40,7 +42,6 @@ class Manager:
         )
         self.stop_event: threading.Event = threading.Event()
         self.presences: typing.List[Presence] = []
-        self.md5: typing.Dict[str, str] = {}
         self.presence_to_stop: typing.Optional[Presence] = None
 
         self.check_folder(presences_folder)
@@ -74,6 +75,15 @@ class Manager:
         module_name = file[:-3]
         relative_path = os.path.relpath(root, self.folder)
         module_path = os.path.join(relative_path, module_name).replace(os.sep, ".")
+        folder_name = os.path.basename(root)
+        if not self.dev_mode:
+            if not exist_github_folder(
+                Constants.PRESENCES_ENPOINT.format(presence_name=folder_name)
+            ):
+                self.log.warning(
+                    f"Presence {folder_name} not found in remote repository."
+                )
+                return
         try:
             spec = importlib.util.find_spec(module_path)
             if spec is None:
@@ -84,7 +94,6 @@ class Manager:
             if self.checkRestrictedModules(module):
                 return
             """
-            self.md5[root.split(os.sep)[-1]] = dir_md5(root)
             for attr in dir(module):
                 obj = getattr(module, attr)
                 if (
@@ -106,6 +115,10 @@ class Manager:
         Stop all presences.
         """
         for presence in self.presences:
+            if not presence.running:
+                continue
+            if not presence.enabled:
+                continue
             presence.on_close()
 
     def __presence_thread(self, presence: Presence) -> None:
@@ -150,11 +163,46 @@ class Manager:
                     presence.update()
         self.stop_presences()
 
+    def compare(self) -> None:
+        """
+        Compare the presences with the remote repository.
+        If a difference is found, the presence is disabled.
+        """
+        if not self.presences:
+            self.log.error("No presences loaded.")
+            return
+        if self.dev_mode:
+            self.log.info("Skipping comparison in dev mode.")
+            return
+        with tempfile.TemporaryDirectory(prefix="rpp_", delete=False) as tempdir:
+            self.log.info(f"Temp directory: {tempdir}")
+            for presence in self.presences:
+                if not presence.enabled:
+                    continue
+                try:
+                    self.log.info(f"Comparing {presence.name}...")
+                    download_github_folder(
+                        Constants.PRESENCES_ENPOINT.format(presence_name=presence.name),
+                        os.path.join(tempdir, presence.name),
+                    )
+                    if filecmp.dircmp(
+                        presence.path, os.path.join(tempdir, presence.name)
+                    ).diff_files:
+                        self.log.info(f"Inconsistency found in {presence.name}.")
+                        self.log.info(f"Please update {presence.name}.")
+                        presence.enabled = False
+                        break
+                except Exception as exc:
+                    self.log.error(f"Comparing {presence.name}: {exc}")
+                    continue
+
     def run_presences(self) -> None:
         """
         Run all presences.
         """
         for presence in self.presences:
+            if not presence.enabled:
+                continue
             presence.running = True
             self.executor.submit(self.__presence_thread, presence)
         self.executor.submit(self.__main_thread)
@@ -170,6 +218,12 @@ class Manager:
         """
         Run a presence.
         """
+        if not presence.enabled:
+            self.log.error(f"{presence.name} is not enabled.")
+            return
+        if presence.running:
+            self.log.warning(f"{presence.name} already running.")
+            return
         self.executor.submit(self.__presence_thread, presence)
 
     def run_runtime(self) -> None:
