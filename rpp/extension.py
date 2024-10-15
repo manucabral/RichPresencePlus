@@ -91,6 +91,8 @@ def extension(cls: Presence) -> Presence:
             """
             Called when the presence is loaded.
             """
+            if self.dev_mode:
+                return
             try:
                 self.__rpc = pypresence.Presence(self.client_id)
                 self.__rpc.connect()
@@ -122,7 +124,7 @@ def extension(cls: Presence) -> Presence:
             """
             Force the presence to update.
             """
-            if self.devMode:
+            if self.dev_mode:
                 return
             if not self.last_update:
                 self.last_update = time.time()
