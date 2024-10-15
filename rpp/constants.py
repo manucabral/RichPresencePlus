@@ -10,6 +10,7 @@ class Constants:
 
     MAX_PRESENCES = 10
     PRESENCES_FOLDER = "presences"
+    PRESENCES_ENPOINT = "https://api.github.com/repos/manucabral/RichPresencePlus/contents/presences/{presence_name}"
     RUNTIME_INTERVAL = 1
     PRESENCE_INTERVAL = 15
     DEV_MODE = True
