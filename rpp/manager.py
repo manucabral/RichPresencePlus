@@ -116,19 +116,21 @@ class Manager:
                 self.log.warning(
                     f"{presence.name} uses web features but runtime is not connected"
                 )
+        presence.on_load()
         while not self.stop_event.is_set() and presence.running:
             time.sleep(presence.update_interval)
             presence.on_update(runtime=self.runtime)
-            print("Presence updated", presence.running)
 
     def __runtime_thread(self) -> None:
         """
         Run the runtime in a thread.
         """
         self.log.info(f"Runtime thread started (interval: {self.runtime_interval}s)")
-        while not self.stop_event.is_set():
+        self.runtime.running = True
+        while not self.stop_event.is_set() and self.runtime.connected and self.runtime.running:
             time.sleep(self.runtime_interval)
             self.runtime.update()
+        self.runtime.running = False
 
     def __main_thread(self) -> None:
         """
@@ -151,12 +153,32 @@ class Manager:
         self.executor.submit(self.__main_thread)
         self.log.info("Presences started.")
 
+    def run_main(self) -> None:
+        """
+        Run the main thread.
+        """
+        self.executor.submit(self.__main_thread)
+
     def run_presence(self, presence: Presence) -> None:
         """
         Run a presence.
         """
-        presence.on_load()
         self.executor.submit(self.__presence_thread, presence)
+
+    def run_runtime(self) -> None:
+        """
+        Run the runtime.
+        """
+        if not self.runtime:
+            self.log.error("No runtime loaded.")
+            return
+        if self.runtime.running:
+            self.log.warning("Runtime already running.")
+            return
+        if not self.runtime.connected:
+            self.log.warning("Skipping runtime thread, not connected.")
+            return
+        self.executor.submit(self.__runtime_thread)
 
     def start(self) -> None:
         """
@@ -168,8 +190,8 @@ class Manager:
 
         try:
             self.run_presences()
-            if self.runtime.connected and self.web_enabled:
-                self.executor.submit(self.__runtime_thread)
+            if self.web_enabled:
+                self.run_runtime()
             while not self.stop_event.is_set():
                 time.sleep(0.1)
         except KeyboardInterrupt:
