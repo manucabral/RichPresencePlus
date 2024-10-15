@@ -1,3 +1,8 @@
+<p align="center">
+<img src="https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/assets/logo.svg?raw=true" width="250" title="RichPresencePlusLogo">
+</p>
+
+
 <h1 align="center">Rich Presence Plus</h1>
 <p align="center">
 A simple Discord Rich Presence application manager for custom desktop or web statuses.
