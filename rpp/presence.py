@@ -19,11 +19,13 @@ class Presence(ABC):
         self.version = "1.0.0"
         self.web = False
         self.enabled = True
+        self.running = False
         self.update_interval = 3
         self.metadata_file = metadata_file
         self.dev_mode = True
         self.client_id = None
         self.log = None
+        self.path = None
 
         # Presence data
         self.title = None
