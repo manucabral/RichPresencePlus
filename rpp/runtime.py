@@ -34,6 +34,7 @@ class Runtime:
         self.port: int = port
         self.data: list[Tab] = []
         self.connected: bool = False
+        self.running: bool = False
         self.log: RPPLogger = get_logger("Runtime")
         self.update()
 
