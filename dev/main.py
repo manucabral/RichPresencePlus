@@ -14,6 +14,7 @@ __license__ = "MIT"
 
 import argparse
 import time
+import sys
 import rpp
 
 
@@ -117,3 +118,6 @@ if __name__ == "__main__":
     )
     manager.load()
     manager.start()
+
+    input("Press Enter to continue...")
+    sys.exit(0)
