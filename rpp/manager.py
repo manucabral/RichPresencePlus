@@ -39,6 +39,7 @@ class Manager:
         )
         self.stop_event: threading.Event = threading.Event()
         self.presences: typing.List[Presence] = []
+        self.presence_to_stop: typing.Optional[Presence] = None
 
         self.check_folder(presences_folder)
 
@@ -115,9 +116,10 @@ class Manager:
                 self.log.warning(
                     f"{presence.name} uses web features but runtime is not connected"
                 )
-        while not self.stop_event.is_set():
+        while not self.stop_event.is_set() and presence.running:
             time.sleep(presence.update_interval)
             presence.on_update(runtime=self.runtime)
+            print("Presence updated", presence.running)
 
     def __runtime_thread(self) -> None:
         """
@@ -135,7 +137,8 @@ class Manager:
         while not self.stop_event.is_set():
             time.sleep(self.presence_interval)
             for presence in self.presences:
-                presence.update()
+                if presence.running:
+                    presence.update()
         self.stop_presences()
 
     def run_presences(self) -> None:
@@ -147,6 +150,13 @@ class Manager:
             self.executor.submit(self.__presence_thread, presence)
         self.executor.submit(self.__main_thread)
         self.log.info("Presences started.")
+
+    def run_presence(self, presence: Presence) -> None:
+        """
+        Run a presence.
+        """
+        presence.on_load()
+        self.executor.submit(self.__presence_thread, presence)
 
     def start(self) -> None:
         """
