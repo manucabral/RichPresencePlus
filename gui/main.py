@@ -1,306 +1,359 @@
 """
-Beta version of the GUI. 
+Easy-to-use GUI for RichPresencePlus.
 """
-import os
-import yaml
-import rpp
+
 import customtkinter
 import CTkMessagebox as CTkMb
+import rpp
 
 
-# need to be moved to rpp.utils
-def connect_runtime() -> rpp.Runtime:
+class ScrollableFrame(customtkinter.CTkScrollableFrame):
     """
-    Connect to the browser.
-    """
-    runtime = rpp.Runtime()
-    res = runtime.connect()
-    if not res:
-        CTkMb.CTkMessagebox(
-            icon="warning",
-            title="Browser connection",
-            message="Unable to connect to the browser. Please, make sure that you have the browser closed completely to use web presences.",
-            option_1="Ok",
-        )
-    return runtime
-
-
-# need to be moved to rpp.utils
-def load_local_presences(uses_browser: bool = True) -> list:
-    presences = []
-    for file in rpp.utils.list_dir("presences"):
-        subdir = os.path.join("presences", file)
-        if not rpp.utils.is_dir(subdir):
-            continue
-        files = rpp.utils.list_dir(subdir)
-        if "metadata.yml" not in files or "main.py" not in files:
-            rpp.log(
-                f"Skipping {file} because it is not a valid presence.", level="WARNING"
-            )
-            continue
-        with open(os.path.join(subdir, "metadata.yml")) as _file:
-            metadata = yaml.safe_load(_file)
-        metadata["path"] = subdir
-        presence = rpp.Presence(**metadata)
-        if presence.metadata["use_browser"] and not uses_browser:
-            presence.enabled = False
-            rpp.log(
-                f"Skipping {presence.metadata['name']} because the browser is not running.",
-                level="WARNING",
-            )
-            continue
-        presences.append(presence)
-
-    rpp.log(f"Loaded {len(presences)} presences.")
-    return presences
-
-
-# TODO: need to be moved to rpp.utils
-def validate_local_presences() -> list:
-    pass
-
-
-class ScrollableSwitchFrame(customtkinter.CTkScrollableFrame):
-    """
-    Frame with a scrollable area and switches.
+    Scrollable frame.
     """
 
     def __init__(self, master, command=None, **kwargs):
         """
-        Initialize the frame.
+        Initialize the scrollable frame.
         """
         super().__init__(master, **kwargs)
+        self.command = command
+        self.switches: list[customtkinter.CTkSwitch] = []
 
-        self.__command = command
+        self.configure_grid()
+
+        self.label = customtkinter.CTkLabel(self, text="Presences", font=("Arial", 20))
+        self.label.grid(row=0, column=0, sticky="ew", pady=(0, 10))
+    
+    def configure_grid(self):
+        """
+        Configure the grid.
+        """
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
-        title_lb = customtkinter.CTkLabel(
-            master=self, text="Presences", font=("Arial", 20)
-        )
-        title_lb.grid(row=0, column=0, sticky="ew", pady=(0, 10))
-        self.__switches = []
 
     def add_item(self, item: str):
         """
-        Add a switch to the frame.
+        Add a presence to the list.
         """
-        switch = customtkinter.CTkSwitch(master=self, text=item)
-        if self.__command is not None:
-            switch.configure(command=lambda: self.__command(item, switch.get()))
-        switch.grid(row=2 + len(self.__switches), column=0, pady=(0, 10))
-        self.__switches.append(switch)
+        switch = customtkinter.CTkSwitch(master=self, text=item, font=("Arial", 16))
+        if self.command is not None:
+            switch.configure(command=lambda: self.command(item, switch.get()))
+        switch.grid(row=2 + len(self.switches), column=0, pady=(0, 10))
+        self.switches.append(switch)
 
     def clear(self):
         """
         Clear all switches.
         """
-        for switch in self.__switches:
+        for switch in self.switches:
             switch.destroy()
-        self.__switches.clear()
+        self.switches.clear()
+
+    def change_switch_state(self, item: str, state: bool):
+        """
+        Change the state of a switch.
+        """
+        for switch in self.switches:
+            if switch.cget("text") == item:
+                switch.select() if state else switch.deselect()
+                break
 
     def get_switches_states(self):
-        return [switch.get() for switch in self.__switches]
+        """
+        Get the states of all switches.
+        """
+        return [switch.get() for switch in self.switches]
 
     def get_items(self):
-        return [switch.text for switch in self.__switches]
+        """
+        Get all items.
+        """
+        return [switch.text for switch in self.switches]
 
 
 class App(customtkinter.CTk):
     """
-    Main app.
+    Main application.
     """
 
-    __slots__ = ("__runtime", "__presences", "scrollable_frame", "reload_btn")
+    def __init__(
+        self, manager: rpp.Manager, runtime: rpp.Runtime, browser: rpp.Browser
+    ):
+        """
+        Initialize the application.
 
-    def __init__(self):
+        """
         super().__init__()
-        self.__configure_window()
-        self.__configure_grid()
-        self.__presences = []
-        self.__runtime = connect_runtime()
-        self.scrollable_frame = ScrollableSwitchFrame(
-            master=self,
-            command=self.on_switch_change,
-        )
-        self.scrollable_frame.grid(row=0, column=0, sticky="ns")
-        self.__configure_buttons_frame()
 
-        self.runtime_lb = customtkinter.CTkLabel(master=self, text="Hello World")
-        self.runtime_lb.grid(row=1, column=0, sticky="ew", pady=(0, 10))
-        self.__update_runtime_label()
+        self.manager: rpp.Manager = manager
+        self.runtime: rpp.Runtime = runtime
+        self.browser: rpp.Browser = browser
+        self.log: rpp.RPPLogger = rpp.get_logger("Interface")
+
+        self.configure_window()
+        self.configure_grid()
+
+        self.scrollable_frame = ScrollableFrame(self, command=self.on_switch_change)
+        self.scrollable_frame.grid(row=0, column=0, sticky="nsew")
+
+        self.configure_frame_buttons()
+
+
+        self.runtime_label = customtkinter.CTkLabel(master=self, text="Loading...", font=("Arial", 16))
+        self.runtime_label.grid(row=1, column=0, sticky="ew", pady=(0, 10))
+        self.update_runtime_label()
 
         self.version_lb = customtkinter.CTkLabel(
-            master=self, text=f"v{rpp.__version__}"
+            master=self, text=f"Using v{rpp.__version__}"
         )
         self.version_lb.grid(row=1, column=1, sticky="ew", pady=(0, 10))
 
         self.load_presences()
 
-    def __configure_window(self):
+    def configure_window(self):
         """
         Configure the window.
         """
         self.title(rpp.__title__)
         self.geometry("400x300")
-        customtkinter.set_appearance_mode("dark")
-        # customtkinter.set_default_color_theme("blue")
+        self.resizable(False, False)
+        self.iconbitmap("logo.ico")
+        customtkinter.set_appearance_mode("System")
+        customtkinter.set_default_color_theme("green")
 
-    def __configure_grid(self):
+    def configure_grid(self):
+        """
+        Configure the grid.
+        """
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
 
-    def __configure_buttons_frame(self):
-        buttons_frame = customtkinter.CTkFrame(master=self)
+    def configure_frame_buttons(self):
+        """
+        Configure the buttons.
+        """
+        buttons_frame = customtkinter.CTkFrame(self)
         buttons_frame.grid(row=0, column=1, sticky="ns")
 
-        config_lb = customtkinter.CTkLabel(
-            master=buttons_frame, text="Configuration", font=("Arial", 16)
+        frame_title = customtkinter.CTkLabel(
+            buttons_frame, text="Settings", font=("Arial", 20)
         )
-        config_lb.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
+        frame_title.grid(row=0, column=0, columnspan=2, sticky="ew", pady=(0, 10))
 
         # buttons
-        self.reload_btn = customtkinter.CTkButton(
-            master=buttons_frame, text="Reload presences", command=self.reload_presences
+        self.reload_button = customtkinter.CTkButton(
+            master=buttons_frame, text="Reload", command=self.on_reload_presences, font=("Arial", 16)
         )
-        self.reload_btn.grid(row=2, column=0, sticky="ew", pady=(0, 10))
+        self.reload_button.grid(row=2, column=0, sticky="ew", pady=(0, 10))
 
-        text = (
-            "Connect to browser"
-            if not self.__runtime.connected
-            else "Reconnect to browser"
+        # browser buttons
+        self.open_browser_button = customtkinter.CTkButton(
+            master=buttons_frame,
+            text="Open browser",
+            command=self.on_browser_open,
+            font=("Arial", 16),
         )
-        self.runtime_btn = customtkinter.CTkButton(
-            master=buttons_frame, text=text, command=self.on_runtime_connect
-        )
-        self.runtime_btn.grid(row=3, column=0, sticky="ew", pady=(0, 10))
+        self.open_browser_button.grid(row=3, column=0, sticky="ew", pady=(0, 10))
 
-        """
-        self.exit_btn = customtkinter.CTkButton(master=buttons_frame, text="Exit")
-        self.exit_btn.grid(row=4, column=0, sticky="ew")
-        """
-
-    def __update_runtime_label(self):
-        """
-        Update the runtime label.
-        """
-        text = "Browser"
-        text += " connected" if self.__runtime.connected else " disconnected"
-        self.runtime_lb.configure(text=text)
-        self.runtime_btn.configure(
-            text="Reconnect to browser"
-            if self.__runtime.connected
-            else "Connect to browser"
+        self.close_browser_button = customtkinter.CTkButton(
+            master=buttons_frame,
+            text="Close browser",
+            command=self.on_browser_close,
+            font=("Arial", 16),
         )
+        self.close_browser_button.grid(row=4, column=0, sticky="ew", pady=(0, 10))
 
-    def reload_presences(self):
-        """
-        Reload presences.
-        """
-        for presence in self.__presences:
-            if presence.enabled:
-                msg = f"Please, disable {presence.metadata['name']} before reloading."
-                CTkMb.CTkMessagebox(
-                    icon="warning",
-                    title="Reload presences",
-                    message=msg,
-                    option_1="Ok",
-                )
-                return
-        self.__presences.clear()
-        self.scrollable_frame.clear()
-        self.reload_btn.configure(state="disabled")
-        self.load_presences()
-        self.reload_btn.configure(state="normal")
-        CTkMb.CTkMessagebox(
-            icon="info",
-            title="Reload presences",
-            message="Presences reloaded successfully.",
-            option_1="Ok",
+        # runtime
+        self.runtime_button = customtkinter.CTkButton(
+            master=buttons_frame,
+            text="Connect",
+            command=self.on_runtime_connect,
+            font=("Arial", 16),
         )
+        self.runtime_button.grid(row=5, column=0, sticky="ew", pady=(0, 10))
 
     def load_presences(self):
         """
-        Reload presences.
+        Load the presences.
         """
-        self.__presences = load_local_presences(self.__runtime.connected)
-        for presence in self.__presences:
-            if self.__runtime.connected and presence.metadata["use_browser"]:
-                presence.runtime = self.__runtime
+        self.log.info("Loading presences...")
+        self.manager.load()
+        for presence in self.manager.presences:
             self.scrollable_frame.add_item(presence.name)
 
-    def get_presence(self, name: str) -> rpp.Presence:
+    def on_reload_presences(self):
         """
-        Return a presence by its name.
+        Handle presence reload.
         """
-        for presence in self.__presences:
-            if presence.name == name:
-                return presence
-        return None
+        for presence in self.manager.presences:
+            if presence.running:
+                message = CTkMb.CTkMessagebox(
+                    icon="warning",
+                    title="Presence running",
+                    message=f"{presence.name} is running. Please stop it first.",
+                    option_1="OK",
+                )
+                message.get()
+                return
+        self.manager.presences.clear()
+        self.scrollable_frame.clear()
+        self.load_presences()
+        message = CTkMb.CTkMessagebox(
+            icon="info",
+            title="Presences reloaded",
+            message="Presences reloaded successfully.",
+            option_1="OK",
+        )
+
+    def on_browser_open(self):
+        """
+        Handle browser open.
+        """
+        if self.browser.running():
+            message = CTkMb.CTkMessagebox(
+                icon="warning",
+                title="Browser already running",
+                message=f"{self.browser.name} ({self.browser.process}) is already running.",
+                option_1="OK",
+            )
+            message.get()
+            return
+        self.browser.start()
+        message = CTkMb.CTkMessagebox(
+            icon="info",
+            title="Browser opened",
+            message=f"{self.browser.name} ({self.browser.process}) opened.",
+            option_1="OK",
+        )
+        message.get()
+        self.update_runtime_label()
+
+    def on_browser_close(self):
+        """
+        Handle browser close.
+        """
+        if not self.browser.running():
+            message = CTkMb.CTkMessagebox(
+                icon="warning",
+                title="Browser not running",
+                message=f"{self.browser.name} ({self.browser.process}) is not running.",
+                option_1="OK",
+            )
+            message.get()
+            return
+        self.browser.kill()
+        message = CTkMb.CTkMessagebox(
+            icon="info",
+            title="Browser closed",
+            message=f"{self.browser.name} ({self.browser.process}) closed.",
+            option_1="OK",
+        )
+        message.get()
+        self.update_runtime_label()
 
     def on_runtime_connect(self):
-        tab = self.__runtime.current_tab
-        print(tab)
-        if tab is None:
-            self.__runtime = connect_runtime()
-            self.__update_runtime_label()
-            if self.__runtime.connected:
-                CTkMb.CTkMessagebox(
-                    icon="info",
-                    title="Browser connection",
-                    message="The browser has been connected successfully. Please, reload the presences.",
-                    option_1="Ok",
-                )
-        else:
-            CTkMb.CTkMessagebox(
-                icon="info",
-                title="Browser connection",
-                message="The browser is already connected.",
-                option_1="Ok",
-            )
-
-    def on_switch_change(self, name: str, state: bool):
         """
-        Called when a switch changes its state.
+        Handle runtime connect.
+        """
+        if self.runtime.connected:
+            message = CTkMb.CTkMessagebox(
+                icon="warning",
+                title="Runtime already connected",
+                message=f"Runtime is already connected to port {self.runtime.port}.",
+                option_1="OK",
+            )
+            message.get()
+            return
+        
+        self.runtime.update()
+        self.update_runtime_label()
+        if not self.runtime.connected:
+            message = CTkMb.CTkMessagebox(
+                icon="warning",
+                title="Runtime not connected",
+                message="Cannot connect to the browser.",
+                option_1="OK",
+            )
+            message.get()
+            return
+
+    def update_runtime_label(self):
+        """
+        Update the runtime label.
+        """
+        self.runtime.update()
+        temp = f"{browser.name} browser {'connected' if self.runtime.connected else 'disconnected'}"
+        self.runtime_label.configure(text=temp)
+        self.manager.run_runtime()
+
+    def on_switch_change(self, switch_name: str, state: bool):
+        """
+        Handle switch change.
         """
         target = None
-        for presence in self.__presences:
-            if presence.name == name:
+        for presence in self.manager.presences:
+            if presence.name == switch_name:
                 target = presence
+                break
         if target is None:
-            rpp.log(f"Presence {name} not found.", level="WARNING")
+            manager.log.info(f"Presence {switch_name} not found.")
             return
         if state:
-            target.enabled = True
-            target.start()
-            target.connect()
+            target.prepare()
+            if not self.runtime.connected and target.web:
+                message = CTkMb.CTkMessagebox(
+                    icon="warning",
+                    title="Connection required",
+                    message=f"{target.name} requires connection to the browser. Please connect first.",
+                    option_1="OK",
+                )
+                message.get()
+                self.scrollable_frame.change_switch_state(target.name, False)
+                return
+            target.running = True
+            self.manager.run_presence(target)
             return
-        rpp.log(f"Stopping {name}...")
-        target.stop()
-        target.enabled = False
-        print(target.enabled)
+        target.running = False
+        target.on_close()
+        self.log.info(f"Presence {target.name} closed.")
 
-    def on_exit(self):
+    def on_exit(self) -> None:
         """
         Called when the app is closed.
         """
-        result = CTkMb.CTkMessagebox(
+        for presence in self.manager.presences:
+            if presence.running:
+                message = CTkMb.CTkMessagebox(
+                    icon="warning",
+                    title="Presence running",
+                    message=f"{presence.name} is running. Please stop it first.",
+                    option_1="OK",
+                )
+                message.get()
+                return
+        message = CTkMb.CTkMessagebox(
             icon="question",
             title="Exit",
             message="Are you sure you want to exit?",
             option_1="Yes",
             option_2="No",
         )
-        if result == "No":
+        
+        result: str = message.get()
+        if result.lower() == "no":
             return
-        for presence in self.__presences:
-            if not presence.enabled:
-                continue
-            presence.stop()
+        self.manager.stop_event.set()
         self.destroy()
 
 
 if __name__ == "__main__":
-    app = App()
+    browser = rpp.Browser()
+    runtime = rpp.Runtime(9222)
+    manager = rpp.Manager(runtime=runtime, dev_mode=False)
+    manager.run_main()
+    app = App(manager, runtime, browser)
     app.protocol("WM_DELETE_WINDOW", app.on_exit)
     app.mainloop()
