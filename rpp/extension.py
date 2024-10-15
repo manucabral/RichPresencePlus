@@ -116,7 +116,8 @@ def extension(cls: Presence) -> Presence:
             if self.dev_mode:
                 return
             try:
-                self.__rpc.close()
+                if self.__rpc:
+                    self.__rpc.close()
             except Exception as exc:
                 self.log.error(f"Failed to close connection to Discord: {exc}")
 
