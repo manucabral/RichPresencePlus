@@ -11,6 +11,10 @@ A simple Discord Rich Presence application manager for custom desktop or web sta
 Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 </p>
 
+<p align="center">
+<img src="https://github.com/manucabral/RichPresencePlus/blob/main/assets/demo.gif" width="550" title="RichPresencePlusDemo">
+</p>
+
 > [!IMPORTANT]  
 > Currently in the early development phase. Please take this into consideration.
 
