@@ -18,14 +18,23 @@ Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 > [!IMPORTANT]  
 > Currently in the early development phase. Please take this into consideration.
 
+> Only compatible with Microsoft Windows systems.
+
 # Features
 - Easy to use.
 - Support for multiple presences.
 - Compatibility with web and desktop presences.
 - Users can create custom presences.
 
+# Supported browsers
+Chromium base browsers (e.g. Chrome, Opera, Edge and more)
+> If you want support for another browser, create an [issue](https://github.com/manucabral/RichPresencePlus/issues).
+
+## Request a Presence
+If you'd like to propose a new presence to be added to the list, please [create an issue]()
+
 ## Presence Development
-> Coming soon: Documentation to help you create custom web o desktop presences.
+Please check the [development repository](https://github.com/manucabral/RichPresencePlusDev) to read the documentation and start coding your custom presence.
 
 ## Roadmap
 - Expand usable modules.
@@ -38,5 +47,4 @@ Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 - Enhance GUI design and optimization.
 > The listed items cover the most relevant aspects.
 
-## App Preview
-![image](https://github.com/manucabral/RichPresencePlus/assets/83357673/5c853dfd-f1fb-4fa2-8262-3b4fe7bfd7ec)
+
