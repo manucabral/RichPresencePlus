@@ -22,7 +22,6 @@ def generate_request(url: str, token: str = None) -> urllib.request.Request:
         urllib.request.Request: The request object.
     """
     headers = {}
-    log.info(token)
     if token:
         headers["Authorization"] = f"token {token}"
     return urllib.request.Request(url, headers=headers)

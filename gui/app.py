@@ -6,7 +6,7 @@ Contains the main application class.
 import customtkinter
 import CTkMessagebox as CTkMb
 import rpp
-from .scrollable_frame import ScrollableFrame
+import scrollable_frame
 
 
 class App(customtkinter.CTk):
@@ -37,7 +37,9 @@ class App(customtkinter.CTk):
         self.configure_grid()
         self.configure_presences_window()
 
-        self.scrollable_frame = ScrollableFrame(self, command=self.on_switch_change)
+        self.scrollable_frame = scrollable_frame.ScrollableFrame(
+            self, command=self.on_switch_change
+        )
         self.scrollable_frame.grid(row=0, column=0, sticky="nsew")
 
         self.configure_frame_buttons()
@@ -273,7 +275,7 @@ class App(customtkinter.CTk):
         Update the runtime label.
         """
         self.runtime.update()
-        temp = f"{browser.name} browser {'connected' if self.runtime.connected else 'disconnected'}"
+        temp = f"{self.browser.name} browser {'connected' if self.runtime.connected else 'disconnected'}"
         self.runtime_label.configure(text=temp)
         self.manager.run_runtime()
 
