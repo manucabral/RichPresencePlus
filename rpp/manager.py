@@ -15,7 +15,7 @@ from .constants import Constants
 from .logger import get_logger, RPPLogger
 from .presence import Presence
 from .runtime import Runtime
-from .utils import download_github_folder, exist_github_folder
+from .utils import download_github_folder, exist_github_folder, get_available_presences
 
 
 class Manager:
@@ -78,7 +78,8 @@ class Manager:
         folder_name = os.path.basename(root)
         if not self.dev_mode:
             if not exist_github_folder(
-                Constants.PRESENCES_ENPOINT.format(presence_name=folder_name)
+                Constants.PRESENCES_ENPOINT.format(presence_name=folder_name),
+                os.getenv("GITHUB_API_TOKEN"),
             ):
                 self.log.warning(
                     f"Presence {folder_name} not found in remote repository."
@@ -163,6 +164,55 @@ class Manager:
                     presence.update()
         self.stop_presences()
 
+    def download_presence(self, presence_name: str) -> None:
+        """
+        Download a presence from the remote repository.
+
+        Args:
+            presence_name (str): The presence name.
+        """
+        if self.dev_mode:
+            self.log.info("Skipping download in dev mode.")
+            return
+        for presence in self.presences:
+            if presence.name == presence_name:
+                self.log.warning(f"Presence {presence_name} already downloaded.")
+                return
+        try:
+            download_github_folder(
+                Constants.PRESENCES_ENPOINT.format(presence_name=presence_name),
+                os.path.join(self.folder, presence_name),
+                os.getenv("GITHUB_API_TOKEN"),
+            )
+            self.log.info(f"Presence {presence_name} downloaded.")
+        except Exception as exc:
+            self.log.error(f"Downloading {presence_name}: {exc}")
+
+    def remove_presence(self, presence_name: str) -> None:
+        """
+        Remove a presence.
+
+        Args:
+            presence_name (str): The presence name.
+        """
+        presence_path = os.path.join(self.folder, presence_name)
+        if not os.path.exists(presence_path):
+            self.log.error(f"Presence {presence_name} not found.")
+            return
+
+        for presence in self.presences:
+            if presence.name == presence_name and presence.running:
+                self.log.warning(f"Cannot remove running presence {presence_name}.")
+                return
+        try:
+            for root, _, files in os.walk(presence_path):
+                for file in files:
+                    os.remove(os.path.join(root, file))
+            os.rmdir(presence_path)
+            self.log.info(f"Presence {presence_name} removed.")
+        except Exception as exc:
+            self.log.error(f"Removing {presence_name}: {exc}")
+
     def compare(self) -> None:
         """
         Compare the presences with the remote repository.
@@ -174,7 +224,7 @@ class Manager:
         if self.dev_mode:
             self.log.info("Skipping comparison in dev mode.")
             return
-        with tempfile.TemporaryDirectory(prefix="rpp_", delete=False) as tempdir:
+        with tempfile.TemporaryDirectory(prefix="rpp_") as tempdir:
             self.log.info(f"Temp directory: {tempdir}")
             for presence in self.presences:
                 if not presence.enabled:
@@ -184,6 +234,7 @@ class Manager:
                     download_github_folder(
                         Constants.PRESENCES_ENPOINT.format(presence_name=presence.name),
                         os.path.join(tempdir, presence.name),
+                        os.getenv("GITHUB_API_TOKEN"),
                     )
                     if filecmp.dircmp(
                         presence.path, os.path.join(tempdir, presence.name)
@@ -195,6 +246,29 @@ class Manager:
                 except Exception as exc:
                     self.log.error(f"Comparing {presence.name}: {exc}")
                     continue
+
+    def sync_presences(self) -> typing.List[dict]:
+        """
+        Sync the presences with the remote repository.
+
+        Returns:
+            list[dict]: A list of synced presences.
+        """
+        remote_presences = get_available_presences(os.getenv("GITHUB_API_TOKEN"))
+        synced_presences = []
+        for presence in remote_presences:
+            installed = False
+            for local_presence in self.presences:
+                if presence == local_presence.name:
+                    installed = True
+                    break
+            synced_presences.append(
+                {
+                    "name": presence,
+                    "installed": installed,
+                }
+            )
+        return synced_presences
 
     def run_presences(self) -> None:
         """
