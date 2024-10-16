@@ -16,7 +16,7 @@ build_exe_options = {
 }
 
 executables = [
-    Executable("app.py", base=base, icon="logo.ico", target_name=rpp.__title__)
+    Executable("main.py", base=base, icon="logo.ico", target_name=rpp.__title__)
 ]
 
 setup(
