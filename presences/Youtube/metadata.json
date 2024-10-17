@@ -1,12 +1,12 @@
 {
     "name": "Youtube",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": {
         "en": "Shows the currently playing video on YouTube.",
         "pt-BR": "Mostra o vídeo atualmente sendo reproduzido no YouTube."
     },
     "clientId": 1113646725408772176,
-    "updateInterval": 3,
+    "updateInterval": 5,
     "author": "manucabral",
     "contributors": [],
     "web": true,

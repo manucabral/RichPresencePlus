@@ -1,6 +1,6 @@
 import time
 import enum
-from rpp import extension, Presence, Runtime, Tab
+from rpp import extension, Presence, Runtime, Tab, ActivityType
 
 
 class Query(enum.Enum):
@@ -152,20 +152,15 @@ class Youtube(Presence):
         ]
         self.log.info(f"Updating video: {videoTitle}, url: {self.tab.url}")
 
-    def handleTab(self, lastTab: Tab):
-        pass
-
-    def force_update(self):
-        pass
-
     def handleBrowsing(self):
         self.state = "Browsing..."
         self.details = "Idle"
         self.large_image = self.logo
 
     def on_load(self):
-        self.state = "Watching YouTube"
+        self.state = "Initializing..."
         self.details = "Idle"
+        self.activity_type = ActivityType.WATCHING
         self.large_image = self.logo
         self.log.info("Started successfully")
 
