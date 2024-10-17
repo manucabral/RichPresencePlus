@@ -3,6 +3,7 @@ Core application GUI.
 Contains the main application class.
 """
 
+import sys
 import customtkinter
 import CTkMessagebox as CTkMb
 import rpp
@@ -366,7 +367,7 @@ class App(customtkinter.CTk):
                 target = presence
                 break
         if target is None:
-            manager.log.info(f"Presence {switch_name} not found.")
+            self.log.info(f"Presence {switch_name} not found.")
             return
         if state:
             target.prepare()
@@ -413,5 +414,11 @@ class App(customtkinter.CTk):
         if result.lower() == "no":
             return
         self.manager.stop_event.set()
+        try:
+            self.manager.runtime.running = False
+            self.manager.executor.shutdown()
+        except Exception as exc:
+            self.log.error(f"Error stopping: {exc}")
         self.destroy()
         self.quit()
+        sys.exit(0)
