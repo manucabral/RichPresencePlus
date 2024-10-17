@@ -4,6 +4,7 @@ Easy-to-use GUI for RichPresencePlus.
 
 import rpp
 import app
+import logging
 
 if __name__ == "__main__":
     rpp.load_env()
@@ -14,6 +15,7 @@ if __name__ == "__main__":
         "your_github_api_token_here"
     )
     """
+    logging.getLogger("PIL.PngImagePlugin").setLevel(logging.INFO)
     browser = rpp.Browser()
     runtime = rpp.Runtime(9222)
     manager = rpp.Manager(runtime=runtime, dev_mode=False)
