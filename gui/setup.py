@@ -11,8 +11,11 @@ build_exe_options = {
         "rpp.Runtime",
         "rpp.Presence",
         "rpp.Browser",
+        "rpp.ClientRPC",
+        "rpp.get_available_presences",
+        "rpp.load_env",
     ],
-    "packages": ["websocket", "presences", "pypresence"],
+    "packages": ["websocket", "presences"],
 }
 
 executables = [
