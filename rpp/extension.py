@@ -5,13 +5,7 @@ This module provides a decorator to extend the base class of the presence for cr
 import rpp
 import json
 import time
-
-try:
-    import pypresence
-except ImportError:
-    # that means dev mode is enabled
-    pypresence = None
-
+from .rpc import ClientRPC
 from .constants import Constants
 from .presence import Presence
 from .logger import get_logger
@@ -70,22 +64,24 @@ def extension(cls: Presence) -> Presence:
             try:
                 with open(self.path + "/metadata.json", "r", encoding="utf-8") as file:
                     metadata = json.load(file)
-                    self.client_id = metadata.get("clientId")
+                    self.client_id = str(metadata.get("clientId"))
                     self.name = metadata.get("name", self.name)
                     self.author = metadata.get("author", "Unknown")
                     self.web = metadata.get("web", False)
+                    self.version = metadata.get("version", None)
                     self.update_interval = metadata.get("updateInterval", 3)
                     self.info()
             except Exception as exc:
                 self.log.error(f"Failed to load metadata: {exc}")
 
         def prepare(self) -> None:
+            """
+            Prepare the presence.
+            Load the metadata if necessary.
+            """
             if self.metadata_file:
                 self.__load_metadata()
             self.log.info("Loaded.")
-
-            if self.dev_mode:
-                return
 
         def on_load(self) -> None:
             """
@@ -94,7 +90,7 @@ def extension(cls: Presence) -> Presence:
             if self.dev_mode:
                 return
             try:
-                self.__rpc = pypresence.Presence(self.client_id)
+                self.__rpc = ClientRPC(client_id=self.client_id)
                 self.__rpc.connect()
             except Exception as exc:
                 self.log.error(f"Failed to connect to Discord: {exc}")
@@ -145,9 +141,9 @@ def extension(cls: Presence) -> Presence:
             self.log.debug(f"Updating")
             try:
                 self.large_text = f"{rpp.__title__} v{rpp.__version__}"
-                if len(self.details) > 128:
+                if self.details and len(self.details) > 128:
                     self.details = self.details[:125] + "..."
-                if len(self.state) > 128:
+                if self.state and len(self.state) > 128:
                     self.state = self.state[:125] + "..."
                 self.__rpc.update(
                     state=self.state,
@@ -156,8 +152,9 @@ def extension(cls: Presence) -> Presence:
                     large_text=self.large_text,
                     small_image=self.small_image,
                     small_text=self.small_text,
-                    start=self.start,
-                    end=self.end,
+                    activity_type=self.activity_type,
+                    start_time=self.start,
+                    end_time=self.end,
                     buttons=[
                         {
                             "label": "Download App",
