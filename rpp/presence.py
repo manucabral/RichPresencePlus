@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from .rpc import ActivityType
 
 
 class Presence(ABC):
@@ -14,29 +15,32 @@ class Presence(ABC):
             metadata_file (bool): Whether the presence is being loaded from a metadata (json) file.
 
         """
-        self.name = None
-        self.author = "Unknown"
-        self.version = "1.0.0"
-        self.web = False
-        self.enabled = True
-        self.running = False
-        self.update_interval = 3
-        self.metadata_file = metadata_file
-        self.dev_mode = True
-        self.client_id = None
+        self.client_id: str = None
+        self.name: str = None
+        self.author: str = None
+        self.version: str = None
+        self.web: bool = False
+        self.enabled: bool = True
+        self.running: bool = False
+        self.update_interval: int = 3
+
+        # Internal variables
+        self.metadata_file: bool = metadata_file
+        self.dev_mode: bool = False
+        self.path: str = None
         self.log = None
-        self.path = None
 
         # Presence data
-        self.title = None
-        self.details = None
-        self.state = None
-        self.large_image = None
-        self.small_image = None
-        self.small_text = "Rich Presence Plus"
-        self.buttons = None
-        self.start = None
-        self.end = None
+        self.title: str = None
+        self.details: str = None
+        self.state: str = None
+        self.large_image: str = None
+        self.small_image: str = None
+        self.small_text: str = "Rich Presence Plus"
+        self.activity_type: ActivityType = ActivityType.PLAYING
+        self.buttons: list = None
+        self.start: int = None
+        self.end: int = None
 
     @abstractmethod
     def on_load(self) -> None:
@@ -65,7 +69,6 @@ class Presence(ABC):
         """
         pass
 
-    @abstractmethod
     def force_update(self):
         """
         Force update the presence.
