@@ -3,7 +3,7 @@
 </p>
 
 
-<h1 align="center">Rich Presence Plus</h1>
+<h1 align="center">Discord Rich Presence Plus</h1>
 <p align="center">
 A simple Discord Rich Presence application manager for custom desktop or web statuses.
 </p>
