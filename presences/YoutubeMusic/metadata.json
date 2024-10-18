@@ -1,0 +1,19 @@
+{
+    "name": "YoutubeMusic",
+    "version": "1.0.0",
+    "description": {
+        "en": "Shows what you're listening to on YouTube Music.",
+        "pt-BR": "Mostra o que você está ouvindo no YouTube Music."
+    },
+    "clientId": 828083725790609459,
+    "updateInterval": 5,
+    "author": "manucabral",
+    "contributors": [],
+    "web": true,
+    "category": "Media",
+    "color": "#A56786",
+    "tags": [
+        "music",
+        "media"
+    ]
+}
