@@ -155,12 +155,16 @@ def extension(cls: Presence) -> Presence:
                     activity_type=self.activity_type,
                     start_time=self.start,
                     end_time=self.end,
-                    buttons=[
-                        {
-                            "label": "Download App",
-                            "url": "https://github.com/manucabral/RichPresencePlus",
-                        },
-                    ],
+                    buttons=(
+                        [
+                            {
+                                "label": "Download App",
+                                "url": "https://github.com/manucabral/RichPresencePlus/releases",
+                            },
+                        ]
+                        if not self.buttons
+                        else self.buttons
+                    ),
                 )
                 self.last_update = time.time()
             except Exception as exc:
