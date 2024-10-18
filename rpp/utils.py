@@ -120,3 +120,21 @@ def load_env() -> None:
         log.warning("No .env file found.")
     except Exception as exc:
         log.error(f"Failed to load .env file: {exc}")
+
+
+def remove_none(d: dict) -> dict:
+    """
+    Remove None values from a dictionary
+    """
+
+    def clean_dict(d: dict) -> dict:
+        """
+        Clean the dictionary from None values
+        """
+        return {
+            k: clean_dict(v) if isinstance(v, dict) else v
+            for k, v in d.items()
+            if v is not None and (not isinstance(v, dict) or len(v) > 0)
+        }
+
+    return clean_dict(d)
