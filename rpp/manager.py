@@ -277,7 +277,10 @@ class Manager:
         for presence in self.presences:
             if not presence.enabled:
                 continue
+            if not self.web_enabled:
+                self.web_enabled = True
             presence.running = True
+            presence.prepare()
             self.executor.submit(self.__presence_thread, presence)
         self.executor.submit(self.__main_thread)
         self.log.info("Presences started.")
