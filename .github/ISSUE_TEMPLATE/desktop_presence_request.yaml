@@ -1,0 +1,57 @@
+name: Desktop Presence Request
+description: Request to add a new desktop presence
+labels: ["request", "desktop"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check if your request has already been made before submitting a new issue. If it has, kindly respond to the existing issue.
+  - type: textarea
+    id: software-description
+    attributes:
+      label: Software description
+      description: Please provide a description of the software.
+      placeholder: Remote access/control program
+    validations:
+      required: true
+  - type: input
+    id: software-name
+    attributes:
+      label: Software name
+      description: Please provide the name of the software.
+      placeholder: Teamviewer
+    validations:
+      required: true
+  - type: input
+    id: software-url
+    attributes:
+      label: Software URL
+      description: Please provide the oficial website URL of the software.
+      placeholder: https://www.teamviewer.com
+    validations:
+      required: true
+  - type: checkboxes
+    id: software-paid-service
+    attributes:
+      label: Paid service
+      description: Require a subscription or offer paid memberships for certain features.
+      options:
+        - label: "Yes"
+        - label: "No"
+  - type: checkboxes
+    id: software-restrictions
+    attributes:
+      label: Regional restrictions
+      description: Are there country-specific restrictions?
+      options:
+        - label: "Yes"
+        - label: "No"
+  - type: checkboxes
+    id: software-game
+    attributes:
+      label: Game
+      description: Is the software a game?
+      options:
+        - label: "Yes"
+        - label: "No"
