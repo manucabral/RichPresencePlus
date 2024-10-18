@@ -3,9 +3,9 @@
 </p>
 
 
-<h1 align="center">Discord Rich Presence Plus</h1>
+<h1 align="center">Rich Presence Plus</h1>
 <p align="center">
-A simple Discord Rich Presence application manager for custom desktop or web statuses.
+A simple Discord Rich Presence (Discord RPC) application manager for custom desktop or web services statuses.
 </p>
 <p align="center">
 Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
