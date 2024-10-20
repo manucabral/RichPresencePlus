@@ -36,6 +36,8 @@ class PhasmoReader:
             result = subprocess.run(
                 [
                     "powershell",
+                    "-WindowStyle",
+                    "Hidden",
                     "-Command",
                     f"Get-Process -Name phasmophobia -ErrorAction SilentlyContinue",
                 ],
