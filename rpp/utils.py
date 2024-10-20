@@ -5,6 +5,8 @@ Utility functions for the RPP package.
 import os
 import json
 import urllib.request
+import urllib.parse
+from .constants import Constants
 from .logger import get_logger
 
 log = get_logger("Utils")
@@ -49,6 +51,7 @@ def exist_github_folder(url: str, token: str = None) -> bool:
         bool: Whether the directory exists.
     """
     try:
+        url = urllib.parse.quote(url, safe=":/")
         response = urllib.request.urlopen(generate_request(url, token), timeout=10)
         data = json.loads(response.read())
         return bool(data)
@@ -70,6 +73,7 @@ def download_github_folder(url: str, folder: str, token: str = None) -> None:
     name = url.split("/")[-1]
     log.info(f"Downloading {name}...")
     try:
+        url = urllib.parse.quote(url, safe=":/")
         response = urllib.request.urlopen(generate_request(url, token), timeout=10)
         data = json.loads(response.read())
     except urllib.error.HTTPError as e:
@@ -94,7 +98,7 @@ def get_available_presences(token: str = None) -> list[str]:
     try:
         response = urllib.request.urlopen(
             generate_request(
-                "https://api.github.com/repos/manucabral/RichPresencePlus/contents/presences",
+                Constants.PRESENCES_LIST_ENPOINT,
                 token,
             ),
             timeout=10,
