@@ -1,0 +1,23 @@
+{
+    "name": "Phasmophobia",
+    "version": "1.0.0",
+    "description": {
+        "en": "Show your friends that you are playing Phasmophobia.",
+        "pt-BR": "Mostre aos seus amigos que você está jogando Phasmophobia.",
+        "es": "Muestra a tus amigos que estás jugando Phasmophobia.",
+        "ru": "Покажите своим друзьям, что вы играете в Phasmophobia."
+    },
+    "clientId": 989305225137492029,
+    "updateInterval": 8,
+    "author": "manucabral",
+    "contributors": [],
+    "web": false,
+    "category": "Games",
+    "color": "#000000",
+    "tags": [
+        "game",
+        "steam",
+        "horror",
+        "indie"
+    ]
+}
