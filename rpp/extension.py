@@ -127,6 +127,7 @@ def extension(cls: Presence) -> Presence:
             """
             if self.dev_mode:
                 return
+
             if not self.last_update:
                 self.last_update = time.time()
             if time.time() - self.last_update > Constants.PRESENCE_INTERVAL:
