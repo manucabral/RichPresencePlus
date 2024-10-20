@@ -55,9 +55,12 @@ def extension(cls: Presence) -> Presence:
             self.dev_mode = mode
             self.log.info(f"Dev mode {'enabled' if mode else 'disabled'}")
 
-        def __load_metadata(self):
+        def __load_metadata(self, log: bool = True) -> None:
             """
             Load the metadata from the metadata file.
+
+            Args:
+                log (bool): Whether to log the metadata.
             """
             if not self.path:
                 raise ValueError("No path provided for metadata file")
@@ -70,17 +73,18 @@ def extension(cls: Presence) -> Presence:
                     self.web = metadata.get("web", False)
                     self.version = metadata.get("version", None)
                     self.update_interval = metadata.get("updateInterval", 3)
-                    self.info()
+                    if log:
+                        self.info()
             except Exception as exc:
                 self.log.error(f"Failed to load metadata: {exc}")
 
-        def prepare(self) -> None:
+        def prepare(self, log: bool = False) -> None:
             """
             Prepare the presence.
             Load the metadata if necessary.
             """
             if self.metadata_file:
-                self.__load_metadata()
+                self.__load_metadata(log)
             self.log.info("Loaded.")
 
         def on_load(self) -> None:
