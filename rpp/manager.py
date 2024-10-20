@@ -126,17 +126,20 @@ class Manager:
         """
         Run the presence in a thread.
         """
-        presence.on_load()
-        if presence.web:
-            if not self.web_enabled:
-                self.web_enabled = True
-            if not self.runtime.connected:
-                self.log.warning(
-                    f"{presence.name} uses web features but runtime is not connected"
-                )
-        while not self.stop_event.is_set() and presence.running:
-            time.sleep(presence.update_interval)
-            presence.on_update(runtime=self.runtime)
+        try:
+            presence.on_load()
+            if presence.web:
+                if not self.web_enabled:
+                    self.web_enabled = True
+                if not self.runtime.connected:
+                    self.log.warning(
+                        f"{presence.name} uses web features but runtime is not connected"
+                    )
+            while not self.stop_event.is_set() and presence.running:
+                presence.on_update(runtime=self.runtime)
+                time.sleep(presence.update_interval)
+        except Exception as exc:
+            self.log.error(f"Error running {presence.name}: {exc}")
 
     def __runtime_thread(self) -> None:
         """
@@ -149,8 +152,8 @@ class Manager:
             and self.runtime.connected
             and self.runtime.running
         ):
-            time.sleep(self.runtime_interval)
             self.runtime.update()
+            time.sleep(self.runtime_interval)
         self.runtime.running = False
 
     def __main_thread(self) -> None:
@@ -230,6 +233,7 @@ class Manager:
                 if not presence.enabled:
                     continue
                 try:
+                    presence.prepare(log=False)
                     self.log.info(f"Comparing {presence.name}...")
                     download_github_folder(
                         Constants.PRESENCES_ENPOINT.format(presence_name=presence.name),
