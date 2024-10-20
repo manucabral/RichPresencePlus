@@ -34,19 +34,14 @@ class PhasmoReader:
     def running(self) -> bool:
         try:
             result = subprocess.run(
-                [
-                    "powershell",
-                    "-WindowStyle",
-                    "Hidden",
-                    "-Command",
-                    f"Get-Process -Name phasmophobia -ErrorAction SilentlyContinue",
-                ],
+                "wmic process where \"name='phasmophobia.exe'\" get ProcessId /format:value",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
+                shell=True,
                 text=True,
-                creationflags=subprocess.CREATE_NO_WINDOW,
             )
-            return "phasmophobia" in result.stdout.lower()
+            out = result.stdout.strip()
+            return bool(out)
         except Exception as exc:
             self.log.error(f"Failed to check if game is running: {exc}")
             return False
