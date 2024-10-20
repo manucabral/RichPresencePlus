@@ -66,6 +66,5 @@ class PhasmoReader:
         level = self._filter("Level: ")
         if not level:
             return self.send_state("Game started")
-        print(level[-1])
         data = self._format(level[-1])
         return self.send_state("In-game", data)
