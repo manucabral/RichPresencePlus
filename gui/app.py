@@ -411,6 +411,8 @@ class App(customtkinter.CTk):
         )
 
         result: str = message.get()
+        if result is None:
+            return
         if result.lower() == "no":
             return
         self.manager.stop_event.set()
