@@ -1,0 +1,67 @@
+name: Desktop Presence Bug Report
+description: Report related to an issue with a desktop presence
+labels: ["bug", "desktop"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please verify that your bug hasn't been reported before submitting a new issue. If it has, kindly respond to the existing issue.
+  - type: textarea
+    id: steps-to-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Provide a detailed sequence of actions that should be taken to reproduce the bug.
+      placeholder: |
+        1. Open...
+        2. Go to...
+        2. Click on... 
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: Describe the outcome you expected to see.
+    validations:
+      required: true
+  - type: input
+    id: app-version
+    attributes:
+      label: App version
+      description: What version of Rich Presence Plus are you running?
+      placeholder: v0.0.3-stable
+    validations:
+      required: true
+  - type: input
+    id: program-app
+    attributes:
+      label: Program/App
+      description: What program or application and version are you using?
+      placeholder: TeamViewer 15.58.8
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Operating System
+      description: Please provide the operating system you are using.
+      placeholder: Windows 11 Pro 23H2
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+  - type: textarea
+    id: a-comments
+    attributes:
+      label: Additional comments
+  - type: textarea
+    id: logfile
+    attributes:
+      label: Presence log
+      description: Please attach the presence log.
+      placeholder: Presence.log
+    validations:
+      required: true

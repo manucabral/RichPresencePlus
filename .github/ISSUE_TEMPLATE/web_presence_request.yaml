@@ -1,0 +1,57 @@
+name: Web Presence Request
+description: Request to add a new web presence
+labels: ["request", "web"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check if your request has already been made before submitting a new issue. If it has, kindly respond to the existing issue.
+  - type: textarea
+    id: website-desc
+    attributes:
+      label: Website description
+      description: Please provide a description of the website.
+      placeholder: Streaming site
+    validations:
+      required: true
+  - type: input
+    id: website-name
+    attributes:
+      label: Website name
+      description: Please provide the name of the website.
+      placeholder: Netflix
+    validations:
+      required: true
+  - type: input
+    id: website-url
+    attributes:
+      label: Website URL
+      description: Please provide the URL of the website.
+      placeholder: https://www.netflix.com
+    validations:
+      required: true
+  - type: checkboxes
+    id: website-paid-service
+    attributes:
+      label: Paid service
+      description: Require a subscription or offer paid memberships for certain features.
+      options:
+        - label: "Yes"
+        - label: "No"
+  - type: checkboxes
+    id: website-restrictions
+    attributes:
+      label: Regional restrictions
+      description: Are there country-specific restrictions on the website?
+      options:
+        - label: "Yes"
+        - label: "No"
+  - type: checkboxes
+    id: website-adult
+    attributes:
+      label: Adult website
+      description: Is the website intended for adult audiences?
+      options:
+        - label: "Yes"
+        - label: "No"
