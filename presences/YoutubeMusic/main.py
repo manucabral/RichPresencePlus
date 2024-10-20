@@ -8,15 +8,27 @@ class YoutubeMusic(rpp.Presence):
         super().__init__(metadata_file=True)
         self.activity_type: rpp.ActivityType = rpp.ActivityType.LISTENING
         self.last_song: str = None
+        self.duration: int = 0
         self.tab: rpp.Tab = None
 
     def on_load(self):
+        self.state = "Initializing"
+        self.details = "Idle"
         self.log.info("Loaded")
 
     def extract_tabs(self, runtime: rpp.Runtime) -> list[rpp.Tab]:
         tabs = runtime.tabs()
         tabs = runtime.filter_tabs("music.youtube.com")
         return [tab for tab in tabs if "sw.js" not in tab.url]
+
+    def extract_video_stream(self):
+        element = self.tab.execute(
+            'Array.from(document.querySelectorAll(".video-stream")).find(element => element.duration)'
+        )
+        if not element.objectId:
+            self.log.warning("Video stream not found")
+            return None
+        return self.tab.getProperties(element.objectId)
 
     def extract_mediasession_metadata(self):
         element = self.tab.execute("navigator.mediaSession.metadata")
@@ -67,12 +79,13 @@ class YoutubeMusic(rpp.Presence):
         metadata = self.extract_mediasession_metadata()
         playback_state = self.extract_mediasession_playblackstate()
         artwork = self.extract_mediasession_artwork()
+        video_stream = self.extract_video_stream()
 
         if self.last_song != metadata["title"]:  # Song changed
-            self.last_song = metadata["title"]
             self.log.info(
                 f"Now playing {metadata['title']} by {metadata['artist']} at {metadata['album']}"
             )
+            self.last_song = metadata["title"]
             self.details = metadata["artist"]
             self.state = metadata["title"]
             self.large_image = artwork
@@ -85,12 +98,25 @@ class YoutubeMusic(rpp.Presence):
                 {
                     "label": "Listen on Youtube Music",
                     "url": self.tab.url,
-                }
+                },
             ]
+            if video_stream:
+                self.duration = int(video_stream.duration.value)
+
         else:
-            # song not changed, update time, playback state...
+            # Update time and playback state
+            if video_stream:
+                if playback_state == "playing":
+                    self.duration = int(video_stream.duration.value)
+                    self.start = int(time.time()) - int(video_stream.currentTime.value)
+                    self.end = self.start + self.duration
+                else:
+                    self.start = self.end = None
+
             self.small_image = "playing" if playback_state == "playing" else "pause"
             self.small_text = "Listening" if playback_state == "playing" else "Paused"
 
     def on_close(self):
+        self.last_song = None
+        self.tab = None
         self.log.info("Closed")

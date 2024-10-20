@@ -1,9 +1,10 @@
 {
-    "name": "YoutubeMusic",
-    "version": "1.0.0",
+    "name": "Youtube Music",
+    "version": "1.0.1",
     "description": {
         "en": "Shows what you're listening to on YouTube Music.",
-        "pt-BR": "Mostra o que você está ouvindo no YouTube Music."
+        "pt-BR": "Mostra o que você está ouvindo no YouTube Music.",
+        "es": "Muestra lo que estás escuchando en YouTube Music."
     },
     "clientId": 828083725790609459,
     "updateInterval": 5,
