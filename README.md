@@ -28,10 +28,10 @@ Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 
 # Supported browsers
 Chromium base browsers (e.g. Chrome, Opera, Edge and more)
-> If you want support for another browser, create an [issue](https://github.com/manucabral/RichPresencePlus/issues).
+> If you want support for another browser, create an [issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
 
 ## Request a Presence
-If you'd like to propose a new presence to be added to the list, please [create an issue]()
+If you'd like to propose a new presence to be added to the list, please [create an issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
 
 ## Presence Development
 Please check the [development repository](https://github.com/manucabral/RichPresencePlusDev) to read the documentation and start coding your custom presence.
