@@ -42,6 +42,7 @@ class PhasmoReader:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
+                creationflags=subprocess.CREATE_NO_WINDOW,
             )
             return "phasmophobia" in result.stdout.lower()
         except Exception as exc:
