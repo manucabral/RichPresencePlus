@@ -11,9 +11,12 @@ class Constants:
     MAX_PRESENCES = 10
     PRESENCES_FOLDER = "presences"
     PRESENCES_ENPOINT = "https://api.github.com/repos/manucabral/RichPresencePlus/contents/presences/{presence_name}"
-    RUNTIME_INTERVAL = 1
+    PRESENCES_LIST_ENPOINT = (
+        "https://api.github.com/repos/manucabral/RichPresencePlus/contents/presences"
+    )
+    RUNTIME_INTERVAL = 2
     PRESENCE_INTERVAL = 15
-    DEV_MODE = True
+    DEV_MODE = False
     LOG_FILE = "rpp.log"
 
     USER_CHOICE = (
