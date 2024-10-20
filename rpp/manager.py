@@ -61,17 +61,34 @@ class Manager:
         if root_path not in sys.path:
             sys.path.append(root_path)
         for root, _, files in os.walk(self.folder):
+            files.sort(key=lambda x: x != "main.py")
             for file in files:
                 if file.startswith("__"):
                     continue
-                if file == "main.py":
+                if file.endswith(".py"):
                     self.load_presence(root, file)
+
+    def load_presence_entry_module(self, module: typing.Any, root: str) -> None:
+        """
+        Load entry presence module.
+        """
+        for attr in dir(module):
+            obj = getattr(module, attr)
+            if (
+                isinstance(obj, type)
+                and obj is not Presence
+                and issubclass(obj, Presence)
+            ):
+                instance = obj()
+                instance.path = root
+                instance.set_dev_mode(self.dev_mode)
+                if instance.enabled:
+                    self.presences.append(instance)
 
     def load_presence(self, root: str, file: str) -> None:
         """
-        Load a presence from a file.
+        Load presence modules.
         """
-        self.log.info(f"Loading presence from {root}")
         module_name = file[:-3]
         relative_path = os.path.relpath(root, self.folder)
         module_path = os.path.join(relative_path, module_name).replace(os.sep, ".")
@@ -91,22 +108,14 @@ class Manager:
                 raise ImportError(f"Module {module_path} not found")
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
+            self.log.info(f"Loaded module for {relative_path} ({module_name})")
             """
+            TODO
             if self.checkRestrictedModules(module):
                 return
             """
-            for attr in dir(module):
-                obj = getattr(module, attr)
-                if (
-                    isinstance(obj, type)
-                    and obj is not Presence
-                    and issubclass(obj, Presence)
-                ):
-                    instance = obj()
-                    instance.path = root
-                    instance.set_dev_mode(self.dev_mode)
-                    if instance.enabled:
-                        self.presences.append(instance)
+            if file == "main.py":
+                self.load_presence_entry_module(module, root)
         except Exception as exc:
             self.log.error(f"Error loading {module_path}: {exc}")
             return
