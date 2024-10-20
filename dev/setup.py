@@ -1,7 +1,3 @@
-"""
-This script is used to build the development version.
-"""
-
 from main import __title__, __version__, __description__
 from cx_Freeze import setup, Executable
 
@@ -14,6 +10,7 @@ build_exe_options = {
         "rpp.Runtime",
         "rpp.Presence",
         "rpp.Browser",
+        "rpp.ClientRPC",
         "rpp.load_env",
         "rpp.get_available_presences",
     ],
