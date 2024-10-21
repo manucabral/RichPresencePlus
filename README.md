@@ -12,7 +12,7 @@ Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 </p>
 
 <p align="center">
-<img src="https://github.com/manucabral/RichPresencePlus/blob/main/assets/demo.gif" width="650" title="RichPresencePlusDemo">
+<img src="https://github.com/manucabral/RichPresencePlus/blob/main/assets/demov0.0.5.gif" width="650" title="RichPresencePlusDemo">
 </p>
 
 > [!IMPORTANT]  
