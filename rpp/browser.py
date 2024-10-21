@@ -19,10 +19,10 @@ class Browser:
         """
         Initialize the browser.
         """
+        self.log: RPPLogger = get_logger(self.__class__.__name__)
         self.progid: str = self.get_progid()
         self.path = self.get_path()
         self.name: str = self.get_name()
-        self.log: RPPLogger = get_logger(self.name)
         self.process: str = self.path.split("\\")[-1]
         self.log.info("Initialized.")
 
@@ -59,12 +59,16 @@ class Browser:
         Returns:
             str: The browser name. E.g. "Google Chrome"
         """
-        with winreg.OpenKeyEx(
-            winreg.HKEY_CLASSES_ROOT,
-            Constants.BROWSER_NAME.format(progId=self.progid),
-        ) as key:
-            name = winreg.QueryValueEx(key, "ApplicationName")[0]
+        try:
+            with winreg.OpenKeyEx(
+                winreg.HKEY_CLASSES_ROOT,
+                Constants.BROWSER_NAME.format(progId=self.progid),
+            ) as key:
+                name = winreg.QueryValueEx(key, "ApplicationName")[0]
             return name or "Browser"
+        except FileNotFoundError:
+            self.log.warning("Browser name not found. Using progid.")
+            return self.progid
 
     def kill(self) -> None:
         """
