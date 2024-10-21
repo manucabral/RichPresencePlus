@@ -276,7 +276,7 @@ class App(customtkinter.CTk):
         Update the runtime label.
         """
         self.runtime.update()
-        temp = f"{self.browser.name} browser {'connected' if self.runtime.connected else 'disconnected'}"
+        temp = f"{self.browser.name} {'connected' if self.runtime.connected else 'disconnected'}"
         self.runtime_label.configure(text=temp)
         self.manager.run_runtime()
 
