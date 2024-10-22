@@ -15,7 +15,12 @@ from .constants import Constants
 from .logger import get_logger, RPPLogger
 from .presence import Presence
 from .runtime import Runtime
-from .utils import download_github_folder, exist_github_folder, get_available_presences
+from .utils import (
+    load_env,
+    download_github_folder,
+    exist_github_folder,
+    get_available_presences,
+)
 
 
 class Manager:
@@ -67,6 +72,8 @@ class Manager:
                     continue
                 if file.endswith(".py"):
                     self.load_presence(root, file)
+                if file == ".env":
+                    load_env(path=os.path.join(root, file), origin=root)
 
     def load_presence_entry_module(self, module: typing.Any, root: str) -> None:
         """
@@ -250,7 +257,9 @@ class Manager:
                         os.getenv("GITHUB_API_TOKEN"),
                     )
                     if filecmp.dircmp(
-                        presence.path, os.path.join(tempdir, presence.name)
+                        presence.path,
+                        os.path.join(tempdir, presence.name),
+                        ignore=["__pycache__", ".env"],
                     ).diff_files:
                         self.log.info(f"Inconsistency found in {presence.name}.")
                         self.log.info(f"Please update {presence.name}.")
