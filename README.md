@@ -20,6 +20,9 @@ Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 
 > Only compatible with Microsoft Windows systems.
 
+# Download
+The lastest release is available [here](https://github.com/manucabral/RichPresencePlus/releases)
+
 # Features
 - Easy to use.
 - Support for multiple presences.
@@ -36,12 +39,12 @@ If you'd like to propose a new presence to be added to the list, please [create 
 ## Presence Development
 Please check the [development repository](https://github.com/manucabral/RichPresencePlusDev) to read the documentation and start coding your custom presence.
 
-## Roadmap
+## RoadMap
 - Expand usable modules.
-- Detect and choose the default browser to connect.
-- Support for multiple Chromium-based browsers; investigate Firefox compatibility.
+- Investigate Firefox compatibility.
+- Detect and choose browsers to connect.
 - Add more functionalities to the runtime (like IFrames or QuerySelectors).
-- Wiki for creating new presences, also including a tool to create them.
+- Wiki for presences creation, ref [Rich Presence Plus Dev](https://github.com/manucabral/RichPresencePlusDev)
 - Customized real-time RPC (modify state, details, and more).
 - Code optimization and related improvements.
 - Enhance GUI design and optimization.
