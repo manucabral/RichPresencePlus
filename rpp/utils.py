@@ -110,18 +110,18 @@ def get_available_presences(token: str = None) -> list[str]:
         return []
 
 
-def load_env() -> None:
+def load_env(path: str = ".env", origin: str = "main") -> None:
     """
     Load the environment variables from the .env file.
     """
     try:
-        with open(".env", "r") as file:
+        with open(path, "r", encoding="utf-8", errors="ignore") as file:
             for line in file:
                 key, value = line.strip().split("=")
                 os.environ[key] = value
-        log.info("Loaded .env file.")
+        log.info(f"Loaded env variables from {origin}.")
     except FileNotFoundError:
-        log.warning("No .env file found.")
+        log.warning(f"No .env file found in {origin}.")
     except Exception as exc:
         log.error(f"Failed to load .env file: {exc}")
 
