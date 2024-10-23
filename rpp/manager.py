@@ -15,6 +15,7 @@ from .constants import Constants
 from .logger import get_logger, RPPLogger
 from .presence import Presence
 from .runtime import Runtime
+from .steam import Steam
 from .utils import (
     load_env,
     download_github_folder,
@@ -31,14 +32,16 @@ class Manager:
     def __init__(
         self,
         presences_folder: str = Constants.PRESENCES_FOLDER,
-        runtime=None,
+        runtime: Runtime = None,
         runtime_interval=Constants.RUNTIME_INTERVAL,
+        steam: Steam = None,
         dev_mode=Constants.DEV_MODE,
     ):
         self.log: RPPLogger = get_logger("Manager")
         self.dev_mode: bool = dev_mode
         self.web_enabled: bool = False
         self.folder: str = presences_folder
+        self.steam: Steam = steam
         self.runtime: Runtime = runtime
         self.runtime_interval: int = runtime_interval
         self.presence_interval: int = Constants.PRESENCE_INTERVAL
@@ -106,7 +109,7 @@ class Manager:
                 os.getenv("GITHUB_API_TOKEN"),
             ):
                 self.log.warning(
-                    f"Presence {folder_name} not found in remote repository."
+                    "Presence %s not found in remote repository." % folder_name
                 )
                 return
         try:
@@ -115,16 +118,11 @@ class Manager:
                 raise ImportError(f"Module {module_path} not found")
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            self.log.info(f"Loaded module for {relative_path} ({module_name})")
-            """
-            TODO
-            if self.checkRestrictedModules(module):
-                return
-            """
+            self.log.info("Loaded module for {%s} (%s)" % (relative_path, module_name))
             if file == "main.py":
                 self.load_presence_entry_module(module, root)
         except Exception as exc:
-            self.log.error(f"Error loading {module_path}: {exc}")
+            self.log.error("Error loading %s: %s", module_path, exc)
             return
 
     def stop_presences(self) -> None:
@@ -149,10 +147,11 @@ class Manager:
                     self.web_enabled = True
                 if not self.runtime.connected:
                     self.log.warning(
-                        f"{presence.name} uses web features but runtime is not connected"
+                        "%s uses web features but runtime is not connected"
+                        % presence.name
                     )
             while not self.stop_event.is_set() and presence.running:
-                presence.on_update(runtime=self.runtime)
+                presence.on_update(runtime=self.runtime, steam=self.steam)
                 time.sleep(presence.update_interval)
         except Exception as exc:
             self.log.error(f"Error running {presence.name}: {exc}")
@@ -161,7 +160,7 @@ class Manager:
         """
         Run the runtime in a thread.
         """
-        self.log.info(f"Runtime thread started (interval: {self.runtime_interval}s)")
+        self.log.info("Runtime thread started (interval: %ds)" % self.runtime_interval)
         self.runtime.running = True
         while (
             not self.stop_event.is_set()
@@ -244,7 +243,7 @@ class Manager:
             self.log.info("Skipping comparison in dev mode.")
             return
         with tempfile.TemporaryDirectory(prefix="rpp_") as tempdir:
-            self.log.info(f"Temp directory: {tempdir}")
+            self.log.info("Using temp dir %s" % tempdir)
             for presence in self.presences:
                 if not presence.enabled:
                     continue
