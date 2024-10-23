@@ -7,6 +7,7 @@
         "es": "Muestra lo que estás escuchando en YouTube Music."
     },
     "clientId": 828083725790609459,
+    "image": "https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/presences/Youtube%20Music/image.webp",
     "updateInterval": 5,
     "author": "manucabral",
     "contributors": [],
