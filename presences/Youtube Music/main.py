@@ -59,7 +59,7 @@ class YoutubeMusic(rpp.Presence):
         props = self.tab.getProperties(element.objectId)
         return props.src.value
 
-    def on_update(self, runtime: rpp.Runtime):
+    def on_update(self, runtime: rpp.Runtime, **context):
 
         tabs = self.extract_tabs(runtime)
         if not tabs:  # No tabs found

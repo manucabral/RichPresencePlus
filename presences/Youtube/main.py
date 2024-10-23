@@ -158,7 +158,7 @@ class Youtube(Presence):
         self.large_image = self.logo
         self.log.info("Started successfully")
 
-    def on_update(self, runtime: Runtime):
+    def on_update(self, runtime: Runtime, **context):
 
         tabs = runtime.tabs()
         tabs = self.extractYoutubeTabs(runtime.tabs())
