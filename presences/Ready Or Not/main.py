@@ -36,14 +36,17 @@ class ReadyOrNot(rpp.Presence):
         if data is None:
             self.log.info("No data found")
             return
-        self.details = data["name"] or "Ready or Not"
-        self.state = data["state"] or "Playing"
-        if self.last_state != self.state:
-            self.last_state = self.state
-            self.start_time = int(time.time())
-            self.log.info("State changed to %s" % self.state)
-        self.start = self.start_time
-        self.large_image = self.logo
+        if data["name"] == "Ready or Not":
+            self.details = data["name"] or "Ready or Not"
+            self.state = data["state"] or "Playing"
+            if self.last_state != self.state:
+                self.last_state = self.state
+                self.start_time = int(time.time())
+                self.log.info("State changed to %s" % self.state)
+            self.start = self.start_time
+            self.large_image = self.logo
+        else:
+            self.state = "No playing"
 
     def on_close(self):
         self.log.info("Closed")
