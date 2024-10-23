@@ -154,7 +154,11 @@ def extension(cls: Presence) -> Presence:
                     state=self.state,
                     details=self.details,
                     large_image=self.large_image,
-                    large_text=self.large_text,
+                    large_text=(
+                        self.large_text
+                        if self.large_text
+                        else f"{rpp.__title__} v{rpp.__version__}"
+                    ),
                     small_image=self.small_image,
                     small_text=self.small_text,
                     activity_type=self.activity_type,
