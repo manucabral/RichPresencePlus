@@ -6,6 +6,7 @@
         "pt-BR": "Mostra o vídeo atualmente sendo reproduzido no YouTube."
     },
     "clientId": 1113646725408772176,
+    "image": "https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/presences/Youtube/image.webp",
     "updateInterval": 5,
     "author": "manucabral",
     "contributors": [],
