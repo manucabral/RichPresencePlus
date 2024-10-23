@@ -13,6 +13,7 @@ build_exe_options = {
         "rpp.Browser",
         "rpp.ClientRPC",
         "rpp.get_available_presences",
+        "rpp.Steam",
         "rpp.load_env",
     ],
     "packages": ["websocket", "presences"],
