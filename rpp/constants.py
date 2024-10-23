@@ -26,3 +26,6 @@ class Constants:
     BROWSER_PATH = "{progId}\\shell\\open\\command"
     BROWSER_NAME = "{progId}\\Application"
     KILL_BROWSER = "taskkill /f /im {process} /t"
+
+    STEAM_CONFIG_PATH = r"C:\Program Files (x86)\Steam\config\config.vdf"
+    STEAM_BASE_ID4 = 76561197960265728
