@@ -3,6 +3,7 @@ Utility functions for the RPP package.
 """
 
 import os
+import re
 import json
 import urllib.request
 import urllib.parse
@@ -142,3 +143,32 @@ def remove_none(d: dict) -> dict:
         }
 
     return clean_dict(d)
+
+
+def get_steam_presence(steam_id3: int) -> dict:
+    """
+    Get the presence information for a Steam account.
+
+    Args:
+        steam_id3 (int): Steam ID3 of the account.
+
+    Returns:
+        dict: The presence information.
+    """
+
+    try:
+        response = urllib.request.urlopen(
+            "https://steamcommunity.com/miniprofile/%d" % steam_id3,
+            timeout=10,
+        )
+        response = response.read().decode("utf-8")
+        name_pattern = re.compile(r'<span class="miniprofile_game_name">([^<]+)</span>')
+        state_pattern = re.compile(r'<span class="rich_presence">(.*?)</span>')
+        game_name_match = name_pattern.search(response)
+        game_name = game_name_match.group(1) if game_name_match else None
+        game_state_match = state_pattern.search(response)
+        game_state = game_state_match.group(1) if game_state_match else None
+        return {"name": game_name, "state": game_state}
+    except urllib.error.HTTPError as exc:
+        log.error("Failed to get Steam presence: %s" % exc)
+        return {"name": None, "state": None}
