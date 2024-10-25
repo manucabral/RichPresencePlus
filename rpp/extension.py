@@ -6,7 +6,6 @@ import rpp
 import json
 import time
 from .rpc import ClientRPC
-from .constants import Constants
 from .presence import Presence
 from .logger import get_logger
 
@@ -16,8 +15,16 @@ def extension(cls: Presence) -> Presence:
     Decorator to extend the base class of the presence for create new presences.
     """
 
+    # pylint: disable=R0902
     class Wrapp(cls):
+        """
+        Wrapper class for the presence
+        """
+
         def __init__(self, *args, **kwargs):
+            """
+            Initialize the presence.
+            """
             super().__init__(*args, **kwargs)
 
             if not self.name:
@@ -35,7 +42,12 @@ def extension(cls: Presence) -> Presence:
             """
             Show the presence information.
             """
-            self.log.info(f"Using v{self.version} ({self.client_id}) by {self.author}")
+            self.log.info(
+                "Using v%s (%s) by %s",
+                self.version,
+                self.client_id,
+                self.author,
+            )
 
         def data(self) -> dict:
             """
@@ -43,7 +55,7 @@ def extension(cls: Presence) -> Presence:
             """
             exclude_keys = ["log", "__rpc", "path"]
             return {
-                key: value
+                key: value if hasattr(value, "__dict__") else value
                 for key, value in self.__dict__.items()
                 if key not in exclude_keys
             }
@@ -53,7 +65,7 @@ def extension(cls: Presence) -> Presence:
             Set the dev mode.
             """
             self.dev_mode = mode
-            self.log.info(f"Dev mode {'enabled' if mode else 'disabled'}")
+            self.log.info("Dev mode %s", "enabled" if mode else "disabled")
 
         def __load_metadata(self, log: bool = True) -> None:
             """
@@ -75,8 +87,13 @@ def extension(cls: Presence) -> Presence:
                     self.update_interval = metadata.get("updateInterval", 3)
                     if log:
                         self.info()
+            # pylint: disable=W0703
+            except FileNotFoundError:
+                self.log.error("Metadata file not found.")
+            except json.JSONDecodeError:
+                self.log.error("Failed to decode metadata.")
             except Exception as exc:
-                self.log.error(f"Failed to load metadata: {exc}")
+                self.log.error("Failed to load metadata: %s", exc)
 
         def prepare(self, log: bool = False) -> None:
             """
@@ -101,12 +118,14 @@ def extension(cls: Presence) -> Presence:
                 return
             super().on_load()
             self.update()
+            self.last_update = time.time()
 
         def on_update(self, **context) -> None:
             """
             Called when the presence is updated.
             """
             super().on_update(**context)
+            self.update()
 
         def on_close(self) -> None:
             """
@@ -125,25 +144,39 @@ def extension(cls: Presence) -> Presence:
             """
             Force the presence to update.
             """
-            if self.dev_mode:
-                return
+            self.update()
 
-            if not self.last_update:
-                self.last_update = time.time()
-            if time.time() - self.last_update > Constants.PRESENCE_INTERVAL:
-                self.update()
-                self.log.debug(f"Forced update for {self.name}")
-            else:
-                self.log.debug(f"Skipping update for {self.name}")
+        def __interval_time(self) -> bool:
+            """
+            Check the update interval (15 seconds).
+            """
+            now = time.time()
+            if self.last_update is None:
+                self.last_update = now
+                return True
+            max_time = self.last_update + 15
+            if max_time > now:
+                diff = now - (self.last_update + 15)
+                remaining = int(abs(diff))
+                if self.dev_mode:
+                    self.log.debug("Skipping update %d seconds remaining", remaining)
+                return False
+            self.last_update = now
+            return True
 
         def update(self) -> None:
             """
             Update the presence.
             """
-            if self.dev_mode:
-                self.log.debug(self.data())
+            ok = self.__interval_time()
+            if not ok:
                 return
-            self.log.debug(f"Updating")
+            if self.dev_mode:
+                # pretty print the data
+                self.log.debug(json.dumps(self.data(), indent=4))
+
+                return
+            self.log.debug("Sending update to Discord.")
             try:
                 self.large_text = f"{rpp.__title__} v{rpp.__version__}"
                 if self.details and len(self.details) > 128:
@@ -175,7 +208,6 @@ def extension(cls: Presence) -> Presence:
                         else self.buttons
                     ),
                 )
-                self.last_update = time.time()
             except Exception as exc:
                 self.log.error(f"Failed to update on Discord: {exc}")
 
