@@ -7,6 +7,8 @@ import re
 import json
 import urllib.request
 import urllib.parse
+from packaging import version as pversion
+from .version import __version__
 from .constants import Constants
 from .logger import get_logger
 
@@ -53,11 +55,13 @@ def exist_github_folder(url: str, token: str = None) -> bool:
     """
     try:
         url = urllib.parse.quote(url, safe=":/")
-        response = urllib.request.urlopen(generate_request(url, token), timeout=10)
-        data = json.loads(response.read())
+        with urllib.request.urlopen(
+            generate_request(url, token), timeout=10
+        ) as response:
+            data = json.loads(response.read())
         return bool(data)
     except urllib.error.HTTPError as exc:
-        log.error(f"on check {exc}")
+        log.error("Check %s", exc)
         return False
 
 
@@ -72,13 +76,15 @@ def download_github_folder(url: str, folder: str, token: str = None) -> None:
     if not os.path.exists(folder):
         os.makedirs(folder)
     name = url.split("/")[-1]
-    log.info(f"Downloading {name}...")
+    log.info("Downloading %s", name)
     try:
         url = urllib.parse.quote(url, safe=":/")
-        response = urllib.request.urlopen(generate_request(url, token), timeout=10)
-        data = json.loads(response.read())
+        with urllib.request.urlopen(
+            generate_request(url, token), timeout=10
+        ) as response:
+            data = json.loads(response.read())
     except urllib.error.HTTPError as e:
-        log.error(f"Failed to download {name}: {e}")
+        log.error("Failed to download %s: %s", name, e)
     for item in data:
         if item["type"] == "file":
             download_github_file(
@@ -97,17 +103,17 @@ def get_available_presences(token: str = None) -> list[str]:
         list[str]: A list of available presences.
     """
     try:
-        response = urllib.request.urlopen(
+        with urllib.request.urlopen(
             generate_request(
                 Constants.PRESENCES_LIST_ENPOINT,
                 token,
             ),
             timeout=10,
-        )
-        data = json.loads(response.read())
+        ) as response:
+            data = json.loads(response.read())
         return [item["name"] for item in data if item["type"] == "dir"]
     except urllib.error.HTTPError as exc:
-        log.error(f"Failed to get available presences: {exc}")
+        log.error("On get available presences: %s", exc)
         return []
 
 
@@ -120,11 +126,14 @@ def load_env(path: str = ".env", origin: str = "main") -> None:
             for line in file:
                 key, value = line.strip().split("=")
                 os.environ[key] = value
-        log.info(f"Loaded env variables from {origin}.")
+        log.info("Loaded env variables from %s", origin)
     except FileNotFoundError:
-        log.warning(f"No .env file found in {origin}.")
+        log.warning("No .env file found in %s.", origin)
+    except ValueError:
+        log.error("Invalid .env file format.")
+    # pylint: disable=broad-except
     except Exception as exc:
-        log.error(f"Failed to load .env file: {exc}")
+        log.error("Unexpected error: %s", exc)
 
 
 def remove_none(d: dict) -> dict:
@@ -145,6 +154,52 @@ def remove_none(d: dict) -> dict:
     return clean_dict(d)
 
 
+def check_version_compatibility(version: str) -> bool:
+    """
+    Check if the current version is compatible with the required version.
+
+    Args:
+        version (str): Version to check.
+
+    Returns:
+        bool: Whether the version is compatible.
+
+    E.g.:
+        check_version_compatibility(">=1.0.0,<2.0.0")
+        check_version_compatibility("==1.0.0")
+        check_version_compatibility("<2.0.0")
+        check_version_compatibility(">=1.0.0")
+    """
+    try:
+        actual_version = pversion.parse(__version__)
+        conditions = [req.strip() for req in version.split(",")]
+        for condition in conditions:
+            if condition.startswith("=="):
+                required_version = pversion.parse(condition[2:])
+                if actual_version != required_version:
+                    log.error("Version mismatch: %s", version)
+                    return False
+            elif condition.startswith(">="):
+                required_version = pversion.parse(condition[2:])
+                if actual_version < required_version:
+                    log.error("Version too old: %s", version)
+                    return False
+            elif condition.startswith("<"):
+                required_version = pversion.parse(condition[1:])
+                if actual_version >= required_version:
+                    log.error("Version too new: %s", version)
+                    return False
+            else:
+                raise ValueError(f"Unknown version condition: {condition}")
+        return True
+    except pversion.InvalidVersion as exc:
+        log.error("Invalid version: %s", exc)
+        return False
+    except ValueError as exc:
+        log.error("Invalid version condition: %s", exc)
+        return False
+
+
 def get_steam_presence(steam_id3: int) -> dict:
     """
     Get the presence information for a Steam account.
@@ -155,20 +210,26 @@ def get_steam_presence(steam_id3: int) -> dict:
     Returns:
         dict: The presence information.
     """
-
+    state = {"name": None, "state": None}
     try:
-        response = urllib.request.urlopen(
-            "https://steamcommunity.com/miniprofile/%d" % steam_id3,
+        with urllib.request.urlopen(
+            f"https://steamcommunity.com/miniprofile/{steam_id3}",
             timeout=10,
-        )
-        response = response.read().decode("utf-8")
+        ) as response:
+            response = response.read().decode("utf-8")
         name_pattern = re.compile(r'<span class="miniprofile_game_name">([^<]+)</span>')
         state_pattern = re.compile(r'<span class="rich_presence">(.*?)</span>')
         game_name_match = name_pattern.search(response)
         game_name = game_name_match.group(1) if game_name_match else None
         game_state_match = state_pattern.search(response)
         game_state = game_state_match.group(1) if game_state_match else None
-        return {"name": game_name, "state": game_state}
+        state = {"name": game_name, "state": game_state}
+        return state
     except urllib.error.HTTPError as exc:
-        log.error("Failed to get Steam presence: %s" % exc)
-        return {"name": None, "state": None}
+        log.error("Failed to get Steam presence: %s", exc)
+    except AttributeError as exc:
+        log.error("Failed to parse Steam presence: %s", exc)
+    # pylint: disable=broad-except
+    except Exception as exc:
+        log.error("Unexpected error: %s", exc)
+    return state

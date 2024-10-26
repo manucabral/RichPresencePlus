@@ -4,7 +4,7 @@ This module provides a decorator to extend the base class of the presence for cr
 
 import json
 import time
-import rpp
+from .version import __title__, __version__
 from .rpc import ClientRPC
 from .presence import Presence
 from .logger import get_logger
@@ -21,6 +21,8 @@ def extension(cls: Presence) -> Presence:
         """
         Wrapper class for the presence
         """
+
+        last_update = None
 
         def __init__(self, *args, **kwargs):
             """
@@ -54,12 +56,9 @@ def extension(cls: Presence) -> Presence:
             """
             Get the presence data.
             """
-            exclude_keys = ["log", "__rpc", "path"]
-            return {
-                key: value if hasattr(value, "__dict__") else value
-                for key, value in self.__dict__.items()
-                if key not in exclude_keys
-            }
+            exclude_tokens = ["log", "__rpc", "path", "activity_type"]
+            exclude_keys = {key for key in self.__dict__ if key not in exclude_tokens}
+            return {key for key, _ in self.__dict__.items() if key not in exclude_keys}
 
         def set_dev_mode(self, mode: bool) -> None:
             """
@@ -86,6 +85,7 @@ def extension(cls: Presence) -> Presence:
                     self.web = metadata.get("web", False)
                     self.version = metadata.get("version", None)
                     self.update_interval = metadata.get("updateInterval", 3)
+                    self.package = metadata.get("package", None)
                     if log:
                         self.info()
             # pylint: disable=W0703
@@ -167,6 +167,36 @@ def extension(cls: Presence) -> Presence:
             self.last_update = now
             return True
 
+        def __convert(self, value: any) -> any:
+            """
+            Convert the value to a string.
+
+            Args:
+                value (any): The value to convert.
+
+            Returns:
+                any: The converted value.
+            """
+            try:
+                return json.dumps(value)
+            # pylint: disable=W0703
+            except Exception:
+                return str(value)
+
+        def deserialize(self) -> dict:
+            """
+            Deserialize the presence.
+
+            Returns:
+                dict: The deserialized presence.
+            """
+            exclude_tokens = ["log", "__rpc", "path"]
+            return {
+                key: self.__convert(value)
+                for key, value in self.__dict__.items()
+                if key not in exclude_tokens
+            }
+
         def update(self) -> None:
             """
             Update the presence.
@@ -175,13 +205,12 @@ def extension(cls: Presence) -> Presence:
             if not ok:
                 return
             if self.dev_mode:
-                # pretty print the data
-                self.log.debug(json.dumps(self.data(), indent=4))
+                self.log.debug(json.dumps(self.deserialize(), indent=4))
 
                 return
             self.log.debug("Sending update to Discord.")
             try:
-                self.large_text = f"{rpp.__title__} v{rpp.__version__}"
+                self.large_text = f"{__title__} v{__version__}"
                 if self.details and len(self.details) > 128:
                     self.details = self.details[:125] + "..."
                 if self.state and len(self.state) > 128:
@@ -193,7 +222,7 @@ def extension(cls: Presence) -> Presence:
                     large_text=(
                         self.large_text
                         if self.large_text
-                        else f"{rpp.__title__} v{rpp.__version__}"
+                        else f"{__title__} v{__version__}"
                     ),
                     small_image=self.small_image,
                     small_text=self.small_text,

@@ -1,7 +1,12 @@
+"""
+Presence base class for creating new presences.
+"""
+
 from abc import ABC, abstractmethod
 from .rpc import ActivityType
 
 
+# pylint: disable=R0902
 class Presence(ABC):
     """
     Abstract class for creating a presence for Rich Presence Plus.
@@ -47,7 +52,6 @@ class Presence(ABC):
         """
         Called when the presence is loaded.
         """
-        pass
 
     @abstractmethod
     def on_update(self, **context) -> None:
@@ -60,17 +64,14 @@ class Presence(ABC):
         Context:
             runtime: The runtime instance.
         """
-        pass
 
     @abstractmethod
     def on_close(self) -> None:
         """
         Called when the presence is closed.
         """
-        pass
 
     def force_update(self):
         """
         Force update the presence.
         """
-        pass

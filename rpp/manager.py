@@ -11,6 +11,7 @@ import concurrent.futures
 import tempfile
 import filecmp
 import time
+from .version import __version__
 from .constants import Constants
 from .logger import get_logger, RPPLogger
 from .presence import Presence
@@ -21,9 +22,11 @@ from .utils import (
     download_github_folder,
     exist_github_folder,
     get_available_presences,
+    check_version_compatibility,
 )
 
 
+# pylint: disable=R0903, R0902, R0913, W0703, R0917
 class Manager:
     """
     Manager class for Rich Presence Plus.
@@ -92,6 +95,7 @@ class Manager:
                 instance = obj()
                 instance.path = root
                 instance.set_dev_mode(self.dev_mode)
+                instance.prepare(log=False)
                 if instance.enabled:
                     self.presences.append(instance)
 
@@ -109,7 +113,7 @@ class Manager:
                 os.getenv("GITHUB_API_TOKEN"),
             ):
                 self.log.warning(
-                    "Presence %s not found in remote repository." % folder_name
+                    "Presence %s not found in remote repository.", folder_name
                 )
                 return
         try:
@@ -118,7 +122,7 @@ class Manager:
                 raise ImportError(f"Module {module_path} not found")
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            self.log.info("Loaded module for {%s} (%s)" % (relative_path, module_name))
+            self.log.info("Loaded module for {%s} (%s)", relative_path, module_name)
             if file == "main.py":
                 self.load_presence_entry_module(module, root)
         except Exception as exc:
@@ -147,20 +151,20 @@ class Manager:
                     self.web_enabled = True
                 if not self.runtime.connected:
                     self.log.warning(
-                        "%s uses web features but runtime is not connected"
-                        % presence.name
+                        "%s uses web features but runtime is not connected",
+                        presence.name,
                     )
             while not self.stop_event.is_set() and presence.running:
                 presence.on_update(runtime=self.runtime, steam=self.steam)
                 time.sleep(presence.update_interval)
         except Exception as exc:
-            self.log.error(f"Error running {presence.name}: {exc}")
+            self.log.error("Error running %s: %s", presence.name, exc)
 
     def __runtime_thread(self) -> None:
         """
         Run the runtime in a thread.
         """
-        self.log.info("Runtime thread started (interval: %ds)" % self.runtime_interval)
+        self.log.info("Runtime thread started (interval: %ds)", self.runtime_interval)
         self.runtime.running = True
         while (
             not self.stop_event.is_set()
@@ -170,17 +174,6 @@ class Manager:
             self.runtime.update()
             time.sleep(self.runtime_interval)
         self.runtime.running = False
-
-    def __main_thread(self) -> None:
-        """
-        Run the main thread.
-        """
-        while not self.stop_event.is_set():
-            time.sleep(self.presence_interval)
-            for presence in self.presences:
-                if presence.running:
-                    presence.update()
-        self.stop_presences()
 
     def download_presence(self, presence_name: str) -> None:
         """
@@ -194,7 +187,7 @@ class Manager:
             return
         for presence in self.presences:
             if presence.name == presence_name:
-                self.log.warning(f"Presence {presence_name} already downloaded.")
+                self.log.warning("Presence %s already downloaded.", presence_name)
                 return
         try:
             download_github_folder(
@@ -202,9 +195,9 @@ class Manager:
                 os.path.join(self.folder, presence_name),
                 os.getenv("GITHUB_API_TOKEN"),
             )
-            self.log.info(f"Presence {presence_name} downloaded.")
+            self.log.info("Presence %s downloaded.", presence_name)
         except Exception as exc:
-            self.log.error(f"Downloading {presence_name}: {exc}")
+            self.log.error("On download %s: %s", presence_name, exc)
 
     def remove_presence(self, presence_name: str) -> None:
         """
@@ -215,21 +208,21 @@ class Manager:
         """
         presence_path = os.path.join(self.folder, presence_name)
         if not os.path.exists(presence_path):
-            self.log.error(f"Presence {presence_name} not found.")
+            self.log.error("Presence %s not found.", presence_name)
             return
 
         for presence in self.presences:
             if presence.name == presence_name and presence.running:
-                self.log.warning(f"Cannot remove running presence {presence_name}.")
+                self.log.warning("Cannot remove running presence %s.", presence_name)
                 return
         try:
             for root, _, files in os.walk(presence_path):
                 for file in files:
                     os.remove(os.path.join(root, file))
             os.rmdir(presence_path)
-            self.log.info(f"Presence {presence_name} removed.")
+            self.log.info("Presence %s removed.", presence_name)
         except Exception as exc:
-            self.log.error(f"Removing {presence_name}: {exc}")
+            self.log.error("On removing %s: %s", presence_name, exc)
 
     def compare(self) -> None:
         """
@@ -243,13 +236,21 @@ class Manager:
             self.log.info("Skipping comparison in dev mode.")
             return
         with tempfile.TemporaryDirectory(prefix="rpp_") as tempdir:
-            self.log.info("Using temp dir %s" % tempdir)
+            self.log.info("Using temp dir %s", tempdir)
             for presence in self.presences:
                 if not presence.enabled:
                     continue
+                if not check_version_compatibility(presence.package):
+                    self.log.warning(
+                        "%s is incompatible with the current RPP version (%s)",
+                        presence.name,
+                        __version__,
+                    )
+                    presence.enabled = False
+                    continue
                 try:
                     presence.prepare(log=False)
-                    self.log.info(f"Comparing {presence.name}...")
+                    self.log.info("Comparing %s...", presence.name)
                     download_github_folder(
                         Constants.PRESENCES_ENPOINT.format(presence_name=presence.name),
                         os.path.join(tempdir, presence.name),
@@ -260,12 +261,12 @@ class Manager:
                         os.path.join(tempdir, presence.name),
                         ignore=["__pycache__", ".env"],
                     ).diff_files:
-                        self.log.info(f"Inconsistency found in {presence.name}.")
-                        self.log.info(f"Please update {presence.name}.")
+                        self.log.info("Inconsistency found in %s.", presence.name)
+                        self.log.info("Please update %s.", presence.name)
                         presence.enabled = False
                         break
                 except Exception as exc:
-                    self.log.error(f"Comparing {presence.name}: {exc}")
+                    self.log.error("On compare %s: %s", presence.name, exc)
                     continue
 
     def sync_presences(self) -> typing.List[dict]:
@@ -303,24 +304,17 @@ class Manager:
             presence.running = True
             presence.prepare()
             self.executor.submit(self.__presence_thread, presence)
-        self.executor.submit(self.__main_thread)
         self.log.info("Presences started.")
-
-    def run_main(self) -> None:
-        """
-        Run the main thread.
-        """
-        self.executor.submit(self.__main_thread)
 
     def run_presence(self, presence: Presence) -> None:
         """
         Run a presence.
         """
         if not presence.enabled:
-            self.log.error(f"{presence.name} is not enabled.")
+            self.log.error("%s is disabled.", presence.name)
             return
         if presence.running:
-            self.log.warning(f"{presence.name} already running.")
+            self.log.warning("%s already running.", presence.name)
             return
         self.executor.submit(self.__presence_thread, presence)
 

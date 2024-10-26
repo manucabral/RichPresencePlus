@@ -1,5 +1,10 @@
-import urllib.request
+"""
+Module to interact with the browser runtime.
+Only works with Chromium-based browsers for now.
+"""
+
 import json
+import urllib.request
 from functools import wraps
 from .tab import Tab
 from .logger import get_logger, RPPLogger
@@ -48,13 +53,14 @@ class Runtime:
             ) as url:
                 data = json.loads(url.read().decode())
                 if not data:
-                    return []
+                    return
                 self.data = [Tab(**d) for d in data]
                 if not self.connected:
                     self.connected = True
                     self.log.info("Connected to browser successfully")
                 self.log.debug("Updated data")
-        except Exception as exc:
+        # pylint: disable=broad-except
+        except Exception:
             self.log.warning("Could not connect to browser")
             self.connected = False
 

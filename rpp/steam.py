@@ -26,7 +26,7 @@ class SteamAccount:
         """
         Return the string representation of the Steam account.
         """
-        return "%s(%s, %d)" % (self.__class__.__name__, self.name, self.steam_id64)
+        return f"{self.__class__.__name__}({self.name}, {self.steam_id64})"
 
     def __repr__(self) -> str:
         """
@@ -35,6 +35,7 @@ class SteamAccount:
         return str(self)
 
 
+# pylint: disable=R0903
 class Steam:
     """
     Steam class.
@@ -48,8 +49,8 @@ class Steam:
             config_path = os.getenv("STEAM_CONFIG_PATH")
         self.config_path: str = config_path
         self.log: RPPLogger = get_logger("Steam")
-        self.accounts: list[SteamAccount] = list()
-        self.log.info("Init: %s" % self.config_path)
+        self.accounts: list[SteamAccount] = []
+        self.log.info("Init: %s", self.config_path)
         self.enabled: bool = True
         self.load_accounts()
 
@@ -71,13 +72,16 @@ class Steam:
                     return self.accounts
                 for name, steam_id64 in matches:
                     self.accounts.append(SteamAccount(name, int(steam_id64)))
-            self.log.info("Found %d steam accounts" % len(self.accounts))
+            self.log.info("Found %d steam accounts", len(self.accounts))
             return self.accounts
         except FileNotFoundError:
             self.log.error(
-                "Steam configuration file not found, maybe steam is installed in a different directory"
+                "Steam configuration file not found,"
+                "maybe steam is installed in a different directory"
             )
             self.log.info(
-                "Please specify the real path into the .env file with key STEAM_CONFIG_PATH"
+                "Please specify the real path into"
+                "the .env file with key STEAM_CONFIG_PATH"
             )
             self.enabled = False
+            return []

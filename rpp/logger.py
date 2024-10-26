@@ -42,20 +42,20 @@ class RPPLogger(logging.Logger):
             self.console_handler.setLevel(logging.CRITICAL + 1)
         super().log(level, message, *args, **kwargs)
 
-    def info(self, message: str, *args, console: bool = True, **kwargs) -> None:
-        self.__log(logging.INFO, message, *args, console=console, **kwargs)
+    def info(self, msg: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.INFO, msg, *args, console=console, **kwargs)
 
-    def debug(self, message: str, *args, console: bool = True, **kwargs) -> None:
-        self.__log(logging.DEBUG, message, *args, console=console, **kwargs)
+    def debug(self, msg: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.DEBUG, msg, *args, console=console, **kwargs)
 
-    def error(self, message: str, *args, console: bool = True, **kwargs) -> None:
-        self.__log(logging.ERROR, message, *args, console=console, **kwargs)
+    def error(self, msg: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.ERROR, msg, *args, console=console, **kwargs)
 
-    def warning(self, message: str, *args, console: bool = True, **kwargs) -> None:
-        self.__log(logging.WARNING, message, *args, console=console, **kwargs)
+    def warning(self, msg: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.WARNING, msg, *args, console=console, **kwargs)
 
-    def critical(self, message: str, *args, console: bool = True, **kwargs) -> None:
-        self.__log(logging.CRITICAL, message, *args, console=console, **kwargs)
+    def critical(self, msg: str, *args, console: bool = True, **kwargs) -> None:
+        self.__log(logging.CRITICAL, msg, *args, console=console, **kwargs)
 
 
 logging.setLoggerClass(RPPLogger)

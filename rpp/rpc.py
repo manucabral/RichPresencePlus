@@ -53,14 +53,15 @@ class ClientRPC:
         for index in range(10):
             path = path.format(index)
             try:
-                self.__socket = open(path, "w+b", buffering=0)
+                # pylint: disable=consider-using-with
+                self.__socket = open(path, "w+b")
             except FileNotFoundError:
                 continue
             except OSError as e:
                 self.log.error(e)
             else:
                 if self.debug:
-                    self.log.info(f"Connected to: {path}")
+                    self.log.info("Connected to: %s", path)
                 break
         else:
             self.log.error("Failed to connect. Possibly Discord is not running.")
@@ -106,7 +107,7 @@ class ClientRPC:
 
         output = json.loads(enc_data.decode("UTF-8"))
         if self.debug:
-            self.log.debug(f"Received: {output}")
+            self.log.debug("Received: %s", output)
         return output
 
     def __handshake(self) -> None:
@@ -124,12 +125,13 @@ class ClientRPC:
 
         if data["cmd"] == "DISPATCH" and data["evt"] == "READY":
             self.log.info("Handshake successful.")
-            self.log.info(f"User: {data['data']['user']['username']}")
+            self.log.info("User: %s", data["data"]["user"]["username"])
             self.__connected = True
         else:
-            self.log.error(f"Failed to handshake: {data}")
+            self.log.error("Failed to handshake: %s", data)
             raise ValueError("Handshake failed.")
 
+    # pylint: disable=R0913, R0917
     def update(
         self,
         state: str = None,

@@ -3,6 +3,7 @@ Constants module for Rich Presence Plus.
 """
 
 
+# pylint: disable=C0301, R0903
 class Constants:
     """
     Constants class for Rich Presence Plus.

@@ -1,6 +1,13 @@
+"""
+Tab module. 
+Contains each element to interact with a tab from the browser.
+"""
+
 import json
 from .client import Client
 from .logger import get_logger
+
+# pylint: disable=C0103
 
 
 class Attribute:
@@ -14,6 +21,9 @@ class Attribute:
     """
 
     def __init__(self, **kwargs: dict):
+        """
+        Initialize the attribute object.
+        """
         self.name = kwargs.get("name", None)
         self.type = kwargs.get("type", None)
         self.value = kwargs.get("value", None)
@@ -33,6 +43,9 @@ class PropertiesResponse:
     """
 
     def __init__(self, **kwargs: dict) -> None:
+        """
+        Initialize the properties response object.
+        """
         self.__dict__.update(kwargs)
 
     def __str__(self) -> str:
@@ -44,7 +57,10 @@ class PropertiesResponse:
     def __getitem__(self, key: str) -> Attribute:
         return getattr(self, key)
 
-    def keys(self):
+    def keys(self) -> list:
+        """
+        Get the keys of the properties.
+        """
         return self.__dict__.keys()
 
     def __contains__(self, key: str) -> bool:
@@ -56,17 +72,15 @@ class PropertiesResponse:
 
 
 class RemoteObject:
-    __slots__ = (
-        "type",
-        "subtype",
-        "className",
-        "value",
-        "unserializableValue",
-        "description",
-        "objectId",
-    )
+    """
+    Remote object class.
+    See: https://chromedevtools.github.io/devtools-protocol/tot/Runtime#type-RemoteObject
+    """
 
-    def __init__(self, **kwargs: dict) -> None:
+    def __init__(self, **kwargs: dict):
+        """
+        Initialize the remote object.
+        """
         self.type = kwargs.get("type", None)
         self.subtype = kwargs.get("subtype", None)
         self.className = kwargs.get("className", None)
@@ -82,19 +96,17 @@ class RemoteObject:
         return self.__str__()
 
     def __eq__(self, other) -> bool:
-        return self.objectId == other.objectId and self.otype == other.otype
+        return self.objectId == other.objectId
+
+    def __ne__(self, other) -> bool:
+        return self.objectId != other.objectId
 
 
 class Tab:
-    __slots__ = (
-        "__id",
-        "__url",
-        "__title",
-        "__ws_debug_url",
-        "__client",
-        "__connected",
-        "log",
-    )
+    """
+    Tab class.
+    Interacts with a tab from the browser.
+    """
 
     def __init__(self, **kwargs: dict) -> None:
         self.__id = kwargs.get("id", None)
@@ -119,18 +131,30 @@ class Tab:
 
     @property
     def id(self) -> str:
+        """
+        Get the tab id.
+        """
         return self.__id
 
     @property
     def url(self) -> str:
+        """
+        Get the tab url.
+        """
         return self.__url
 
     @property
     def title(self) -> str:
+        """
+        Get the tab title.
+        """
         return self.__title
 
     @property
     def connected(self) -> bool:
+        """
+        Get the connection status.
+        """
         return self.__connected
 
     def getProperties(self, objectId: str) -> PropertiesResponse:
@@ -155,7 +179,7 @@ class Tab:
         data = self.__client.receive()
         jsonData = json.loads(data)
         if "error" in jsonData:
-            self.log.error(f"getProperties: {jsonData['error']['message']}")
+            self.log.error("On get properties: %s", jsonData["error"]["message"])
             return PropertiesResponse()
         result = jsonData["result"]["result"]
         properties = {
@@ -208,7 +232,7 @@ class Tab:
             data = self.__client.receive()
             jsonData = json.loads(data)
             if "error" in jsonData:
-                self.log.error(f"execute: {jsonData['error']['message']}")
+                self.log.error("On execute: %s", jsonData["error"]["message"])
                 return RemoteObject()
             return RemoteObject(**jsonData["result"]["result"])
         except Exception as exc:

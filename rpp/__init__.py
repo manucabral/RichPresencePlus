@@ -15,12 +15,11 @@ from .browser import Browser
 from .runtime import Runtime
 from .utils import load_env, get_available_presences, get_steam_presence
 from .tab import Tab
+from .version import __version__, __title__
 
-__title__ = "Rich Presence Plus"
 __description__ = (
     "A simple Discord Rich Presence manager for custom desktop or web status."
 )
-__version__ = "0.0.8"
 __author__ = "Manuel Cabral"
 __license__ = "GPL-3.0"
 
