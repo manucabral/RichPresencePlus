@@ -1,10 +1,9 @@
 {
     "name": "Youtube Music",
     "version": "1.0.1",
+    "package": ">=0.0.7",
     "description": {
-        "en": "Shows what you're listening to on YouTube Music.",
-        "pt-BR": "Mostra o que você está ouvindo no YouTube Music.",
-        "es": "Muestra lo que estás escuchando en YouTube Music."
+        "en": "YouTube Music is a streaming service offering access to over 70 million official songs, including albums, singles, remixes, and live performances. It allows users to create custom playlists, explore various music genres, and discover exclusive content. Unique features include lyrics display and seamless switching between audio and video. Available on Android, iOS, and desktop."
     },
     "clientId": 828083725790609459,
     "image": "https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/presences/Youtube%20Music/image.webp",

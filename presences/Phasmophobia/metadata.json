@@ -1,11 +1,9 @@
 {
     "name": "Phasmophobia",
     "version": "1.0.0",
+    "package": ">=0.0.7",
     "description": {
-        "en": "Show your friends that you are playing Phasmophobia.",
-        "pt-BR": "Mostre aos seus amigos que você está jogando Phasmophobia.",
-        "es": "Muestra a tus amigos que estás jugando Phasmophobia.",
-        "ru": "Покажите своим друзьям, что вы играете в Phasmophobia."
+        "en": "Phasmophobia is a co-op horror game where players investigate haunted locations, using paranormal equipment to identify ghosts while avoiding deadly encounters."
     },
     "clientId": 989305225137492029,
     "image": "https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/presences/Phasmophobia/image.webp",

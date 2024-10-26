@@ -1,9 +1,9 @@
 {
     "name": "Youtube",
     "version": "1.0.1",
+    "package": ">=0.0.7",
     "description": {
-        "en": "Shows the currently playing video on YouTube.",
-        "pt-BR": "Mostra o vídeo atualmente sendo reproduzido no YouTube."
+        "en": "YouTube is a video-sharing platform where users can upload, watch, and interact with videos, ranging from music and tutorials to vlogs and live streams."
     },
     "clientId": 1113646725408772176,
     "image": "https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/presences/Youtube/image.webp",

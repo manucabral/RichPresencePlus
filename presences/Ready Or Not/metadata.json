@@ -1,6 +1,7 @@
 {
     "name": "Ready Or Not",
     "version": "1.0.0",
+    "package": ">=0.0.7",
     "description": {
         "en": "Ready or Not is a tactical first person shooter which places you in the boots of an elite SWAT team, tasked with diffusing hostile situations in intense, claustrophobic environments. It\u2019s set in a nondescript modern America, where an income disparity between the classes have become unsustainable and the country has been plunged into havoc. Bring order to chaos with up to 8 players in cooperative play, battle enemy squads in a close player-vs-player environment, or command AI in a striking single-player mode."
     },

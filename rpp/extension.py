@@ -2,14 +2,15 @@
 This module provides a decorator to extend the base class of the presence for create new presences.
 """
 
-import rpp
 import json
 import time
+import rpp
 from .rpc import ClientRPC
 from .presence import Presence
 from .logger import get_logger
 
 
+# pylint: disable=W0201, R0903, E0203, R0915
 def extension(cls: Presence) -> Presence:
     """
     Decorator to extend the base class of the presence for create new presences.
@@ -113,8 +114,9 @@ def extension(cls: Presence) -> Presence:
             try:
                 self.__rpc = ClientRPC(client_id=self.client_id)
                 self.__rpc.connect()
+            # pylint: disable=W0703
             except Exception as exc:
-                self.log.error(f"Failed to connect to Discord: {exc}")
+                self.log.error("Failed to connect to Discord: %s", exc)
                 return
             super().on_load()
             self.update()
@@ -137,8 +139,9 @@ def extension(cls: Presence) -> Presence:
             try:
                 if self.__rpc:
                     self.__rpc.close()
+            # pylint: disable=W0703
             except Exception as exc:
-                self.log.error(f"Failed to close connection to Discord: {exc}")
+                self.log.error("Failed to close connection to Discord: %s", exc)
 
         def force_update(self) -> None:
             """
@@ -208,7 +211,8 @@ def extension(cls: Presence) -> Presence:
                         else self.buttons
                     ),
                 )
+            # pylint: disable=W0703
             except Exception as exc:
-                self.log.error(f"Failed to update on Discord: {exc}")
+                self.log.error("Failed to update on Discord: %s", exc)
 
     return Wrapp
