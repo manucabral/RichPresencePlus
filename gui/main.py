@@ -20,7 +20,6 @@ if __name__ == "__main__":
     runtime = rpp.Runtime(9222)
     steam = rpp.Steam()
     manager = rpp.Manager(runtime=runtime, steam=steam, dev_mode=False)
-    manager.run_main()
     app = app.App(manager, runtime, browser)
     app.protocol("WM_DELETE_WINDOW", app.on_exit)
     app.mainloop()
