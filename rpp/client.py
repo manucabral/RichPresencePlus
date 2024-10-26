@@ -1,5 +1,9 @@
-import websocket
+"""
+Client object to interact with the browser using a WebSocket connection.
+"""
+
 import json
+import websocket
 
 
 class Client:
