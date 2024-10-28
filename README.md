@@ -36,6 +36,8 @@ Chromium base browsers (e.g. Chrome, Opera, Edge and more)
 ## Request a Presence
 If you'd like to propose a new presence to be added to the list, please [create an issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
 
+You can check the development status of each one by going [here](https://github.com/users/manucabral/projects/4).
+
 ## Presence Development
 Please check the [development repository](https://github.com/manucabral/RichPresencePlusDev) to read the documentation and start coding your custom presence.
 
