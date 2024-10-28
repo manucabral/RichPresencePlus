@@ -41,6 +41,13 @@ You can check the development status of each one by going [here](https://github.
 ## Presence Development
 Please check the [development repository](https://github.com/manucabral/RichPresencePlusDev) to read the documentation and start coding your custom presence.
 
+All presences are accepted as long as they follow the correct policies.
+
+## Discussions
+If you have questions, feature suggestions, or feedback to share, the Discussions area is the best place to engage with the community.
+
+Feel free to start a new discussion [here](https://github.com/manucabral/RichPresencePlus/discussions).
+
 ## RoadMap
 - Expand usable modules.
 - Investigate Firefox compatibility.
