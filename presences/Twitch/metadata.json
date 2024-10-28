@@ -1,0 +1,23 @@
+{
+    "name": "Twitch",
+    "version": "1.0.0",
+    "package": ">=0.0.8",
+    "description": {
+        "en": "Twitch is where millions of people come together live every day to chat, interact, and make their own entertainment together."
+    },
+    "clientId": 1113134454945362081,
+    "image": "https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/presences/Twitch/image.webp",
+    "updateInterval": 8,
+    "author": "manucabral",
+    "contributors": [],
+    "web": true,
+    "category": "streaming",
+    "color": "#6441A4",
+    "tags": [
+        "streaming",
+        "live",
+        "chat",
+        "interact",
+        "entertainment"
+    ]
+}
