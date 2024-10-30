@@ -1,3 +1,7 @@
+"""
+Twitch presence for Rich Presence Plus.
+"""
+
 import re
 import time
 import rpp
@@ -7,19 +11,38 @@ TWITCH_ICON = "https://assets.twitch.tv/assets/favicon-32-e29e246c157142c94346.p
 
 @rpp.extension
 class Twitch(rpp.Presence):
+    """
+    Twitch presence for Rich Presence Plus.
+    """
+
     def __init__(self):
+        """
+        Initialize the presence.
+        """
         super().__init__(metadata_file=True)
         self.activity_type: rpp.ActivityType = rpp.ActivityType.WATCHING
         self.tab: rpp.Tab = None
+        self.enabled = False
+        self.state = "Initializing"
+        self.details = "Initializing"
+        self.large_image = self.small_image = TWITCH_ICON
+        self.large_text = self.small_text = "Twitch"
+        self.start = None
+        self.buttons = None
 
     def on_load(self):
+        """
+        Load the presence.
+        """
         self.state = "No watching"
-        self.details = "Initializing"
+        self.details = "Updating..."
         self.start = int(time.time())
-        self.small_image = TWITCH_ICON
         self.log.info("Loaded")
 
     def extract_stream_avatar(self):
+        """
+        Extract the stream avatar.
+        """
         element = self.tab.execute(
             "document.querySelector('div[aria-label=\"Channel Avatar Picture\"] img')"
         )
@@ -29,6 +52,9 @@ class Twitch(rpp.Presence):
         return self.tab.getProperties(element.objectId)
 
     def extract_stream_title(self):
+        """
+        Extract the stream title.
+        """
         element = self.tab.execute(
             "document.querySelector('h2[data-a-target=\"stream-title\"]')"
         )
@@ -38,7 +64,9 @@ class Twitch(rpp.Presence):
         return self.tab.getProperties(element.objectId)
 
     def on_update(self, runtime: rpp.Runtime, **context):
-
+        """
+        Update the presence.
+        """
         tabs = runtime.filter_tabs("www.twitch.tv")
         if not tabs:
             return
@@ -74,5 +102,8 @@ class Twitch(rpp.Presence):
         ]
 
     def on_close(self):
+        """
+        Close the presence.
+        """
         self.tab = None
         self.log.info("Closed")
