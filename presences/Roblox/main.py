@@ -29,7 +29,6 @@ class Roblox(rpp.Presence):
         self.state = self.details = "Initializing"
         self.small_text = self.large_text = "Roblox"
         self.start = None
-        self.running = True
         self.last_state = "unknown"
         self.log_path = (
             os.getenv("ROBLOX_LOGS_PATH")
