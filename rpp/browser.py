@@ -102,7 +102,6 @@ class Browser:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
-                text=True,
             )
         except subprocess.CalledProcessError as exc:
             if not self.running():
@@ -182,14 +181,12 @@ class Browser:
                 self.start(remote_port, True)
 
         try:
-            subprocess.run(
+            subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
                 text=True,
-                check=True,
-                timeout=10,
             )
         except PermissionError:
             as_admin()
