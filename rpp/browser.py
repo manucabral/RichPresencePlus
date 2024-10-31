@@ -95,30 +95,38 @@ class Browser:
             if admin
             else Constants.KILL_BROWSER.format(process=self.process)
         )
+
+        def as_admin():
+            self.log.warning(
+                "No permission to kill browser normally. Trying to kill as admin."
+            )
+            if not admin:
+                self.kill(admin=True)
+
         try:
             # pylint: disable=consider-using-with
-            subprocess.Popen(
+            process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
             )
+            self.log.info("Killed with PID: %s (%s)", process.pid, self.process)
+            if self.running() and self.process == "Arc.exe":
+                # Arc is a special case
+                as_admin()
         except subprocess.CalledProcessError as exc:
             if not self.running():
                 self.log.warning("Skipping kill, browser not running.")
                 return
-            self.log.warning("Cannot kill browser process. Trying as admin.")
             self.log.error(exc)
-            if not admin:
-                self.kill(admin=True)
+            as_admin()
         except subprocess.TimeoutExpired:
             self.log.error("Timeout killing browser process.")
         except PermissionError:
             self.log.error("No permission to kill browser process.")
         except FileNotFoundError:
             self.log.error("Browser path not found.")
-        finally:
-            self.log.info("Browser killed.")
 
     def running(self) -> bool:
         """
@@ -181,13 +189,20 @@ class Browser:
                 self.start(remote_port, True)
 
         try:
-            subprocess.Popen(
+            # pylint: disable=consider-using-with
+            process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
                 text=True,
             )
+            self.log.info("Started with PID: %s (%s)", process.pid, self.process)
+            if self.process != "opera.exe":
+                _, stderr = process.communicate()
+                result = stderr.strip()
+                if "Access is denied" in result:
+                    as_admin()
         except PermissionError:
             as_admin()
         except FileNotFoundError:
@@ -198,5 +213,3 @@ class Browser:
             self.log.error("Error starting browser.")
             self.log.error(exc)
             as_admin()
-        finally:
-            self.log.info("Browser started.")
