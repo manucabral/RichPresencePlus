@@ -22,7 +22,6 @@ class Twitch(rpp.Presence):
         super().__init__(metadata_file=True)
         self.activity_type: rpp.ActivityType = rpp.ActivityType.WATCHING
         self.tab: rpp.Tab = None
-        self.enabled = False
         self.state = "Initializing"
         self.details = "Initializing"
         self.large_image = self.small_image = TWITCH_ICON
