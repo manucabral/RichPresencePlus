@@ -41,7 +41,7 @@ class Presence(ABC):
         self.state: str = None
         self.large_image: str = None
         self.small_image: str = None
-        self.small_text: str = "Rich Presence Plus"
+        self.small_text: str = None
         self.activity_type: ActivityType = ActivityType.PLAYING
         self.buttons: list = None
         self.start: int = None
