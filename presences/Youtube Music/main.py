@@ -107,6 +107,8 @@ class YoutubeMusic(rpp.Presence):
             self.details = metadata["artist"]
             self.state = metadata["title"]
             self.large_image = artwork
+            if metadata["album"] == metadata["title"]:
+                metadata["album"] = None
             self.large_text = metadata["album"] if metadata["album"] else extra
             self.small_image = "play" if playback_state == "playing" else "pause"
             self.small_text = (
