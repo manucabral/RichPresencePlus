@@ -64,6 +64,18 @@ class YoutubeMusic(rpp.Presence):
         props = self.tab.getProperties(element.objectId)
         return props.src.value
 
+    def extract_extra_metadata(self):
+        """
+        Simply extracts the year or likes if available.
+        """
+        element = self.tab.execute(
+            "document.querySelector('yt-formatted-string.byline.style-scope.ytmusic-player-bar span:last-of-type')"
+        )
+        if not element.objectId:
+            self.log.debug("Extra metadata not found")
+            return None
+        return self.tab.getProperties(element.objectId).textContent.value
+
     def on_update(self, runtime: rpp.Runtime, **context):
 
         tabs = self.extract_tabs(runtime)
@@ -85,6 +97,7 @@ class YoutubeMusic(rpp.Presence):
         playback_state = self.extract_mediasession_playblackstate()
         artwork = self.extract_mediasession_artwork()
         video_stream = self.extract_video_stream()
+        extra = self.extract_extra_metadata()
 
         if self.last_song != metadata["title"]:  # Song changed
             self.log.info(
@@ -94,9 +107,7 @@ class YoutubeMusic(rpp.Presence):
             self.details = metadata["artist"]
             self.state = metadata["title"]
             self.large_image = artwork
-            self.large_text = (
-                metadata["album"] if metadata["album"] else metadata["artist"]
-            )
+            self.large_text = metadata["album"] if metadata["album"] else extra
             self.small_image = "play" if playback_state == "playing" else "pause"
             self.small_text = (
                 "Listening to music" if playback_state == "playing" else "Paused"
