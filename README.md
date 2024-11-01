@@ -4,12 +4,24 @@
 
 
 <h1 align="center">Rich Presence Plus</h1>
+
+<div align="center">
+    <img src="https://img.shields.io/badge/version-0.0.8-blue" />
+    <img src="https://img.shields.io/github/downloads/manucabral/RichPresencePlus/total" />
+    <img src="https://img.shields.io/github/contributors/manucabral/RichPresencePlus" />
+    <img src="https://img.shields.io/github/license/manucabral/RichPresencePlus" />
+    <img src="https://img.shields.io/github/commit-activity/m/manucabral/RichPresencePlus" />
+</div>
+
+
 <p align="center">
 A simple Discord Rich Presence (Discord RPC) application manager for custom desktop or web services statuses.
 </p>
+
 <p align="center">
 Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 </p>
+
 
 <p align="center">
 <img src="https://github.com/manucabral/RichPresencePlus/blob/main/assets/demov0.0.5.gif" width="650" title="RichPresencePlusDemo">
@@ -47,6 +59,12 @@ All presences are accepted as long as they follow the correct policies.
 If you have questions, feature suggestions, or feedback to share, the Discussions area is the best place to engage with the community.
 
 Feel free to start a new discussion [here](https://github.com/manucabral/RichPresencePlus/discussions).
+
+## Discord
+Join our community on Discord to connect with other users, get support, and share your ideas. Stay updated with the latest news, participate in discussions, and collaborate with fellow developers.
+
+[Join our Discord server](https://discord.gg/NjXFRqWarc)
+
 
 ## RoadMap
 - Expand usable modules.
