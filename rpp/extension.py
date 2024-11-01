@@ -206,11 +206,9 @@ def extension(cls: Presence) -> Presence:
                 return
             if self.dev_mode:
                 self.log.debug(json.dumps(self.deserialize(), indent=4))
-
                 return
             self.log.debug("Sending update to Discord.")
             try:
-                self.large_text = f"{__title__} v{__version__}"
                 if self.details and len(self.details) > 128:
                     self.details = self.details[:125] + "..."
                 if self.state and len(self.state) > 128:
@@ -219,11 +217,7 @@ def extension(cls: Presence) -> Presence:
                     state=self.state,
                     details=self.details,
                     large_image=self.large_image,
-                    large_text=(
-                        self.large_text
-                        if self.large_text
-                        else f"{__title__} v{__version__}"
-                    ),
+                    large_text=self.large_text,
                     small_image=self.small_image,
                     small_text=self.small_text,
                     activity_type=self.activity_type,
