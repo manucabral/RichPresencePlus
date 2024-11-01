@@ -83,10 +83,17 @@ class Twitch(rpp.Presence):
             self.state = "Browsing Twitch"
             self.details = None
             self.large_image = TWITCH_ICON
+            self.log.info("Browsing...")
             return
 
         title = self.extract_stream_title().textContent.value
         avatar = self.extract_stream_avatar().src.value
+        if len(title) < 2:
+            title = "|> " + title
+        if len(title) > 128:
+            title = title[:125] + "..."
+        if len(avatar) > 128:
+            avatar = TWITCH_ICON
         channel_name = self.tab.url.split("/")[-1]
         self.state = title
         self.details = "Watching " + channel_name
