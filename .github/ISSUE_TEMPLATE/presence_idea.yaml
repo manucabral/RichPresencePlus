@@ -1,0 +1,38 @@
+name: Presence Request Idea
+description: Suggest an improvement or new idea for an existing presence.
+labels: [idea, enhancement]
+
+body:
+
+  - type: input
+    id: idea-presence
+    attributes:
+      label: Presence
+      description: Which presence would you like to implement this idea for?
+      placeholder: Youtube
+    validations:
+      required: true
+      
+  - type: textarea
+    id: idea-description
+    attributes:
+      label: Description
+      description: "Provide a detailed description of the presence idea you would like to see implemented."
+      placeholder: "Explain your idea here..."
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: "Describe how this presence idea would benefit the users or improve the experience."
+      placeholder: "Describe the use case or scenario..."
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      description: "Select the priority level for this idea."
+      options:
+        - Low
+        - Medium
+        - High
