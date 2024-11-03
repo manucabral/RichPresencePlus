@@ -1,0 +1,98 @@
+[
+  {
+    "clientId": 4,
+    "name": "Facebook",
+    "author": "manucabral",
+    "description": {
+      "en": "Facebook helps you connect and share with the people in your life."
+    },
+    "image": "/images/facebook-icon.svg",
+    "version": "1.0.0",
+    "category": "media",
+    "inProgress": true
+  },
+  {
+    "clientId": 5,
+    "name": "Twitter",
+    "author": "manucabral",
+    "description": {
+      "en": "Twitter is what's happening in the world and what people are talking about right now."
+    },
+    "image": "/images/twitter-icon.png",
+    "version": "1.0.0",
+    "category": "media",
+    "inProgress": true
+  },
+  {
+    "clientId": 6,
+    "name": "Instagram",
+    "author": "manucabral",
+    "description": {
+      "en": "A simple, fun & creative way to capture, edit & share photos, vclientIdeos & messages with friends & family."
+    },
+    "image": "/images/instagram-icon.png",
+    "version": "1.0.0",
+    "category": "media",
+    "inProgress": true
+  },
+  {
+    "clientId": 7,
+    "name": "LinkedIn",
+    "author": "manucabral",
+    "description": {
+      "en": "LinkedIn is the world's largest professional network with nearly 740 million members in more than 200 countries and territories worldwclientIde."
+    },
+    "image": "/images/linkedin-icon.png",
+    "version": "1.0.0",
+    "category": "media",
+    "inProgress": true
+  },
+  {
+    "clientId": 8,
+    "name": "Twitch",
+    "author": "manucabral",
+    "description": {
+      "en": "Streaming platform for gamers and content creators"
+    },
+    "image": "/images/twitch-icon.png",
+    "version": "1.0.0",
+    "category": "media_streaming",
+    "inProgress": true
+  },
+  {
+    "clientId": 9,
+    "name": "Spotify",
+    "author": "manucabral",
+    "description": {
+      "en": "Enjoy the music you love, upload original content, and share it all with friends, family, and the world on Spotify."
+    },
+    "image": "/images/spotify-icon.png",
+    "version": "1.0.0",
+    "category": "music",
+    "inProgress": true
+  },
+  {
+    "clientId": 10,
+    "name": "Netflix",
+    "author": "manucabral",
+    "description": {
+      "en": "Watch TV shows and movies online. Stream TV episodes of your favorite series and movies instantly on Netflix."
+    },
+    "image": "/images/netflix-logo.webp",
+    "version": "1.0.0",
+    "category": "media_streaming",
+    "inProgress": true
+  },
+  {
+    "clientId": 1,
+    "name": "Google",
+    "author": "manucabral",
+    "description": {
+      "en": "Google helps you connect and share with the people in your life."
+    },
+    "image": "/images/google-icon.webp",
+    "version": "1.0.0",
+    "category": "other",
+    "inProgress": true
+  }
+]
