@@ -74,13 +74,13 @@ importers:
         version: 18.2.4
       autoprefixer:
         specifier: 10.4.14
-        version: 10.4.14(postcss@8.4.24)
+        version: 10.4.14(postcss@8.4.31)
       eslint-config-next:
         specifier: 14.0.4
         version: 14.0.4(eslint@8.41.0)(typescript@5.0.4)
       postcss:
-        specifier: 8.4.24
-        version: 8.4.24
+        specifier: 8.4.31
+        version: 8.4.31
       prettier:
         specifier: ^3.2.5
         version: 3.2.5
@@ -4159,14 +4159,14 @@ snapshots:
 
   asynckit@0.4.0: {}
 
-  autoprefixer@10.4.14(postcss@8.4.24):
+  autoprefixer@10.4.14(postcss@8.4.31):
     dependencies:
       browserslist: 4.21.6
       caniuse-lite: 1.0.30001489
       fraction.js: 4.2.0
       normalize-range: 0.1.2
       picocolors: 1.0.0
-      postcss: 8.4.24
+      postcss: 8.4.31
       postcss-value-parser: 4.2.0
 
   available-typed-arrays@1.0.5: {}
