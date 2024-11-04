@@ -79,6 +79,8 @@ class Steam:
                 "Steam configuration file not found,"
                 "maybe steam is installed in a different directory"
             )
-            self.log.info("Please specify the real path into the .env file with key STEAM_CONFIG_PATH")
+            self.log.info(
+                "Please specify the real path into .env with STEAM_CONFIG_PATH"
+            )
             self.enabled = False
             return []
