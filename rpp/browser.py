@@ -25,6 +25,7 @@ class Browser:
         self.name: str = self.get_name()
         self.process: str = self.path.split("\\")[-1]
         self.log.info("Initialized.")
+        self.executor = subprocess.run
 
     def get_progid(self) -> str:
         """
@@ -88,7 +89,7 @@ class Browser:
                 "Start-Process",
                 "powershell",
                 "-ArgumentList",
-                f"Stop-Process -Name '{self.process.replace('.exe', '')}' -Force",
+                f"\"Stop-Process -Name '{self.process.replace(".exe", "")}' -Force\"",
                 "-Verb",
                 "RunAs",
             ]
@@ -198,7 +199,8 @@ class Browser:
                 text=True,
             )
             self.log.info("Started with PID: %s (%s)", process.pid, self.process)
-            if self.process != "opera.exe":
+            special_cases = ["Arc.exe"]
+            if self.process in special_cases:
                 _, stderr = process.communicate()
                 result = stderr.strip()
                 if "Access is denied" in result:
