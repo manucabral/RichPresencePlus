@@ -88,7 +88,7 @@ class Browser:
                 "Start-Process",
                 "powershell",
                 "-ArgumentList",
-                f"\"Stop-Process -Name '{self.process.replace(".exe", "")}' -Force\"",
+                f"Stop-Process -Name '{self.process.replace('.exe', '')}' -Force",
                 "-Verb",
                 "RunAs",
             ]
