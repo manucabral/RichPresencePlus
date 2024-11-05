@@ -361,7 +361,7 @@ class CustomPresenceWindow(customtkinter.CTkToplevel):
             return
 
         try:
-            self.rpc = rpp.ClientRPC(data["app_id"], debug=True)
+            self.rpc = rpp.ClientRPC(data["app_id"])
             self.rpc.connect()
             self.rpc_connected = True
             self.log.info("Connected successfully to Discord.")
