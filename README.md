@@ -79,8 +79,8 @@ Join our community on Discord to connect with other users, get support, and shar
 
 [Join our Discord server](https://discord.gg/NjXFRqWarc)
 
-
 ## RoadMap
+- Multi-language system.
 - Expand usable modules.
 - Investigate Firefox compatibility.
 - Add more functionalities to the runtime (like IFrames or QuerySelectors).
@@ -88,4 +88,11 @@ Join our community on Discord to connect with other users, get support, and shar
 - Code optimization and related improvements.
 > The listed items cover the most relevant aspects.
 
+## Contributors
+People who maintain or help with the application.
 
+<a href="https://github.com/manucabral/richpresenceplus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=manucabral/richpresenceplus" />
+</a>
+
+Made with [contrib.rocks](https://contrib.rocks).
