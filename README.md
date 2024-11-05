@@ -40,6 +40,8 @@ The lastest release is available [here](https://github.com/manucabral/RichPresen
 - Support for multiple presences.
 - Compatibility with web and desktop presences.
 - Users can create custom presences.
+- Multiple custom presence profiles.
+- Download and use different presences.
 
 # Supported browsers
 
