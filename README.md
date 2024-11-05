@@ -42,7 +42,19 @@ The lastest release is available [here](https://github.com/manucabral/RichPresen
 - Users can create custom presences.
 
 # Supported browsers
-Chromium base browsers (e.g. Chrome, Opera, Edge and more)
+
+| Name | Compatibility | Supported Since Version |
+| :---  | :---: |  :---: |
+| Microsoft Edge   | ✔️ |  v0.0.1  |
+| Google Chrome    | ✔️ |  v0.0.1  |
+| Yandex Browser   | ✔️ |  v0.0.1  |
+| Arc Browser      | ✔️ |  v0.0.8  |
+| Brave            | ✔️ |  v0.0.9  |
+| Vivaldi          | ✔️ |  v0.0.9  |
+| Opera            | ✔️ |  v0.0.1  |
+| Opera One        | ✔️ |  v0.0.8  |
+| Opera GX         | ✔️ |  v0.0.8  |    
+| Mozilla Firefox  | ❌ |  Not supported   |
 > If you want support for another browser, create an [issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
 
 ## Request a Presence
