@@ -8,8 +8,10 @@ import customtkinter
 import CTkMessagebox as CTkMb
 import rpp
 import scrollable_frame
+import custom_presence_window
 
 
+# pylint: disable=too-many-instance-attributes, too-many-public-methods
 class App(customtkinter.CTk):
     """
     Main application.
@@ -27,16 +29,18 @@ class App(customtkinter.CTk):
         self.manager: rpp.Manager = manager
         self.runtime: rpp.Runtime = runtime
         self.browser: rpp.Browser = browser
-        self.log: rpp.RPPLogger = rpp.get_logger("Interface")
+        self.log = rpp.get_logger("Interface")
         self.presences: list[rpp.Presence] = []
 
         self.presences_window: customtkinter.CTkToplevel = None
+        self.custom_presence_window: custom_presence_window.CustomPresenceWindow = None
         self.search_entry: customtkinter.CTkEntry = None
         self.presences_frame: customtkinter.CTkFrame = None
 
         self.configure_window()
         self.configure_grid()
         self.configure_presences_window()
+        self.configure_custom_presence_window()
 
         self.scrollable_frame = scrollable_frame.ScrollableFrame(
             self, command=self.on_switch_change
@@ -63,7 +67,7 @@ class App(customtkinter.CTk):
         Configure the window.
         """
         self.title(rpp.__title__)
-        self.geometry("400x300")
+        self.geometry("400x400")
         self.resizable(False, False)
         self.iconbitmap("logo.ico")
         customtkinter.set_appearance_mode("System")
@@ -93,6 +97,18 @@ class App(customtkinter.CTk):
         frame = customtkinter.CTkFrame(self.presences_window)
         frame.pack(fill="both", expand=True, padx=10, pady=10)
         self.presences_frame = frame
+
+    def configure_custom_presence_window(self):
+        """
+        Configure the custom presence window.
+        """
+        self.custom_presence_window = custom_presence_window.CustomPresenceWindow(
+            self, "Custom Presence", 480, 500
+        )
+        self.custom_presence_window.withdraw()
+        self.custom_presence_window.protocol(
+            "WM_DELETE_WINDOW", self.on_hide_custom_presence_window
+        )
 
     def configure_grid(self):
         """
@@ -162,7 +178,26 @@ class App(customtkinter.CTk):
             command=self.on_open_presences_list,
             font=("Arial", 16),
         )
-        self.presences_button.grid(row=7, column=0, sticky="ew", pady=(0, 0))
+        self.presences_button.grid(row=7, column=0, sticky="ew", pady=(0, 10))
+
+        # custom presence
+        self.custom_presence_button = customtkinter.CTkButton(
+            master=buttons_frame,
+            text="Custom Presence",
+            command=self.on_open_custom_presence_window,
+            font=("Arial", 16),
+        )
+        self.custom_presence_button.grid(row=8, column=0, sticky="ew", pady=(0, 10))
+
+        # exit
+        self.exit_button = customtkinter.CTkButton(
+            master=buttons_frame,
+            text="Exit",
+            command=self.on_exit,
+            font=("Arial", 16),
+            fg_color="red",
+        )
+        self.exit_button.grid(row=9, column=0, sticky="ew", pady=(0, 10))
 
     def load_presences(self):
         """
@@ -321,6 +356,15 @@ class App(customtkinter.CTk):
         for i, presence in enumerate(self.presences):
             self.add_presence_to_list(i, presence)
 
+    def on_open_custom_presence_window(self):
+        """
+        Handle custom presence window open.
+        """
+        self.custom_presence_window.deiconify()
+        self.custom_presence_window.lift()
+        self.custom_presence_window.grab_set()
+        self.custom_presence_window.update_profiles()
+
     def on_hide_presences_list(self):
         """
         Handle presences list hide.
@@ -328,7 +372,14 @@ class App(customtkinter.CTk):
         self.presences_window.withdraw()
         self.presences_window.grab_release()
 
-    def on_search(self, event):
+    def on_hide_custom_presence_window(self):
+        """
+        Handle custom presence window hide.
+        """
+        self.custom_presence_window.withdraw()
+        self.custom_presence_window.grab_release()
+
+    def on_search(self, _):
         """
         Handle search.
         """
@@ -346,7 +397,7 @@ class App(customtkinter.CTk):
         self.manager.remove_presence(presence["name"])
         self.on_reload_presences()
         self.on_hide_presences_list()
-        self.log.info(f"{presence['name']} deleted.")
+        self.log.info("%s deleted.", presence["name"])
 
     def on_download_presence(self, presence: dict):
         """
@@ -355,7 +406,7 @@ class App(customtkinter.CTk):
         self.manager.download_presence(presence["name"])
         self.on_reload_presences()
         self.on_hide_presences_list()
-        self.log.info(f"{presence['name']} downloaded.")
+        self.log.info("%s downloaded.", presence["name"])
 
     def on_switch_change(self, switch_name: str, state: bool):
         """
@@ -367,7 +418,7 @@ class App(customtkinter.CTk):
                 target = presence
                 break
         if target is None:
-            self.log.info(f"Presence {switch_name} not found.")
+            self.log.info("Presence %s not found.", switch_name)
             return
         if state:
             target.prepare()
@@ -375,7 +426,8 @@ class App(customtkinter.CTk):
                 message = CTkMb.CTkMessagebox(
                     icon="warning",
                     title="Connection required",
-                    message=f"{target.name} requires connection to the browser. Please connect first.",
+                    message=f"{target.name} requires connection to the browser."
+                    "Please connect first.",
                     option_1="OK",
                 )
                 message.get()
@@ -386,7 +438,7 @@ class App(customtkinter.CTk):
             return
         target.running = False
         target.on_close()
-        self.log.info(f"Presence {target.name} closed.")
+        self.log.info("Presence %s closed.", target.name)
 
     def on_exit(self) -> None:
         """
@@ -419,8 +471,10 @@ class App(customtkinter.CTk):
         try:
             self.manager.runtime.running = False
             self.manager.executor.shutdown()
+            self.custom_presence_window.on_custom_presence_disconnect()
+        # pylint: disable=broad-except
         except Exception as exc:
-            self.log.error(f"Error stopping: {exc}")
+            self.log.error("On stopping: %s", exc)
         self.destroy()
         self.quit()
         sys.exit(0)
