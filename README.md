@@ -83,12 +83,9 @@ Join our community on Discord to connect with other users, get support, and shar
 ## RoadMap
 - Expand usable modules.
 - Investigate Firefox compatibility.
-- Detect and choose browsers to connect.
 - Add more functionalities to the runtime (like IFrames or QuerySelectors).
 - Wiki for presences creation, ref [Rich Presence Plus Dev](https://github.com/manucabral/RichPresencePlusDev)
-- Customized real-time RPC (modify state, details, and more).
 - Code optimization and related improvements.
-- Enhance GUI design and optimization.
 > The listed items cover the most relevant aspects.
 
 
