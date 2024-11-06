@@ -59,6 +59,8 @@ The lastest release is available [here](https://github.com/manucabral/RichPresen
 | Mozilla Firefox  | ❌ |  Not supported   |
 > If you want support for another browser, create an [issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
 
+For custom browser path configuration, read [here](https://github.com/manucabral/RichPresencePlus/blob/main/docs/CUSTOM_BROWSER_PATH.md).
+
 ## Request a Presence
 If you'd like to propose a new presence to be added to the list, please [create an issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
 
