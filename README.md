@@ -6,7 +6,7 @@
 <h1 align="center">Rich Presence Plus</h1>
 
 <div align="center">
-    <img src="https://img.shields.io/badge/version-0.0.8-blue" />
+    <img src="https://img.shields.io/badge/version-0.0.9-blue" />
     <img src="https://img.shields.io/github/downloads/manucabral/RichPresencePlus/total" />
     <img src="https://img.shields.io/github/contributors/manucabral/RichPresencePlus" />
     <img src="https://img.shields.io/github/license/manucabral/RichPresencePlus" />
