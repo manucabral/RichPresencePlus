@@ -1,5 +1,5 @@
 """
-Browser module for manage the browser instances. 
+Browser module for managing browser instances.
 Based on pybrinf (https://github.com/manucabral/pybrinf)
 """
 
@@ -12,7 +12,7 @@ from .constants import Constants
 
 class Browser:
     """
-    Browser class for manage the browser instances.
+    Browser class for managing browser instances.
     """
 
     def __init__(self):
@@ -26,6 +26,27 @@ class Browser:
         self.process: str = self.path.split("\\")[-1]
         self.log.info("Initialized.")
         self.executor = subprocess.run
+        self._microsoft_store = self.check_microsoft_store_app()
+
+    @property
+    def microsoft_store(self) -> bool:
+        """
+        Get the microsoft_store property.
+
+        Returns:
+            bool: True if the browser is a Microsoft Store app, False otherwise.
+        """
+        return self._microsoft_store
+
+    @microsoft_store.setter
+    def microsoft_store(self, value: bool) -> None:
+        """
+        Set the microsoft_store property.
+
+        Args:
+            value (bool): The new value for the microsoft_store property.
+        """
+        self._microsoft_store = value
 
     def get_progid(self) -> str:
         """
@@ -75,6 +96,30 @@ class Browser:
             self.log.warning("Browser name not found. Using progid.")
             return self.progid
 
+    def check_microsoft_store_app(self) -> bool:
+        """
+        Check if the browser is a Microsoft Store app.
+
+        Returns:
+            bool: True if the browser is a Microsoft Store app, False otherwise.
+        """
+        command = (
+            'powershell -Command "Get-StartApps | '
+            f'Where-Object {{ $_.Name -like \'{self.process}*\' }}"'
+        )
+        try:
+            result = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                text=True,
+                check=True,
+            )
+            return bool(result.stdout.strip())
+        except subprocess.CalledProcessError:
+            return False
+
     def kill(self, admin: bool = False) -> None:
         """
         Kill the browser process using PowerShell with admin privileges if needed.
@@ -89,7 +134,7 @@ class Browser:
                 "Start-Process",
                 "powershell",
                 "-ArgumentList",
-                f"\"Stop-Process -Name '{self.process.replace('.exe', '')}' -Force\""
+                f"\"Stop-Process -Name '{self.process.replace('.exe', '')}' -Force\"",
                 "-Verb",
                 "RunAs",
             ]
@@ -114,7 +159,6 @@ class Browser:
             )
             self.log.info("Killed with PID: %s (%s)", process.pid, self.process)
             if self.running() and self.process == "Arc.exe":
-                # Arc is a special case
                 as_admin()
         except subprocess.CalledProcessError as exc:
             if not self.running():
