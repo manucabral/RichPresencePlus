@@ -217,27 +217,53 @@ class Browser:
         if self.running():
             self.log.warning("Refusing to start browser, already running.")
             return
-        command = (
-            [
-                "powershell",
-                "-Command",
-                "Start-Process",
-                f"'{self.path}'",
-                "-ArgumentList",
-                f"'--remote-debugging-port={remote_port}',"
-                f"'--remote-allow-origins=http://127.0.0.1:{remote_port}',"
-                f"'--remote-allow-origins=http://localhost:{remote_port}'",
-                "-Verb",
-                "RunAs",
-            ]
-            if admin
-            else [
-                self.path,
-                f"--remote-debugging-port={remote_port}",
-                f"--remote-allow-origins=http://127.0.0.1:{remote_port}",
-                f"--remote-allow-origins=http://localhost:{remote_port}",
-            ]
-        )
+        
+        if self.microsoft_store:
+            app_id = self.get_app_id()
+            command = (
+                [
+                    "powershell",
+                    "-Command",
+                    "Start-Process",
+                    "powershell",
+                    "-ArgumentList",
+                    f"\"explorer.exe shell:appsFolder\\{app_id} --remote-debugging-port={remote_port} "
+                    f"--remote-allow-origins=http://127.0.0.1:{remote_port} "
+                    f"--remote-allow-origins=http://localhost:{remote_port}\"",
+                    "-Verb",
+                    "RunAs",
+                ]
+                if admin
+                else [
+                    "explorer.exe",
+                    f"shell:appsFolder\\{app_id}",
+                    f"--remote-debugging-port={remote_port}",
+                    f"--remote-allow-origins=http://127.0.0.1:{remote_port}",
+                    f"--remote-allow-origins=http://localhost:{remote_port}",
+                ]
+            )
+        else:
+            command = (
+                [
+                    "powershell",
+                    "-Command",
+                    "Start-Process",
+                    f"'{self.path}'",
+                    "-ArgumentList",
+                    f"'--remote-debugging-port={remote_port}',"
+                    f"'--remote-allow-origins=http://127.0.0.1:{remote_port}',"
+                    f"'--remote-allow-origins=http://localhost:{remote_port}'",
+                    "-Verb",
+                    "RunAs",
+                ]
+                if admin
+                else [
+                    self.path,
+                    f"--remote-debugging-port={remote_port}",
+                    f"--remote-allow-origins=http://127.0.0.1:{remote_port}",
+                    f"--remote-allow-origins=http://localhost:{remote_port}",
+                ]
+            )
 
         def as_admin():
             self.log.warning(
