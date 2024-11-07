@@ -82,6 +82,37 @@ class Browser:
             return bool(result.stdout.strip())
         except subprocess.CalledProcessError:
             return False
+        
+    def get_app_id(self) -> str:
+        """
+        Get the application ID for the Microsoft Store app.
+
+        Returns:
+            str: The application ID.
+        """
+        command = [
+            "powershell",
+            "-Command",
+            "Get-StartApps | Where-Object { $_.Name -like '{}*' }".format(self.process.replace(".exe", ""))
+        ]
+        try:
+            result = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                text=True,
+                check=True,
+            )
+            app_info = result.stdout.strip()
+            if app_info:
+                # Extract the AppID from the output
+                app_id = app_info.split()[-1]
+                return app_id
+            else:
+                raise RuntimeError("AppID not found.")
+        except subprocess.CalledProcessError:
+            raise RuntimeError("Failed to get AppID.")
 
     def get_name(self) -> str:
         """
