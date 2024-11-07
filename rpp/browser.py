@@ -1,3 +1,8 @@
+"""
+Browser module for managing browser instances.
+Based on pybrinf (https://github.com/manucabral/pybrinf)
+"""
+
 import os
 import winreg
 import subprocess
@@ -7,7 +12,7 @@ from .constants import Constants
 
 class Browser:
     """
-    Browser class for managing the browser instances.
+    Browser class for managing browser instances.
     """
 
     def __init__(self):
@@ -19,16 +24,28 @@ class Browser:
         self.path = self.get_path()
         self.name: str = self.get_name()
         self.process: str = self.path.split("\\")[-1]
-        self._microsoft_store: bool = self.check_microsoft_store_app()
         self.log.info("Initialized.")
         self.executor = subprocess.run
+        self._microsoft_store = self.check_microsoft_store_app()
 
     @property
     def microsoft_store(self) -> bool:
+        """
+        Get the microsoft_store property.
+
+        Returns:
+            bool: True if the browser is a Microsoft Store app, False otherwise.
+        """
         return self._microsoft_store
 
     @microsoft_store.setter
     def microsoft_store(self, value: bool) -> None:
+        """
+        Set the microsoft_store property.
+
+        Args:
+            value (bool): The new value for the microsoft_store property.
+        """
         self._microsoft_store = value
 
     def get_progid(self) -> str:
@@ -86,13 +103,10 @@ class Browser:
         Returns:
             bool: True if the browser is a Microsoft Store app, False otherwise.
         """
-        command = [
-            "powershell",
-            "-Command",
-            "Get-StartApps | Where-Object { $_.Name -like '{}*' }".format(
-                self.process.replace(".exe", "")
-            ),
-        ]
+        command = (
+            'powershell -Command "Get-StartApps | '
+            f'Where-Object {{ $_.Name -like \'{self.process}*\' }}"'
+        )
         try:
             result = subprocess.run(
                 command,
@@ -105,39 +119,6 @@ class Browser:
             return bool(result.stdout.strip())
         except subprocess.CalledProcessError:
             return False
-
-    def get_app_id(self) -> str:
-        """
-        Get the application ID for the Microsoft Store app.
-
-        Returns:
-            str: The application ID.
-        """
-        command = [
-            "powershell",
-            "-Command",
-            "Get-StartApps | Where-Object { $_.Name -like '{}*' }".format(
-                self.process.replace(".exe", "")
-            ),
-        ]
-        try:
-            result = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=True,
-                text=True,
-                check=True,
-            )
-            app_info = result.stdout.strip()
-            if app_info:
-                # Extract the AppID from the output
-                app_id = app_info.split()[-1]
-                return app_id
-            else:
-                raise RuntimeError("AppID not found.")
-        except subprocess.CalledProcessError:
-            raise RuntimeError("Failed to get AppID.")
 
     def kill(self, admin: bool = False) -> None:
         """
@@ -169,7 +150,6 @@ class Browser:
                 self.kill(admin=True)
 
         try:
-            # pylint: disable=consider-using-with
             process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
@@ -178,7 +158,6 @@ class Browser:
             )
             self.log.info("Killed with PID: %s (%s)", process.pid, self.process)
             if self.running() and self.process == "Arc.exe":
-                # Arc is a special case
                 as_admin()
         except subprocess.CalledProcessError as exc:
             if not self.running():
@@ -224,53 +203,27 @@ class Browser:
         if self.running():
             self.log.warning("Refusing to start browser, already running.")
             return
-
-        if self.microsoft_store:
-            app_id = self.get_app_id()
-            command = (
-                [
-                    "powershell",
-                    "-Command",
-                    "Start-Process",
-                    "powershell",
-                    "-ArgumentList",
-                    f'"explorer.exe shell:appsFolder\\{app_id} --remote-debugging-port={remote_port} '
-                    f"--remote-allow-origins=http://127.0.0.1:{remote_port} "
-                    f'--remote-allow-origins=http://localhost:{remote_port}"',
-                    "-Verb",
-                    "RunAs",
-                ]
-                if admin
-                else [
-                    "explorer.exe",
-                    f"shell:appsFolder\\{app_id}",
-                    f"--remote-debugging-port={remote_port}",
-                    f"--remote-allow-origins=http://127.0.0.1:{remote_port}",
-                    f"--remote-allow-origins=http://localhost:{remote_port}",
-                ]
-            )
-        else:
-            command = (
-                [
-                    "powershell",
-                    "-Command",
-                    "Start-Process",
-                    f"'{self.path}'",
-                    "-ArgumentList",
-                    f"'--remote-debugging-port={remote_port}',"
-                    f"'--remote-allow-origins=http://127.0.0.1:{remote_port}',"
-                    f"'--remote-allow-origins=http://localhost:{remote_port}'",
-                    "-Verb",
-                    "RunAs",
-                ]
-                if admin
-                else [
-                    self.path,
-                    f"--remote-debugging-port={remote_port}",
-                    f"--remote-allow-origins=http://127.0.0.1:{remote_port}",
-                    f"--remote-allow-origins=http://localhost:{remote_port}",
-                ]
-            )
+        command = (
+            [
+                "powershell",
+                "-Command",
+                "Start-Process",
+                f"'{self.path}'",
+                "-ArgumentList",
+                f"'--remote-debugging-port={remote_port}',"
+                f"'--remote-allow-origins=http://127.0.0.1:{remote_port}',"
+                f"'--remote-allow-origins=http://localhost:{remote_port}'",
+                "-Verb",
+                "RunAs",
+            ]
+            if admin
+            else [
+                self.path,
+                f"--remote-debugging-port={remote_port}",
+                f"--remote-allow-origins=http://127.0.0.1:{remote_port}",
+                f"--remote-allow-origins=http://localhost:{remote_port}",
+            ]
+        )
 
         def as_admin():
             self.log.warning(
@@ -280,7 +233,6 @@ class Browser:
                 self.start(remote_port, True)
 
         try:
-            # pylint: disable=consider-using-with
             process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
@@ -289,7 +241,7 @@ class Browser:
                 text=True,
             )
             self.log.info("Started with PID: %s (%s)", process.pid, self.process)
-            special_cases = ["Arc.exe"]  # This is an special case
+            special_cases = ["Arc.exe"]
             if self.process in special_cases:
                 _, stderr = process.communicate()
                 result = stderr.strip()
