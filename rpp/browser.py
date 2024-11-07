@@ -24,6 +24,7 @@ class Browser:
         self.path = self.get_path()
         self.name: str = self.get_name()
         self.process: str = self.path.split("\\")[-1]
+        self.microsoft_store: bool = self.is_microsoft_store_app()
         self.log.info("Initialized.")
         self.executor = subprocess.run
 
@@ -56,6 +57,31 @@ class Browser:
             if not os.path.exists(path):
                 self.log.warning("Browser path not found at %s", path)
         return path
+
+    def is_microsoft_store_app(self) -> bool:
+        """
+        Check if the browser is a Microsoft Store app.
+
+        Returns:
+            bool: True if the browser is a Microsoft Store app, False otherwise.
+        """
+        command = [
+            "poweshell",
+            "-Command",
+            "Get-StartApps | Where-Object { $_.Name -like '{}*' }".format(self.process.replace(".exe", ""))
+        ]
+        try:
+            result = subprocess.run(
+                command,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                shell=True,
+                text=True,
+                check=True
+            )
+            return bool(result.stdout.strip())
+        except subprocess.CalledProcessError:
+            return False
 
     def get_name(self) -> str:
         """
