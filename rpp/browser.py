@@ -150,6 +150,7 @@ class Browser:
                 self.kill(admin=True)
 
         try:
+            # pylint: disable=consider-using-with
             process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
@@ -233,6 +234,7 @@ class Browser:
                 self.start(remote_port, True)
 
         try:
+            # pylint: disable=consider-using-with
             process = subprocess.Popen(
                 command,
                 stdout=subprocess.PIPE,
