@@ -1,8 +1,3 @@
-"""
-Browser module for manage the browser instances. 
-Based on pybrinf (https://github.com/manucabral/pybrinf)
-"""
-
 import os
 import winreg
 import subprocess
@@ -12,7 +7,7 @@ from .constants import Constants
 
 class Browser:
     """
-    Browser class for manage the browser instances.
+    Browser class for managing the browser instances.
     """
 
     def __init__(self):
@@ -24,9 +19,17 @@ class Browser:
         self.path = self.get_path()
         self.name: str = self.get_name()
         self.process: str = self.path.split("\\")[-1]
-        self.microsoft_store: bool = self.is_microsoft_store_app()
+        self._microsoft_store: bool = self.check_microsoft_store_app()
         self.log.info("Initialized.")
         self.executor = subprocess.run
+
+    @property
+    def microsoft_store(self) -> bool:
+        return self._microsoft_store
+
+    @microsoft_store.setter
+    def microsoft_store(self, value: bool) -> None:
+        self._microsoft_store = value
 
     def get_progid(self) -> str:
         """
@@ -58,7 +61,25 @@ class Browser:
                 self.log.warning("Browser path not found at %s", path)
         return path
 
-    def is_microsoft_store_app(self) -> bool:
+    def get_name(self) -> str:
+        """
+        Get the browser name.
+
+        Returns:
+            str: The browser name. E.g. "Google Chrome"
+        """
+        try:
+            with winreg.OpenKeyEx(
+                winreg.HKEY_CLASSES_ROOT,
+                Constants.BROWSER_NAME.format(progId=self.progid),
+            ) as key:
+                name = winreg.QueryValueEx(key, "ApplicationName")[0]
+            return name or "Browser"
+        except FileNotFoundError:
+            self.log.warning("Browser name not found. Using progid.")
+            return self.progid
+
+    def check_microsoft_store_app(self) -> bool:
         """
         Check if the browser is a Microsoft Store app.
 
@@ -66,9 +87,11 @@ class Browser:
             bool: True if the browser is a Microsoft Store app, False otherwise.
         """
         command = [
-            "poweshell",
+            "powershell",
             "-Command",
-            "Get-StartApps | Where-Object { $_.Name -like '{}*' }".format(self.process.replace(".exe", ""))
+            "Get-StartApps | Where-Object { $_.Name -like '{}*' }".format(
+                self.process.replace(".exe", "")
+            ),
         ]
         try:
             result = subprocess.run(
@@ -77,12 +100,12 @@ class Browser:
                 stderr=subprocess.PIPE,
                 shell=True,
                 text=True,
-                check=True
+                check=True,
             )
             return bool(result.stdout.strip())
         except subprocess.CalledProcessError:
             return False
-        
+
     def get_app_id(self) -> str:
         """
         Get the application ID for the Microsoft Store app.
@@ -93,7 +116,9 @@ class Browser:
         command = [
             "powershell",
             "-Command",
-            "Get-StartApps | Where-Object { $_.Name -like '{}*' }".format(self.process.replace(".exe", ""))
+            "Get-StartApps | Where-Object { $_.Name -like '{}*' }".format(
+                self.process.replace(".exe", "")
+            ),
         ]
         try:
             result = subprocess.run(
@@ -114,24 +139,6 @@ class Browser:
         except subprocess.CalledProcessError:
             raise RuntimeError("Failed to get AppID.")
 
-    def get_name(self) -> str:
-        """
-        Get the browser name.
-
-        Returns:
-            str: The browser name. E.g. "Google Chrome"
-        """
-        try:
-            with winreg.OpenKeyEx(
-                winreg.HKEY_CLASSES_ROOT,
-                Constants.BROWSER_NAME.format(progId=self.progid),
-            ) as key:
-                name = winreg.QueryValueEx(key, "ApplicationName")[0]
-            return name or "Browser"
-        except FileNotFoundError:
-            self.log.warning("Browser name not found. Using progid.")
-            return self.progid
-
     def kill(self, admin: bool = False) -> None:
         """
         Kill the browser process using PowerShell with admin privileges if needed.
@@ -146,7 +153,7 @@ class Browser:
                 "Start-Process",
                 "powershell",
                 "-ArgumentList",
-                f"\"Stop-Process -Name '{self.process.replace('.exe', '')}' -Force\""
+                f"\"Stop-Process -Name '{self.process.replace('.exe', '')}' -Force\"",
                 "-Verb",
                 "RunAs",
             ]
@@ -217,7 +224,7 @@ class Browser:
         if self.running():
             self.log.warning("Refusing to start browser, already running.")
             return
-        
+
         if self.microsoft_store:
             app_id = self.get_app_id()
             command = (
@@ -227,9 +234,9 @@ class Browser:
                     "Start-Process",
                     "powershell",
                     "-ArgumentList",
-                    f"\"explorer.exe shell:appsFolder\\{app_id} --remote-debugging-port={remote_port} "
+                    f'"explorer.exe shell:appsFolder\\{app_id} --remote-debugging-port={remote_port} '
                     f"--remote-allow-origins=http://127.0.0.1:{remote_port} "
-                    f"--remote-allow-origins=http://localhost:{remote_port}\"",
+                    f'--remote-allow-origins=http://localhost:{remote_port}"',
                     "-Verb",
                     "RunAs",
                 ]
@@ -282,7 +289,7 @@ class Browser:
                 text=True,
             )
             self.log.info("Started with PID: %s (%s)", process.pid, self.process)
-            special_cases = ["Arc.exe"]
+            special_cases = ["Arc.exe"]  # This is an special case
             if self.process in special_cases:
                 _, stderr = process.communicate()
                 result = stderr.strip()
