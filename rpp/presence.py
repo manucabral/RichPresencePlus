@@ -40,6 +40,7 @@ class Presence(ABC):
         self.details: str = None
         self.state: str = None
         self.large_image: str = None
+        self.large_text: str = None
         self.small_image: str = None
         self.small_text: str = None
         self.activity_type: ActivityType = ActivityType.PLAYING
