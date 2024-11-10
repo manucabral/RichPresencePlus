@@ -492,9 +492,9 @@ class App(customtkinter.CTk):
             return
         if result.lower() == "no":
             return
+        self.manager.runtime.shutdown_callback = None
         self.manager.stop_event.set()
         try:
-            self.manager.runtime.shutdown_callback = None
             self.manager.runtime.running = False
             self.manager.executor.shutdown()
             self.custom_presence_window.on_custom_presence_disconnect()
