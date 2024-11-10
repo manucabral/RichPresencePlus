@@ -105,7 +105,7 @@ class Browser:
         """
         command = (
             'powershell -Command "Get-StartApps | '
-            f'Where-Object {{ $_.Name -like \'{self.process}*\' }}"'
+            f"Where-Object {{ $_.Name -like '{self.process}*' }}\""
         )
         try:
             result = subprocess.run(
