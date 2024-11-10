@@ -359,7 +359,7 @@ class Manager:
         try:
             self.run_presences()
             if self.web_enabled:
-                self.run_runtime()
+                self.run_runtime(None)
             while not self.stop_event.is_set():
                 time.sleep(0.1)
         except KeyboardInterrupt:
