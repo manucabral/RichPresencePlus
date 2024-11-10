@@ -203,11 +203,11 @@ class Browser:
             )
             self.log.info("Started with PID: %s (%s)", process.pid, self.process)
             special_cases = ["Arc.exe"]
+            # ignore waiting for process to finis
             if self.process in special_cases and not self.uses_custom_path:
                 self.log.info("Special case detected (%s)", self.process)
                 _, stderr = process.communicate()
                 result = stderr.strip()
-                self.log.info(result)
                 if "Access is denied" in result:
                     as_admin()
         except PermissionError:
