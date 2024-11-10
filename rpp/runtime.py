@@ -41,6 +41,7 @@ class Runtime:
         self.connected: bool = False
         self.running: bool = False
         self.log: RPPLogger = get_logger("Runtime")
+        self.shutdown_callback: callable = None
         self.update()
 
     def update(self):
