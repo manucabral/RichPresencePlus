@@ -179,7 +179,7 @@ class Manager:
         self.runtime.running = False
         self.log.info("Runtime thread stopped. Maybe the browser was closed.")
         if callback == self.runtime.shutdown_callback and callback is not None:
-            self.log.info("Calling shutdown callback...")
+            self.log.info("Runtime shutdown callback...")
             for presence in self.presences:
                 if presence.web and presence.running:
                     presence.on_close()
@@ -188,6 +188,8 @@ class Manager:
                         "%s stopped because the runtime was closed.", presence.name
                     )
             return callback()
+        else:
+            self.log.warning("No callback found.")
 
     def download_presence(self, presence_name: str) -> None:
         """
