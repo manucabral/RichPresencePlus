@@ -19,34 +19,13 @@ class Browser:
         """
         Initialize the browser.
         """
+        self.uses_custom_path = False
         self.log: RPPLogger = get_logger(self.__class__.__name__)
         self.progid: str = self.get_progid()
         self.path = self.get_path()
         self.name: str = self.get_name()
         self.process: str = self.path.split("\\")[-1]
         self.log.info("Initialized.")
-        self.executor = subprocess.run
-        self._microsoft_store = self.check_microsoft_store_app()
-
-    @property
-    def microsoft_store(self) -> bool:
-        """
-        Get the microsoft_store property.
-
-        Returns:
-            bool: True if the browser is a Microsoft Store app, False otherwise.
-        """
-        return self._microsoft_store
-
-    @microsoft_store.setter
-    def microsoft_store(self, value: bool) -> None:
-        """
-        Set the microsoft_store property.
-
-        Args:
-            value (bool): The new value for the microsoft_store property.
-        """
-        self._microsoft_store = value
 
     def get_progid(self) -> str:
         """
@@ -67,6 +46,7 @@ class Browser:
         """
         custom_path = os.getenv("BROWSER_PATH")
         if custom_path:
+            self.uses_custom_path = True
             self.log.info("Using custom path: %s", custom_path)
             return custom_path
         with winreg.OpenKey(
@@ -95,30 +75,6 @@ class Browser:
         except FileNotFoundError:
             self.log.warning("Browser name not found. Using progid.")
             return self.progid
-
-    def check_microsoft_store_app(self) -> bool:
-        """
-        Check if the browser is a Microsoft Store app.
-
-        Returns:
-            bool: True if the browser is a Microsoft Store app, False otherwise.
-        """
-        command = (
-            'powershell -Command "Get-StartApps | '
-            f"Where-Object {{ $_.Name -like '{self.process}*' }}\""
-        )
-        try:
-            result = subprocess.run(
-                command,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-                shell=True,
-                text=True,
-                check=True,
-            )
-            return bool(result.stdout.strip())
-        except subprocess.CalledProcessError:
-            return False
 
     def kill(self, admin: bool = False) -> None:
         """
@@ -181,17 +137,19 @@ class Browser:
             bool: True if the browser is running, False otherwise.
         """
         try:
+            self.log.info("Checking if browser is running (%s)", self.process)
             result = subprocess.run(
                 Constants.FIND_BROWSER.format(process=self.process),
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 shell=True,
                 text=True,
-                check=True,
             )
             out = result.stdout.strip()
             return bool(out)
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as exc:
+            self.log.error("Internal error, possibly system related.")
+            self.log.error(exc)
             return False
 
     def start(self, remote_port: int = 9222, admin: bool = False) -> None:
@@ -233,6 +191,7 @@ class Browser:
             if not admin:
                 self.start(remote_port, True)
 
+        self.log.info("Starting at %s", self.path)
         try:
             # pylint: disable=consider-using-with
             process = subprocess.Popen(
@@ -244,9 +203,11 @@ class Browser:
             )
             self.log.info("Started with PID: %s (%s)", process.pid, self.process)
             special_cases = ["Arc.exe"]
-            if self.process in special_cases:
+            if self.process in special_cases and not self.uses_custom_path:
+                self.log.info("Special case detected (%s)", self.process)
                 _, stderr = process.communicate()
                 result = stderr.strip()
+                self.log.info(result)
                 if "Access is denied" in result:
                     as_admin()
         except PermissionError:
