@@ -144,6 +144,7 @@ class Browser:
                 stderr=subprocess.PIPE,
                 shell=True,
                 text=True,
+                check=True,
             )
             out = result.stdout.strip()
             return bool(out)

@@ -160,7 +160,7 @@ class Manager:
         except Exception as exc:
             self.log.error("Error running %s: %s", presence.name, exc)
 
-    def __runtime_thread(self, callback: typing.Callable) -> None:
+    def __runtime_thread(self, callback: typing.Callable) -> typing.Any:
         """
         Run the runtime in a thread.
 
@@ -188,8 +188,8 @@ class Manager:
                         "%s stopped because the runtime was closed.", presence.name
                     )
             return callback()
-        else:
-            self.log.warning("No callback found.")
+        self.log.warning("No callback found.")
+        return None
 
     def download_presence(self, presence_name: str) -> None:
         """
@@ -360,7 +360,7 @@ class Manager:
         try:
             self.run_presences()
             if self.web_enabled:
-                self.run_runtime(None)
+                self.run_runtime()
             while not self.stop_event.is_set():
                 time.sleep(0.1)
         except KeyboardInterrupt:
