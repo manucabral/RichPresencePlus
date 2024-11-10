@@ -23,7 +23,7 @@ class Constants:
     USER_CHOICE = (
         r"Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice"
     )
-    FIND_BROWSER = "wmic process where \"name='{process}'\" get ProcessId /format:value"
+    FIND_BROWSER = 'tasklist /FI "IMAGENAME eq {process}" /FO CSV | findstr {process}'
     BROWSER_PATH = "{progId}\\shell\\open\\command"
     BROWSER_NAME = "{progId}\\Application"
     KILL_BROWSER = "taskkill /f /im {process} /t"
