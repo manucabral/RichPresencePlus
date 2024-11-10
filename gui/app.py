@@ -313,7 +313,25 @@ class App(customtkinter.CTk):
         self.runtime.update()
         temp = f"{self.browser.name} {'connected' if self.runtime.connected else 'disconnected'}"
         self.runtime_label.configure(text=temp)
-        self.manager.run_runtime()
+        self.manager.run_runtime(self.on_runtime_disconnect)
+
+    def on_runtime_disconnect(self):
+        """
+        Handle runtime disconnect.
+        """
+        message = CTkMb.CTkMessagebox(
+            icon="warning",
+            title="Runtime disconnected",
+            message="Maybe the browser was closed or the connection was lost.",
+            option_1="OK",
+        )
+        message.get()
+        self.update_runtime_label()
+        self.scrollable_frame.clear()
+        self.log.info("Runtime disconnected. Resetting presences.")
+        for presence in self.manager.presences:
+            if presence.enabled:
+                self.scrollable_frame.add_item(presence.name)
 
     def add_presence_to_list(self, i: int, presence: dict):
         """
