@@ -313,25 +313,32 @@ class App(customtkinter.CTk):
         self.runtime.update()
         temp = f"{self.browser.name} {'connected' if self.runtime.connected else 'disconnected'}"
         self.runtime_label.configure(text=temp)
-        self.manager.run_runtime(self.on_runtime_disconnect)
+        self.manager.runtime.shutdown_callback = self.on_runtime_disconnect
+        self.manager.run_runtime()
 
     def on_runtime_disconnect(self):
         """
         Handle runtime disconnect.
         """
-        message = CTkMb.CTkMessagebox(
-            icon="warning",
-            title="Runtime disconnected",
-            message="Maybe the browser was closed or the connection was lost.",
-            option_1="OK",
-        )
-        message.get()
-        self.update_runtime_label()
-        self.scrollable_frame.clear()
-        self.log.info("Runtime disconnected. Resetting presences.")
-        for presence in self.manager.presences:
-            if presence.enabled:
-                self.scrollable_frame.add_item(presence.name)
+        if not self.winfo_exists():
+            self.log.info("Runtime disconnected.")
+            return
+        try:
+            message = CTkMb.CTkMessagebox(
+                icon="warning",
+                title="Runtime disconnected",
+                message="Maybe the browser was closed or the connection was lost.",
+                option_1="OK",
+            )
+            message.get()
+            self.update_runtime_label()
+            self.scrollable_frame.clear()
+            self.log.info("Runtime disconnected. Resetting presences.")
+            for presence in self.manager.presences:
+                if presence.enabled:
+                    self.scrollable_frame.add_item(presence.name)
+        except Exception as exc:
+            self.log.error("On disconnect: %s", exc)
 
     def add_presence_to_list(self, i: int, presence: dict):
         """
@@ -487,6 +494,7 @@ class App(customtkinter.CTk):
             return
         self.manager.stop_event.set()
         try:
+            self.manager.runtime.shutdown_callback = None
             self.manager.runtime.running = False
             self.manager.executor.shutdown()
             self.custom_presence_window.on_custom_presence_disconnect()
