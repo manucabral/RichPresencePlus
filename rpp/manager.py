@@ -160,9 +160,12 @@ class Manager:
         except Exception as exc:
             self.log.error("Error running %s: %s", presence.name, exc)
 
-    def __runtime_thread(self) -> None:
+    def __runtime_thread(self, callback: typing.Callable) -> None:
         """
         Run the runtime in a thread.
+
+        Args:
+            callback (typing.Callable): The callback function.
         """
         self.log.info("Runtime thread started (interval: %ds)", self.runtime_interval)
         self.runtime.running = True
@@ -174,6 +177,15 @@ class Manager:
             self.runtime.update()
             time.sleep(self.runtime_interval)
         self.runtime.running = False
+        self.log.info("Runtime thread stopped. Maybe the browser was closed.")
+        for presence in self.presences:
+            if presence.web and presence.running:
+                presence.on_close()
+                presence.running = False
+                self.log.warning(
+                    "%s stopped because the runtime was closed.", presence.name
+                )
+        return callback()
 
     def download_presence(self, presence_name: str) -> None:
         """
@@ -318,9 +330,12 @@ class Manager:
             return
         self.executor.submit(self.__presence_thread, presence)
 
-    def run_runtime(self) -> None:
+    def run_runtime(self, callback: typing.Callable) -> None:
         """
         Run the runtime.
+
+        Args:
+            callback (typing.Callable): The callback function.
         """
         if not self.runtime:
             self.log.error("No runtime loaded.")
@@ -331,7 +346,7 @@ class Manager:
         if not self.runtime.connected:
             self.log.warning("Skipping runtime thread, not connected.")
             return
-        self.executor.submit(self.__runtime_thread)
+        self.executor.submit(self.__runtime_thread, callback)
 
     def start(self) -> None:
         """
