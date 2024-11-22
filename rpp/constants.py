@@ -16,7 +16,7 @@ class Constants:
         "https://api.github.com/repos/manucabral/RichPresencePlus/contents/presences"
     )
     RUNTIME_INTERVAL = 1
-    PRESENCE_INTERVAL = 15
+    PRESENCE_INTERVAL = 12
     DEV_MODE = False
     LOG_FILE = "rpp.log"
 
