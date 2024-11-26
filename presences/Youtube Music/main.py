@@ -8,6 +8,7 @@ class YoutubeMusic(rpp.Presence):
         super().__init__(metadata_file=True)
         self.activity_type: rpp.ActivityType = rpp.ActivityType.LISTENING
         self.last_song: str = None
+        self.last_status: str = None 
         self.duration: int = 0
         self.tab: rpp.Tab = None
 
@@ -34,12 +35,7 @@ class YoutubeMusic(rpp.Presence):
         element = self.tab.execute("navigator.mediaSession.metadata")
         if not element.objectId:
             self.log.warning("MediaSession metadata not found")
-            return {
-                "title": "Unknown",
-                "artist": "Unknown",
-                "album": "Unknown",
-                "artwork": "https://music.youtube.com/favicon.ico",
-            }
+            return None
         props = self.tab.getProperties(element.objectId)
         return {
             "title": props.title.value,
@@ -76,8 +72,8 @@ class YoutubeMusic(rpp.Presence):
             return None
         return self.tab.getProperties(element.objectId).textContent.value
 
-    def on_update(self, runtime: rpp.Runtime, **context):
 
+    def on_update(self, runtime: rpp.Runtime, **context):
         tabs = self.extract_tabs(runtime)
         if not tabs:  # No tabs found
             return
@@ -89,16 +85,27 @@ class YoutubeMusic(rpp.Presence):
             self.tab = last_tab
         else:  # Tab not changed
             pass
-
         if not self.tab.connected:
             self.tab.connect()
-
+        
         metadata = self.extract_mediasession_metadata()
+        if not metadata:
+            return
         playback_state = self.extract_mediasession_playblackstate()
         artwork = self.extract_mediasession_artwork()
         video_stream = self.extract_video_stream()
         extra = self.extract_extra_metadata()
 
+    
+        def update_time():
+            if video_stream:
+                if playback_state == "playing":
+                    self.duration = int(video_stream.duration.value)
+                    self.start = int(time.time()) - int(video_stream.currentTime.value)
+                    self.end = self.start + self.duration
+                else:
+                    self.start = self.end = None
+            
         if self.last_song != metadata["title"]:  # Song changed
             self.log.info(
                 f"Now playing {metadata['title']} by {metadata['artist']} at {metadata['album']}"
@@ -111,30 +118,24 @@ class YoutubeMusic(rpp.Presence):
                 metadata["album"] = None
             self.large_text = metadata["album"] if metadata["album"] else extra
             self.small_image = "play" if playback_state == "playing" else "pause"
+            self.last_status = playback_state
             self.small_text = (
                 "Listening to music" if playback_state == "playing" else "Paused"
             )
-            self.buttons = [
-                {
-                    "label": "Listen on Youtube Music",
-                    "url": self.tab.url,
-                },
-            ]
+            self.buttons = [{ "label": "Listen on Youtube Music", "url": self.tab.url }]
             if video_stream:
                 self.duration = int(video_stream.duration.value)
-
+            update_time()
+            self.force_update()
         else:
             # Update time and playback state
-            if video_stream:
-                if playback_state == "playing":
-                    self.duration = int(video_stream.duration.value)
-                    self.start = int(time.time()) - int(video_stream.currentTime.value)
-                    self.end = self.start + self.duration
-                else:
-                    self.start = self.end = None
-
+            update_time()
             self.small_image = "playing" if playback_state == "playing" else "pause"
             self.small_text = "Listening" if playback_state == "playing" else "Paused"
+            if self.last_status != playback_state:
+                self.last_status = playback_state
+                self.log.info(f"Playback state changed to {playback_state}")
+                self.force_update()
 
     def on_close(self):
         self.last_song = None
