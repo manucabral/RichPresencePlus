@@ -25,6 +25,7 @@ class Presence(ABC):
         self.author: str = None
         self.version: str = None
         self.web: bool = False
+        self.automatic: bool = True
         self.enabled: bool = True
         self.running: bool = False
         self.update_interval: int = 3
