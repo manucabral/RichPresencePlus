@@ -83,6 +83,7 @@ def extension(cls: Presence) -> Presence:
                     self.name = metadata.get("name", self.name)
                     self.author = metadata.get("author", "Unknown")
                     self.web = metadata.get("web", False)
+                    self.automatic = metadata.get("automatic", True)
                     self.version = metadata.get("version", None)
                     self.update_interval = metadata.get("updateInterval", 3)
                     self.package = metadata.get("package", None)
@@ -127,7 +128,8 @@ def extension(cls: Presence) -> Presence:
             Called when the presence is updated.
             """
             super().on_update(**context)
-            self.update()
+            if self.automatic:
+                self.update()
 
         def on_close(self) -> None:
             """
@@ -147,6 +149,7 @@ def extension(cls: Presence) -> Presence:
             """
             Force the presence to update.
             """
+            self.log.debug("Forcing update.")
             self.update()
 
         def __interval_time(self) -> bool:
@@ -201,9 +204,10 @@ def extension(cls: Presence) -> Presence:
             """
             Update the presence.
             """
-            ok = self.__interval_time()
-            if not ok:
-                return
+            if self.automatic:
+                ok = self.__interval_time()
+                if not ok:
+                    return
             if self.dev_mode:
                 self.log.debug(json.dumps(self.deserialize(), indent=4))
                 return
