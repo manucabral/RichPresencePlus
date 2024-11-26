@@ -8,7 +8,7 @@ class YoutubeMusic(rpp.Presence):
         super().__init__(metadata_file=True)
         self.activity_type: rpp.ActivityType = rpp.ActivityType.LISTENING
         self.last_song: str = None
-        self.last_status: str = None 
+        self.last_status: str = "unknown" 
         self.duration: int = 0
         self.tab: rpp.Tab = None
 
@@ -72,10 +72,22 @@ class YoutubeMusic(rpp.Presence):
             return None
         return self.tab.getProperties(element.objectId).textContent.value
 
+    def set_idle(self):
+        if self.last_status is not None:
+            self.last_status = None
+            self.state = "No listening..."
+            self.details = "Idle"
+            self.large_image = self.small_image = None
+            self.large_text = self.small_text = None
+            self.end = None
+            self.log.info("No listening activity detected")
+            self.force_update()
 
     def on_update(self, runtime: rpp.Runtime, **context):
+        
         tabs = self.extract_tabs(runtime)
-        if not tabs:  # No tabs found
+        if not tabs:  # No tabs found}
+            self.set_idle()
             return
 
         last_tab = tabs[0]
@@ -83,28 +95,32 @@ class YoutubeMusic(rpp.Presence):
             self.tab = last_tab
         elif self.tab.url != last_tab.url:  # New tab detected
             self.tab = last_tab
+            self.log.info(f"Tab changed to {self.tab.url}")
         else:  # Tab not changed
             pass
+        
         if not self.tab.connected:
             self.tab.connect()
         
         metadata = self.extract_mediasession_metadata()
         if not metadata:
             return
+        
         playback_state = self.extract_mediasession_playblackstate()
         artwork = self.extract_mediasession_artwork()
         video_stream = self.extract_video_stream()
         extra = self.extract_extra_metadata()
-
     
         def update_time():
+            self.small_image = "playing" if playback_state == "playing" else "pause"
+            self.small_text = "Listening" if playback_state == "playing" else "Paused"
             if video_stream:
                 if playback_state == "playing":
                     self.duration = int(video_stream.duration.value)
                     self.start = int(time.time()) - int(video_stream.currentTime.value)
                     self.end = self.start + self.duration
                 else:
-                    self.start = self.end = None
+                    self.end = None
             
         if self.last_song != metadata["title"]:  # Song changed
             self.log.info(
@@ -130,8 +146,6 @@ class YoutubeMusic(rpp.Presence):
         else:
             # Update time and playback state
             update_time()
-            self.small_image = "playing" if playback_state == "playing" else "pause"
-            self.small_text = "Listening" if playback_state == "playing" else "Paused"
             if self.last_status != playback_state:
                 self.last_status = playback_state
                 self.log.info(f"Playback state changed to {playback_state}")
