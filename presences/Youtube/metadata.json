@@ -1,7 +1,7 @@
 {
     "name": "Youtube",
-    "version": "1.0.1",
-    "package": ">=0.0.7",
+    "version": "1.0.2",
+    "package": ">=0.1.0",
     "description": {
         "en": "YouTube is a video-sharing platform where users can upload, watch, and interact with videos, ranging from music and tutorials to vlogs and live streams."
     },
@@ -11,6 +11,7 @@
     "author": "manucabral",
     "contributors": [],
     "web": true,
+    "automatic": false,
     "category": "Media",
     "color": "#A56786",
     "tags": [

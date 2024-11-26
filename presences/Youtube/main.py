@@ -9,6 +9,8 @@ class Youtube(Presence):
     def __init__(self):
         super().__init__(metadata_file=True)
         self.tab = None
+        self.last_video_id = "unknown"
+        self.last_status = "unknown"
         self.thumbnail = "https://i.ytimg.com/vi/{videoId}/hqdefault.jpg"
         self.logo = "https://cdn3.iconfinder.com/data/icons/social-network-30/512/social-06-1024.png"
 
@@ -104,7 +106,10 @@ class Youtube(Presence):
                 "url": shortAuthorUrl,
             },
         ]
-        self.log.info(f"Updating short: {shortId}, url: {self.tab.url}")
+        if self.last_video_id != shortId:
+            self.last_video_id = shortId
+            self.log.info(f"Updating short: {shortId}, url: {self.tab.url}")
+            self.force_update()
 
     def calculeTime(self, duration: int, currentTime: int) -> tuple[int, int]:
         startTime = time.time() - int(currentTime)
@@ -127,6 +132,12 @@ class Youtube(Presence):
         self.start = int(startTime)
         self.end = int(endTime)
 
+        status = self.last_status != videoPlayback
+        if status:
+            self.last_status = videoPlayback
+            self.log.info(f"Updating video status: {self.last_status}")
+            if videoPlayback == "paused":
+                self.end = None
         self.small_text = "Playing" if videoPlayback == "playing" else "Paused"
         self.small_image = "play" if videoPlayback == "playing" else "pause"
 
@@ -144,12 +155,21 @@ class Youtube(Presence):
                 "url": videoAuthorUrl,
             },
         ]
-        self.log.info(f"Updating video: {videoTitle}, url: {self.tab.url}")
+        if self.last_video_id != videoId or status:
+            self.last_video_id = videoId
+            self.log.info(f"Updating video: {videoTitle}, url: {self.tab.url}")
+            self.force_update()
 
     def handleBrowsing(self):
         self.state = "Browsing..."
         self.details = "Idle"
         self.large_image = self.logo
+        self.end = None
+        self.small_image = None
+        if self.last_video_id is not None:
+            self.last_video_id = None
+            self.log.info("Updating browsing")
+            self.force_update()
 
     def on_load(self):
         self.state = "Initializing..."
@@ -174,24 +194,26 @@ class Youtube(Presence):
 
         elif self.tab.url != lastTab.url:
             self.tab = lastTab
-            self.log.info("New tab detected")
+            self.log.info("New tab detected %s", self.tab.url)
 
-        else:
-            self.log.debug("Tab did not change, updating time")
+        if self.tab.connected is False:
+            self.tab.connect()
+
+        def update_video_time():
+            self.log.debug("Updating video time")
             videoDuration = self.extractVideoDuration()
             videoCurrentTime = self.extractVideoCurrentTime()
             startTime, endTime = self.calculeTime(videoDuration, videoCurrentTime)
             self.start = int(startTime)
             self.end = int(endTime)
-            return
-
-        self.tab.connect()
 
         if "/shorts/" in self.tab.url:
             self.handleShort()
         elif "/watch?" in self.tab.url:
+            update_video_time()
             self.handleVideo()
         else:
+            print("Browsing")
             self.handleBrowsing()
 
     def on_close(self):
