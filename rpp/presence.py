@@ -37,7 +37,6 @@ class Presence(ABC):
         self.log = None
 
         # Presence data
-        self.title: str = None
         self.details: str = None
         self.state: str = None
         self.large_image: str = None
