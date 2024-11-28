@@ -1,0 +1,22 @@
+{
+    "name": "Animepahe",
+    "version": "0.0.1",
+    "package": ">=0.0.8",
+    "description": {
+        "en": "Animepahe is a website and app that offers free, high-definition animes."
+    },
+    "clientId": 716923299799498773,
+    "image": "https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/presences/Animepahe/image.webp",
+    "updateInterval": 5,
+    "author": "manucabral",
+    "contributors": [],
+    "web": true,
+    "automatic": false,
+    "category": "Media",
+    "color": "#D2015A",
+    "tags": [
+        "Anime",
+        "Streaming",
+        "Free"
+    ]
+}
