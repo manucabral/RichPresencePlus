@@ -47,29 +47,29 @@ class Animepahe(rpp.Presence):
         return f"{rpp.__title__} v{rpp.__version__}"
 
     def set_idle(self):
-        if self.last_title != "idle":
+        if self.last_status != "idle":
             self.state = "Idle"
             self.details = "Nothing to show"
             self.large_text = self.get_rpp_label()
             self.large_image =  self.buttons = None
             self.end = self.start = None
             self.log.info("Idle")
-            self.last_title = "idle"
+            self.last_status = "idle"
             self.force_update()
 
     def set_viewing_home(self):
-        if self.last_title != "viewing_home":
+        if self.last_status != "viewing_home":
             self.state = "Home"
             self.details = "Last releases"
             self.large_text = self.get_rpp_label()
             self.large_image = self.buttons = None
             self.start = int(time.time())
             self.log.info("Viewing home")
-            self.last_title = "viewing_home"
+            self.last_status = "viewing_home"
             self.force_update()
     
     def set_viewing_queue(self):
-        if self.last_title != "viewing_queue":
+        if self.last_status != "viewing_queue":
             self.state = "Queue"
             self.details = "Watching queue"
             self.lage_image = ""
@@ -77,18 +77,18 @@ class Animepahe(rpp.Presence):
             self.buttons = None
             self.start = int(time.time())
             self.log.info("Viewing queue")
-            self.last_title = "viewing_queue"
+            self.last_status = "viewing_queue"
             self.force_update()
 
     def set_browsing_catalog(self):
-        if self.last_title != "browsing_catalog":
+        if self.last_status != "browsing_catalog":
             self.state = "Browsing..."
             self.details = "Searching in catalog"
             self.large_text = self.get_rpp_label()
             self.large_image =  self.buttons = None
             self.start = int(time.time())
             self.log.info("Browsing in catalog")
-            self.last_title = "browsing_catalog"
+            self.last_status = "browsing_catalog"
             self.force_update()
 
     def set_watching_episode(self):
@@ -114,9 +114,9 @@ class Animepahe(rpp.Presence):
             }
         ]
 
-        if self.last_title != metadata:
+        if self.last_status != metadata:
             self.start = int(time.time())
-            self.last_title = metadata
+            self.last_status = metadata
             self.log.info("Watching %s episode %s", title, episode)
             self.force_update()
 
