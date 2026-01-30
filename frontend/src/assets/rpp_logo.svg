@@ -1,0 +1,45 @@
+<svg width="64" height="64" viewBox="0 0 64 64" fill="none"
+     xmlns="http://www.w3.org/2000/svg">
+
+  <rect
+    x="6"
+    y="6"
+    width="52"
+    height="52"
+    rx="12"
+    stroke="#19C283"
+    stroke-width="6"
+  />
+
+  <rect
+    x="9"
+    y="9"
+    width="46"
+    height="46"
+    rx="10"
+    stroke="#4BF6B6"
+    stroke-width="3"
+    opacity="0.9"
+  />
+
+  <line
+    x1="20"
+    y1="32"
+    x2="44"
+    y2="32"
+    stroke="#19C283"
+    stroke-width="4"
+    stroke-linecap="round"
+  />
+
+  <line
+    x1="32"
+    y1="20"
+    x2="32"
+    y2="44"
+    stroke="#4BF6B6"
+    stroke-width="4"
+    stroke-linecap="round"
+  />
+
+</svg>
