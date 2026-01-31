@@ -149,21 +149,19 @@ class UserSettings:
             raise AttributeError(f"No such option: {key}")
         return getattr(self, key)
 
-USER_SETTINGS: UserSettings | None = None
-
 def get_user_settings() -> UserSettings:
     """
     Get the singleton UserSettings instance.
     """
     if exist_us_file():
-        USER_SETTINGS = UserSettings.load_from_file()
+        user_settings = UserSettings.load_from_file()
     else:
-        USER_SETTINGS = UserSettings(
+        user_settings = UserSettings(
             profile_name=config.browser_profile_name,
             runtime_interval=config.runtime_interval,
             browser_target_port=config.browser_target_port,
             logs_level=config.logs_level,
         )
-        USER_SETTINGS.save()
+        user_settings.save()
 
-    return USER_SETTINGS
+    return user_settings
