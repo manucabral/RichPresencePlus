@@ -1,4 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
+import { toast } from "sonner";
 import {
   getInstalledBrowsers,
   getConnectedBrowser,
@@ -8,6 +9,7 @@ import {
 } from "../../../platform/pywebview/browser.api";
 import type { Browser } from "../../../shared/types/browser";
 import InfoCard from "../../../shared/components/InfoCard";
+import Button from "../../../shared/components/Button";
 
 export default function BrowserPage() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -32,7 +34,10 @@ export default function BrowserPage() {
       await updateConnectedBrowser();
     } catch (error) {
       console.error("Error launching browser:", error);
-      alert(String(error));
+      toast("Error", {
+        description: String(error),
+        duration: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -48,7 +53,10 @@ export default function BrowserPage() {
       }
     } catch (error) {
       console.error("Error closing browser:", error);
-      alert(String(error));
+      toast("Error", {
+        description: String(error),
+        duration: 5000,
+      });
       setBrowser(null);
       setCdpUrl("");
     } finally {
@@ -70,7 +78,10 @@ export default function BrowserPage() {
         }
       } catch (error) {
         console.error(error);
-        alert(String(error));
+        toast("Error", {
+          description: "Failed to fetch browser data.",
+          duration: 5000,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -108,13 +119,14 @@ export default function BrowserPage() {
                     <p className="text-xs text-green-400">Connected</p>
                   </div>
                 </div>
-                <button
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20 disabled:opacity-50 shrink-0"
+                <Button
                   onClick={() => handleClose()}
+                  variant="danger"
                   disabled={isLoading}
+                  className="px-3 py-1.5 text-xs shrink-0"
                 >
                   Disconnect
-                </button>
+                </Button>
               </div>
               <div className="pt-3 border-t border-neutral-800">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -171,13 +183,14 @@ export default function BrowserPage() {
                   </p>
                 </div>
               </div>
-              <button
-                className="px-3 py-1.5 text-xs font-medium rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 disabled:opacity-50 shrink-0"
+              <Button
                 onClick={() => handleLaunch(b.name)}
+                variant="primary"
                 disabled={isLoading}
+                className="px-3 py-1.5 text-xs shrink-0"
               >
                 Connect
-              </button>
+              </Button>
             </div>
           ))}
         </div>

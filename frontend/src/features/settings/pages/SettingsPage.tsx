@@ -3,6 +3,9 @@ import {
   getUserSettingKey,
   setUserSettingKey,
 } from "../../../platform/pywebview/user.api";
+import Button from "../../../shared/components/Button";
+import { toast } from "sonner";
+import InfoCard from "../../../shared/components/InfoCard";
 
 const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"] as const;
 type LogLevel = (typeof LOG_LEVELS)[number];
@@ -114,7 +117,10 @@ export default function SettingsPage() {
       setSaveStatus("success");
       setTimeout(() => setSaveStatus("idle"), 2000);
     } catch (error) {
-      console.error("Error saving settings:", error);
+      toast("Error", {
+        description: "Failed to save settings.",
+        duration: 5000,
+      });
       setSaveStatus("error");
       setTimeout(() => setSaveStatus("idle"), 3000);
     } finally {
@@ -180,10 +186,11 @@ export default function SettingsPage() {
                   className="w-full px-3 py-2 text-sm bg-neutral-800/50 border border-neutral-700/50 rounded-lg text-neutral-100 placeholder-neutral-600 focus:outline-none focus:border-green-500/50 focus:ring-1 focus:ring-green-500/20"
                 />
                 <p className="text-[11px] text-neutral-600 mt-1.5">
-                  Name to identify this configuration profile
+                  Name to identify browser profile.
                 </p>
               </div>
             </div>
+            <InfoCard text="If any browsers are running, this option will close them." />
           </div>
 
           <div>
@@ -214,7 +221,7 @@ export default function SettingsPage() {
                   <p className="text-[11px] text-red-400 mt-1.5">{portError}</p>
                 ) : (
                   <p className="text-[11px] text-neutral-600 mt-1.5">
-                    CDP debugging port for browser connection (1-65535)
+                    CDP debugging port for browser connection.
                   </p>
                 )}
               </div>
@@ -249,11 +256,12 @@ export default function SettingsPage() {
                   </p>
                 ) : (
                   <p className="text-[11px] text-neutral-600 mt-1.5">
-                    How often to refresh presence data (1-300 seconds)
+                    How often to refresh web presences (in seconds)
                   </p>
                 )}
               </div>
             </div>
+            <InfoCard text="If any browsers are running, this options will close them." />
           </div>
 
           <div>
@@ -330,34 +338,15 @@ export default function SettingsPage() {
                 </span>
               )}
             </div>
-            <button
+            <Button
               onClick={saveSettings}
-              disabled={isSaving || !!portError || !!intervalError}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed border border-green-500/20"
+              loading={isSaving}
+              disabled={!!portError || !!intervalError}
+              variant="primary"
+              className="flex items-center gap-2 border border-green-500/20"
             >
               {isSaving ? (
-                <>
-                  <svg
-                    className="w-4 h-4 animate-spin"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Saving...
-                </>
+                "Saving..."
               ) : (
                 <>
                   <svg
@@ -376,7 +365,7 @@ export default function SettingsPage() {
                   Save Settings
                 </>
               )}
-            </button>
+            </Button>
           </div>
         </>
       )}

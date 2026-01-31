@@ -2,6 +2,7 @@ export type Presence = {
   name: string;
   client_id: string;
   web: boolean;
+  verified: boolean;
 };
 
 export type InstalledPresence = Presence & {
@@ -14,6 +15,7 @@ export type InstalledPresence = Presence & {
   on_exit: any;
   runs: number;
   running: boolean;
+  image: string;
 };
 
 export type RemotePresence = {

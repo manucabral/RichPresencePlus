@@ -1,12 +1,16 @@
 import { useEffect, useState, useMemo } from "preact/hooks";
 import {
   getInstalledPresences,
+  removeInstalledPresence,
   startPresence,
   stopPresence,
 } from "../../../platform/pywebview/presences.api";
 import type { InstalledPresence } from "../../../shared/types/presence";
+import { toast } from "sonner";
+import Button from "../../../shared/components/Button";
 
 export default function InstalledPresencesPage() {
+  const [isLoading, setIsLoading] = useState(true);
   const [presences, setPresences] = useState<InstalledPresence[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -20,11 +24,50 @@ export default function InstalledPresencesPage() {
     );
   }, [presences, searchQuery]);
 
+  const getPresenceByName = (name: string) => {
+    return presences.find((p) => p.name === name);
+  };
+
+  const handleRemove = async (name: string) => {
+    try {
+      let presence = getPresenceByName(name);
+      if (presence && presence.running) {
+        toast("Error", {
+          description: "Please stop the presence before removing it.",
+          duration: 5000,
+        });
+        return;
+      }
+      setIsLoading(true);
+
+      const { success, message } = await removeInstalledPresence(name);
+      toast(success ? "Removed" : "Error", {
+        description: message,
+        duration: 5000,
+      });
+      if (!success) return;
+      setPresences((prevPresences) =>
+        prevPresences.filter((p) => p.name !== name),
+      );
+    } catch (error) {
+      toast("Error", {
+        description: String(error),
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleStart = async (name: string) => {
     try {
-      let presenceInstance = presences.find((p) => p.name === name);
+      setIsLoading(true);
+      let presenceInstance = getPresenceByName(name);
       if (presenceInstance && presenceInstance.running) {
-        alert("Presence is already running.");
+        toast("Error", {
+          description: "Presence is already running.",
+          duration: 5000,
+        });
         return;
       }
       await startPresence(name);
@@ -35,43 +78,61 @@ export default function InstalledPresencesPage() {
         ),
       );
     } catch (error) {
-      console.error("Error launching presence:", error);
-      alert(String(error));
+      toast("Cannot start", {
+        description: String(error),
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
   const handleStop = async (name: string) => {
     try {
-      let presenceInstance = presences.find((p) => p.name === name);
+      setIsLoading(true);
+      let presenceInstance = getPresenceByName(name);
       if (presenceInstance && !presenceInstance.running) {
-        alert("Presence is not running.");
+        toast("Cannot stop", {
+          description: "Presence is not running.",
+          duration: 5000,
+        });
         return;
       }
       await stopPresence(name);
-      // change running state
       setPresences((prevPresences) =>
         prevPresences.map((p) =>
           p.name === name ? { ...p, running: false } : p,
         ),
       );
     } catch (error) {
-      console.error("Error stopping presence:", error);
-      alert(String(error));
+      toast("Cannot stop", {
+        description: String(error),
+        duration: 5000,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     async function fetchPresences() {
       try {
+        setIsLoading(true);
         const installedPresences = await getInstalledPresences();
         console.log("Installed presences:", installedPresences);
         setPresences(installedPresences);
       } catch (error) {
-        console.error("Error fetching installed presences:", error);
+        toast("Error", {
+          description: "Failed to fetch installed presences.",
+          duration: 5000,
+        });
+      } finally {
+        setIsLoading(false);
       }
     }
 
     fetchPresences();
   }, []);
+
   return (
     <div className="max-w-4xl">
       <div className="mb-8">
@@ -132,21 +193,46 @@ export default function InstalledPresencesPage() {
               className="flex items-center justify-between p-4 rounded-xl bg-neutral-900/30 border border-neutral-800/50 hover:border-neutral-700/50"
             >
               <div className="flex items-center gap-4 min-w-0">
-                <div
-                  className={`w-3 h-3 rounded-full ${
-                    presence.running ? "bg-green-500" : "bg-neutral-600"
-                  }`}
-                />
+                {presence.image ? (
+                  <img
+                    src={presence.image}
+                    alt={presence.name}
+                    className="w-10 h-10 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-neutral-800 text-neutral-400 font-bold">
+                    {presence.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div className="min-w-0">
                   <p className="text-base text-neutral-200 truncate">
                     {presence.name}
                   </p>
-                  <div className="flex items-center gap-3 text-sm text-neutral-500">
-                    <span className="font-mono">{presence.client_id}</span>
-                    {presence.web && (
-                      <span className="px-2 py-0.5 rounded bg-neutral-800 text-neutral-400 text-xs">
-                        web
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-3 text-sm text-neutral-500">
+                      <span className="font-mono">{presence.client_id}</span>
+                      {presence.web && (
+                        <span className="px-2 py-0.5 rounded bg-neutral-800 text-neutral-400 text-xs">
+                          web
+                        </span>
+                      )}
+                      <span
+                        className={`px-2 py-0.5 rounded text-xs ${
+                          presence.verified
+                            ? "bg-green-500/10 text-green-400"
+                            : "bg-red-500/10 text-red-400"
+                        }`}
+                      >
+                        {presence.verified ? "verified" : "unverified"}
                       </span>
+                    </div>
+                    {presence.path && (
+                      <div
+                        className="text-xs text-neutral-600 font-mono truncate max-w-xs"
+                        title={presence.path}
+                      >
+                        {presence.path}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -154,23 +240,29 @@ export default function InstalledPresencesPage() {
 
               <div className="flex items-center gap-3">
                 {presence.running ? (
-                  <button
+                  <Button
                     onClick={() => handleStop(presence.name)}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
+                    variant="warning"
+                    disabled={isLoading}
                   >
                     Stop
-                  </button>
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     onClick={() => handleStart(presence.name)}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                    variant="primary"
+                    disabled={isLoading}
                   >
                     Start
-                  </button>
+                  </Button>
                 )}
-                <button className="px-4 py-2 text-sm font-medium rounded-lg bg-neutral-800 text-neutral-400 hover:bg-neutral-700">
+                <Button
+                  onClick={() => handleRemove(presence.name)}
+                  variant="neutral"
+                  disabled={isLoading}
+                >
                   Remove
-                </button>
+                </Button>
               </div>
             </div>
           ))}

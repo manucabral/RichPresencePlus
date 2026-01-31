@@ -24,6 +24,7 @@ render(
         <Route path="network" element={<NetworkPage />} />
         <Route path="discord" element={<DiscordPage />} />
         <Route path="settings" element={<SettingsPage />} />
+        {/* <Route path="custom-presence" element={<CustomPresencePage />} /> */}
         <Route path="*" element={<div>404 Not Found</div>} />
       </Route>
     </Routes>

@@ -1,9 +1,11 @@
+import { toast } from "sonner";
 import { useEffect, useState } from "preact/hooks";
 import {
   getNetworkProcceses,
   closeNetworkProcesses,
 } from "../../../platform/pywebview/network.api";
 import type { NetworkProcess } from "../../../shared/types/networkprocess";
+import Button from "../../../shared/components/Button";
 
 export default function NetworkPage() {
   const [processesRaw, setProcessesRaw] = useState<
@@ -31,7 +33,10 @@ export default function NetworkPage() {
       setProcessesRaw(updatedProcesses);
     } catch (error) {
       console.error(`Error closing processes on port ${port}:`, error);
-      alert(String(error));
+      toast("Error", {
+        description: "Failed to close processes.",
+        duration: 5000,
+      });
     }
   };
 
@@ -76,19 +81,20 @@ export default function NetworkPage() {
                     </span>
                   </div>
                   {entries.length > 0 && (
-                    <button
-                      className="text-sm font-medium text-red-400 hover:text-red-300"
+                    <Button
                       onClick={() => handleCloseProcesses(Number(port))}
+                      variant="danger"
+                      className="text-sm"
                     >
                       Kill all
-                    </button>
+                    </Button>
                   )}
                 </div>
                 {entries.length > 0 && (
                   <div className="space-y-2">
-                    {entries.map((process) => (
+                    {entries.map((process, i) => (
                       <div
-                        key={process.pid}
+                        key={`${port}-${process.pid}-${i}`}
                         className="flex items-center justify-between py-2.5 px-4 rounded-lg bg-neutral-800/30 text-sm"
                       >
                         <code className="text-neutral-300 font-mono">

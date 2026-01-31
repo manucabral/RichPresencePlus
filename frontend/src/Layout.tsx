@@ -1,4 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router";
+import { Toaster } from "sonner";
 
 const navItems = [
   {
@@ -58,6 +59,27 @@ const navItems = [
       </svg>
     ),
   },
+  /*
+  {
+    label: "Custom",
+    path: "/custom-presence",
+    icon: (
+      <svg
+        className="w-4 h-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M12 4.5v15m7.5-7.5h-15"
+        />
+      </svg>
+    ),
+  },
+  */
   {
     label: "Store",
     path: "/remote-presences",
@@ -139,10 +161,10 @@ export default function Layout() {
     <div className="w-screen h-screen flex flex-col md:flex-row bg-neutral-950 text-neutral-100">
       <aside className="hidden md:flex w-52 lg:w-56 min-w-52 bg-neutral-950 flex-col border-r border-neutral-800/60">
         <div className="px-4 lg:px-5 py-4 lg:py-5 border-b border-neutral-800/60">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500" />
+          <div className="flex items-center gap-3">
+            <img src="/logo.svg" alt="Logo" className="h-7 w-7" />
             <span className="text-sm font-semibold tracking-tight text-neutral-100">
-              Rich Presence<span className="text-green-500">+</span>
+              Rich Presence<span className="text-green-500"> +</span>
             </span>
           </div>
         </div>
@@ -180,8 +202,8 @@ export default function Layout() {
       </aside>
 
       <header className="md:hidden flex items-center justify-between px-4 py-3 bg-neutral-950 border-b border-neutral-800/60">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-500" />
+        <div className="flex items-center gap-3">
+          <img src="/logo.svg" alt="Logo" className="h-7 w-7" />
           <span className="text-sm font-semibold tracking-tight text-neutral-100">
             Rich Presence<span className="text-green-500">+</span>
           </span>
@@ -189,6 +211,17 @@ export default function Layout() {
         <span className="text-[10px] text-neutral-600">v0.1.1</span>
       </header>
 
+      <Toaster
+        position="bottom-right"
+        richColors
+        toastOptions={{
+          style: {
+            background: "#1A1A1A",
+            color: "white",
+            border: "1px solid #333333",
+          },
+        }}
+      />
       <main className="flex-1 overflow-auto p-4 md:p-5 lg:p-6 bg-neutral-900/30">
         <Outlet />
       </main>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "preact/hooks";
 import { isDiscordRunning } from "../../../platform/pywebview/presences.api";
 import InfoCard from "../../../shared/components/InfoCard";
+import Button from "../../../shared/components/Button";
 
 export default function DiscordPage() {
   const [running, setRunning] = useState<boolean>(false);
@@ -77,13 +78,14 @@ export default function DiscordPage() {
             </>
           )}
 
-          <button
+          <Button
             onClick={checkDiscord}
             disabled={isLoading}
-            className="mt-5 px-4 py-2 text-sm font-medium rounded-md bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed border border-emerald-500/20"
+            variant="primary"
+            className="mt-5 rounded-md border border-emerald-500/20"
           >
             {isLoading ? "Checking..." : "Refresh Status"}
-          </button>
+          </Button>
         </div>
       </div>
 

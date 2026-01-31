@@ -13,8 +13,8 @@ declare global {
         start_presence(name: string): Promise<void>;
         stop_presence(name: string): Promise<void>;
         get_remote_presences(): Promise<RemotePresence[]>;
-        install_remote_presence(name: string): Promise<void>;
-        remove_installed_presence(name: string): Promise<void>;
+        install_remote_presence(name: string): Promise<ResultState>;
+        remove_installed_presence(name: string): Promise<ResultState>;
         is_discord_running(): Promise<boolean>;
         get_network_processes(): Promise<any[]>;
         close_network_processes(port: number): Promise<boolean>;

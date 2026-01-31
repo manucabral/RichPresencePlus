@@ -3,6 +3,7 @@ import { useState, useEffect } from "preact/hooks";
 import { getConnectedBrowser } from "./platform/pywebview/browser.api";
 import { isDiscordRunning } from "./platform/pywebview/presences.api";
 import type { Browser } from "./shared/types/browser";
+import Button from "./shared/components/Button";
 
 const quickLinks = [
   {
@@ -140,10 +141,11 @@ export default function App() {
           <h2 className="text-sm font-medium text-neutral-400 uppercase tracking-wider">
             System Status
           </h2>
-          <button
+          <Button
             onClick={checkStatus}
             disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-neutral-800 text-neutral-400 hover:text-green-400 hover:bg-neutral-800/80 disabled:opacity-50 disabled:cursor-not-allowed border border-neutral-700/50"
+            className="flex items-center gap-2 px-3 py-1.5 text-xs border border-neutral-700/50"
+            variant="ghost"
             title="Refresh Status"
           >
             <svg
@@ -162,7 +164,7 @@ export default function App() {
             <span className="hidden sm:inline">
               {isLoading ? "Refreshing..." : "Refresh"}
             </span>
-          </button>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -3,6 +3,7 @@ import type {
   InstalledPresence,
   RemotePresence,
 } from "../../shared/types/presence";
+import type { ResultState } from "../../shared/types/resultstate";
 
 export async function getInstalledPresences(): Promise<InstalledPresence[]> {
   const api = await getPyApi();
@@ -26,14 +27,20 @@ export async function getRemotePresences(): Promise<RemotePresence[]> {
   return presences;
 }
 
-export async function installRemotePresence(name: string): Promise<void> {
+export async function installRemotePresence(
+  name: string,
+): Promise<ResultState> {
   const api = await getPyApi();
-  return api.install_remote_presence(name);
+  const response = await api.install_remote_presence(name);
+  return response;
 }
 
-export async function removeInstalledPresence(name: string): Promise<void> {
+export async function removeInstalledPresence(
+  name: string,
+): Promise<ResultState> {
   const api = await getPyApi();
-  return api.remove_installed_presence(name);
+  const response = await api.remove_installed_presence(name);
+  return response;
 }
 
 export async function isDiscordRunning(): Promise<boolean> {

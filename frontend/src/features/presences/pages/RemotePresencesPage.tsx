@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo } from "preact/hooks";
+import { toast } from "sonner";
 import {
   getRemotePresences,
   installRemotePresence,
   removeInstalledPresence,
 } from "../../../platform/pywebview/presences.api";
 import type { RemotePresence } from "../../../shared/types/presence";
+import Button from "../../../shared/components/Button";
 
 export default function RemotePresencesPage() {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,7 +35,12 @@ export default function RemotePresencesPage() {
   const handleInstall = async (name: string) => {
     try {
       setIsLoading(true);
-      await installRemotePresence(name);
+      const { success, message } = await installRemotePresence(name);
+      toast(success ? "Installed" : "Cannot install", {
+        description: message,
+        duration: 5000,
+      });
+      if (!success) return;
       setPresences((prevPresences) =>
         prevPresences.map((p) =>
           p.name === name
@@ -43,17 +50,32 @@ export default function RemotePresencesPage() {
       );
     } catch (error) {
       console.error("Error installing presence:", error);
-      alert(String(error));
+      toast("Error", {
+        description: String(error),
+        duration: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleRemove = async (name: string) => {
+  const handleUninstall = async (name: string) => {
     try {
+      let presence = presences.find((p) => p.name === name);
+      if (presence && !presence.manifest.installed) {
+        toast("Error", {
+          description: "Presence is not installed.",
+          duration: 5000,
+        });
+        return;
+      }
       setIsLoading(true);
-      await removeInstalledPresence(name);
-
+      const { success, message } = await removeInstalledPresence(name);
+      toast(success ? "Success" : "Error", {
+        description: message,
+        duration: 5000,
+      });
+      if (!success) return;
       setPresences((prevPresences) =>
         prevPresences.map((p) =>
           p.name === name
@@ -63,7 +85,10 @@ export default function RemotePresencesPage() {
       );
     } catch (error) {
       console.error("Error removing presence:", error);
-      alert(String(error));
+      toast("Error", {
+        description: String(error),
+        duration: 5000,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -73,7 +98,6 @@ export default function RemotePresencesPage() {
     async function fetchRemotePresences() {
       try {
         const remotePresences = await getRemotePresences();
-        console.log("Remote presences:", remotePresences);
         setPresences(remotePresences);
       } catch (error) {
         console.error("Error fetching remote presences:", error);
@@ -148,11 +172,19 @@ export default function RemotePresencesPage() {
               className="flex items-center justify-between p-4 rounded-xl bg-neutral-900/30 border border-neutral-800/50 hover:border-neutral-700/50"
             >
               <div className="flex items-center gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center">
-                  <span className="text-sm font-bold text-neutral-400">
-                    {presence.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
+                {presence.manifest.image ? (
+                  <img
+                    src={presence.manifest.image}
+                    alt={presence.name}
+                    className="w-10 h-10 rounded-lg object-cover"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-lg bg-neutral-800 flex items-center justify-center">
+                    <span className="text-sm font-bold text-neutral-400">
+                      {presence.name.charAt(0).toUpperCase()}
+                    </span>
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-3">
                     <p className="text-base text-neutral-200 truncate">
@@ -180,19 +212,19 @@ export default function RemotePresencesPage() {
                   </p>
                 </div>
                 {presence.manifest.installed ? (
-                  <button
-                    onClick={() => handleRemove(presence.name)}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-red-500/10 text-red-400 hover:bg-red-500/20"
+                  <Button
+                    onClick={() => handleUninstall(presence.name)}
+                    variant="danger"
                   >
-                    Remove
-                  </button>
+                    Uninstall
+                  </Button>
                 ) : (
-                  <button
+                  <Button
                     onClick={() => handleInstall(presence.name)}
-                    className="px-4 py-2 text-sm font-medium rounded-lg bg-green-500/10 text-green-400 hover:bg-green-500/20"
+                    variant="primary"
                   >
                     Install
-                  </button>
+                  </Button>
                 )}
               </div>
             </div>
