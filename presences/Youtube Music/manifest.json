@@ -1,0 +1,24 @@
+{
+  "name": "YouTube Music",
+  "version": "1.0.2",
+  "package": ">=0.1.1",
+  "description": {
+        "en": "YouTube Music is a streaming service offering access to over 70 million official songs, including albums, singles, remixes, and live performances. It allows users to create custom playlists, explore various music genres, and discover exclusive content. Unique features include lyrics display and seamless switching between audio and video. Available on Android, iOS, and desktop."
+  },
+  "client_id": "828083725790609459",
+  "image": "https://raw.githubusercontent.com/manucabral/RichPresencePlus/refs/heads/main/presences/Youtube%20Music/image.webp",
+  "entry": "main.py",
+  "author": "manucabral",
+  "contributors": [],
+  "category": "Media",
+  "color": "#A56786",
+  "tags": [
+    "music",
+    "media"
+  ],
+  "web": true,
+  "interval": 10,
+  "imports": [
+    "state.py"
+  ]
+}
