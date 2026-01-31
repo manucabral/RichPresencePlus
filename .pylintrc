@@ -1,2 +1,15 @@
+[MESSAGES CONTROL]
+disable=
+	broad-exception-caught,
+	import-error,
+	too-few-public-methods,
+	too-many-instance-attributes,
+	consider-using-with,
+	too-many-positional-arguments,
+	too-many-return-statements,
+    too-many-statements
+
 [DESIGN]
-max-attributes=11
+max-args=10
+max-locals=30
+max-branches=30
