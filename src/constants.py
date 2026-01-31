@@ -81,9 +81,7 @@ class Config:
 
     github_owner: str = "manucabral"
     github_repo: str = "RichPresencePlus"
-    github_token: str | None = (
-        ""
-    )
+    github_token: str | None = ""
     meta_filename: str = ".meta.json"
     cache_filename: str = "presences.cache.json"
     cache_ttl_seconds: int = 300  # 5 minutes

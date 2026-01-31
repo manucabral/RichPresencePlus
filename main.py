@@ -40,7 +40,6 @@ def find_free_port() -> int:
     return port
 
 
-
 def start():
     """Start the main application and webview window."""
 
@@ -62,9 +61,7 @@ def start():
     presence_manager.discover(force=True, dev=config.development_mode)
 
     logger.info("Initializing API...")
-    api = RPPApi(
-        browser_manager=bm, presence_manager=pm, runtime=rt
-    )
+    api = RPPApi(browser_manager=bm, presence_manager=pm, runtime=rt)
 
     try:
         logger.info(
