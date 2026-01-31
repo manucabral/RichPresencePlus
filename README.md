@@ -44,27 +44,14 @@ The lastest release is available [here](https://github.com/manucabral/RichPresen
 - Download and use different presences.
 
 # Supported browsers
+- Chromium browsers.
 
-| Name | Compatibility | Supported Since Version |
-| :---  | :---: |  :---: |
-| Microsoft Edge   | ✔️ |  v0.0.1  |
-| Google Chrome    | ✔️ |  v0.0.1  |
-| Yandex Browser   | ✔️ |  v0.0.1  |
-| Arc Browser      | ✔️ |  v0.0.8  |
-| Brave            | ✔️ |  v0.0.9  |
-| Vivaldi          | ✔️ |  v0.0.9  |
-| Opera            | ✔️ |  v0.0.1  |
-| Opera One        | ✔️ |  v0.0.8  |
-| Opera GX         | ✔️ |  v0.0.8  |    
-| Mozilla Firefox  | ❌ |  Not supported   |
-> If you want support for another browser, create an [issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
+Mozilla Firefox o derivates is not supported.
 
-For custom browser path configuration, read [here](https://github.com/manucabral/RichPresencePlus/blob/main/docs/CUSTOM_BROWSER_PATH.md).
-
-If you have Arc browser installed via Microsoft Store, read [here](https://github.com/manucabral/RichPresencePlus/blob/main/docs/ARC_BROWSER_MICROSOFT_STORE.md)
+If you want support for another browser or find a bug, create an [issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
 
 ## Request a Presence
-If you'd like to propose a new presence to be added to the list, please [create an issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
+If you'd like to propose a new web or desktop presence to be added to the list, please [create an issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
 
 You can check the development status of each one by going [here](https://github.com/users/manucabral/projects/4).
 
@@ -86,11 +73,8 @@ Join our community on Discord to connect with other users, get support, and shar
 ## RoadMap
 - Multi-language system.
 - Expand usable modules.
-- Investigate Firefox compatibility.
-- Add more functionalities to the runtime (like IFrames or QuerySelectors).
 - Wiki for presences creation, ref [Rich Presence Plus Dev](https://github.com/manucabral/RichPresencePlusDev)
-- Code optimization and related improvements.
-> The listed items cover the most relevant aspects.
+- And more.
 
 ## Contributors
 People who maintain or help with the application.
