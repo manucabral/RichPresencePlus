@@ -10,7 +10,7 @@ from src.constants import config
 from src.browser_manager import BrowserManager
 from src.presence_manager import PresenceManager
 from src.runtime import Runtime
-from src.user import UserSettings
+from src.user import get_user_settings
 from src.logger import logger, set_log_level
 from src.github_sync import get_remote_presences_list, install, uninstall
 from src.process_manager import get_processes_by_port, close_pids, is_discord_running
@@ -26,7 +26,6 @@ class RPPApi:
         browser_manager: BrowserManager,
         presence_manager: PresenceManager,
         runtime: Runtime,
-        user_settings: UserSettings,
     ):
         """
         Initializes the API with browser and presence managers.
@@ -34,7 +33,7 @@ class RPPApi:
         self.bm = browser_manager
         self.pm = presence_manager
         self.rt = runtime
-        self.us = user_settings
+        self.us = get_user_settings()
         self.force_cache = False
 
     def update_connected_browser(self) -> None:
@@ -214,6 +213,10 @@ class RPPApi:
         """
         Set a user setting value by key.
         """
+        current = self.us.get_option(key)
+        if str(current) == str(value):
+            logger.info("No change for %s: value is already %r", key, value)
+            return False
         if key == "runtime_interval":
             self.rt.interval = int(value)
             logger.info("Updated runtime interval to %d seconds", self.rt.interval)

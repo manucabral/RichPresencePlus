@@ -450,10 +450,7 @@ class PresenceManager:
                 continue
 
             sync_result, sync_msg = sync(f"presences/{name}", str(entry))
-            # if is dev and sync result is false, still proceed
-            print(sync_result, sync_msg, dev)
             if not sync_result and not dev:
-
                 logger.warning(
                     "Presence %s failed to sync from remote: %s", name, sync_msg
                 )

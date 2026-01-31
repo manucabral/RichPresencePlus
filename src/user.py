@@ -1,18 +1,52 @@
 """
-User settings management — thread-safe, atomic persistence to disk.
+User settings management — simple persistence to disk.
+No locks, no atomic replace. Guaranteed overwrite.
 """
 
 import os
 import json
-import threading
-from dataclasses import dataclass, asdict
 from typing import Dict, Any, Optional
+
 from src.logger import logger
 from src.constants import config
 
+SETTINGS_PATH = str(config.base_dir.parent / config.user_settings_filename)
+
+
+def exist_us_file(filepath: Optional[str] = None) -> bool:
+    """
+    Check if the user settings file exists.
+    """
+    path = filepath or SETTINGS_PATH
+    exists = os.path.isfile(path)
+    logger.info("Checking if user settings file exists at %s: %s", path, exists)
+    return exists
+
+
+def _write_file(path: str, data: str) -> None:
+    """
+    Direct write to file (reliable on Windows).
+    """
+    directory = os.path.dirname(path) or str(config.base_dir.parent)
+    os.makedirs(directory, exist_ok=True)
+    try:
+        with open(path, "w+", encoding="utf-8") as f:
+            f.write(data)
+    except Exception as exc:
+        logger.exception("Failed to write file: %s", path)
+        raise exc
+    logger.info("File written successfully: %s", path)
+
 
 class UserSettings:
-    """User settings for the application — thread-safe and saved atomically on disk."""
+    """User settings — simple disk persistence (not thread-safe)."""
+
+    _allowed_keys = (
+        "profile_name",
+        "runtime_interval",
+        "browser_target_port",
+        "logs_level",
+    )
 
     def __init__(
         self,
@@ -22,16 +56,14 @@ class UserSettings:
         logs_level: str,
         filepath: Optional[str] = None,
     ) -> None:
-        self.profile_name: str = profile_name
-        self.runtime_interval: int = int(runtime_interval)
-        self.browser_target_port: int = int(browser_target_port)
-        self.logs_level: str = logs_level
-        self.filepath: str = filepath or config.user_settings_filename
-        self._lock = threading.Lock()
+        self.profile_name = str(profile_name)
+        self.runtime_interval = int(runtime_interval)
+        self.browser_target_port = int(browser_target_port)
+        self.logs_level = str(logs_level)
+        self.filepath = filepath if filepath is not None else SETTINGS_PATH
 
         logger.info(
-            "UserSettings initialized: "
-            "profile_name=%s, runtime_interval=%d, "
+            "UserSettings initialized: profile_name=%s, runtime_interval=%d, "
             "browser_target_port=%d, logs_level=%s",
             self.profile_name,
             self.runtime_interval,
@@ -39,162 +71,101 @@ class UserSettings:
             self.logs_level,
         )
 
-    @property
-    def _allowed_keys(self):
-        return (
-            "profile_name",
-            "runtime_interval",
-            "browser_target_port",
-            "logs_level",
-        )
-
-    def set_option(self, key: str, value: Any) -> None:
-        """Set an option and persist to disk.
-
-        Raises AttributeError if key is not allowed.
+    def to_dict(self) -> Dict[str, Any]:
         """
-        if key.startswith("_"):
-            raise AttributeError("Cannot set private attribute")
-
-        with self._lock:
-            if key in self._allowed_keys:
-                setattr(self, key, value)
-                logger.info("Set user setting %s to %r", key, value)
-                saved = save_us_to_file(self, self.filepath)
-                if not saved:
-                    logger.error(
-                        "Failed to persist user settings after setting %s", key
-                    )
-            else:
-                raise AttributeError(f"No such option: {key}")
-
-    def get_option(self, key: str) -> Any:
-        """Get an option value.
-
-        Raises AttributeError if key is not allowed.
+        Convert settings to a dictionary.
         """
-        if key.startswith("_"):
-            raise AttributeError("Cannot read private attribute")
-
-        with self._lock:
-            if key in self._allowed_keys:
-                logger.info("Getting user setting %s", key)
-                return getattr(self, key)
-            raise AttributeError(f"No such option: {key}")
-
-    def save(self) -> bool:
-        """Persist current settings to disk (thread-safe)."""
-        with self._lock:
-            logger.info("Saving user settings to file %s", self.filepath)
-            return save_us_to_file(self, self.filepath)
-
-
-def exist_us_file(filepath: Optional[str] = None) -> bool:
-    """Check if the user settings file exists."""
-    path = filepath or config.user_settings_filename
-    exists = os.path.isfile(path)
-    logger.info("Checking if user settings file exists at %s: %s", path, exists)
-    return exists
-
-
-@dataclass
-class UserSettingsData:
-    """Data class for user settings serialization."""
-
-    profile_name: str
-    runtime_interval: int
-    browser_target_port: int
-    logs_level: str
-
-    def to_dict(self) -> Dict[str, object]:
-        """Return a dict representation of the UserSettingsData."""
-        return asdict(self)
+        return {
+            "profile_name": self.profile_name,
+            "runtime_interval": self.runtime_interval,
+            "browser_target_port": self.browser_target_port,
+            "logs_level": self.logs_level,
+        }
 
     @classmethod
-    def from_user_settings(cls, us: UserSettings) -> "UserSettingsData":
-        """Create UserSettingsData from UserSettings instance."""
-        return cls(
-            profile_name=str(us.profile_name),
-            runtime_interval=int(us.runtime_interval),
-            browser_target_port=int(us.browser_target_port),
-            logs_level=str(us.logs_level),
-        )
+    def load_from_file(cls) -> "UserSettings":
+        """
+        Load user settings from the JSON file.
+        """
+        path = SETTINGS_PATH
 
-    @classmethod
-    def to_user_settings(cls, data: "UserSettingsData") -> UserSettings:
-        """Create UserSettings instance from UserSettingsData."""
-        us = UserSettings(
-            profile_name=data.profile_name,
-            runtime_interval=data.runtime_interval,
-            browser_target_port=data.browser_target_port,
-            logs_level=data.logs_level,
-        )
-        return us
+        if not os.path.isfile(path):
+            raise FileNotFoundError(path)
 
-
-def load_us_from_file(filepath: Optional[str] = None) -> UserSettings:
-    """Load user settings from a JSON file and return a UserSettings instance.
-
-    Raises FileNotFoundError if path doesn't exist, ValueError on invalid contents.
-    """
-    path = filepath or config.user_settings_filename
-
-    if not os.path.isfile(path):
-        logger.error("User settings file not found: %s", path)
-        raise FileNotFoundError(path)
-
-    try:
         with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-        required_keys = {
-            "profile_name",
-            "runtime_interval",
-            "browser_target_port",
-            "logs_level",
-        }
-        if not required_keys.issubset(set(data.keys())):
-            missing = required_keys - set(data.keys())
-            logger.error("User settings file %s is missing keys: %s", path, missing)
-            raise ValueError(f"Missing keys in user settings file: {missing}")
+        missing = set(cls._allowed_keys) - set(data.keys())
+        if missing:
+            raise ValueError(f"Missing keys in settings file: {missing}")
 
-        usd = UserSettingsData(**data)
-        us = UserSettingsData.to_user_settings(usd)
-        us.filepath = path
-        logger.info("Loaded user settings from file %s", path)
-        return us
+        logger.info("Loaded user settings from %s", path)
 
-    except json.JSONDecodeError as exc:
-        logger.error("Failed to parse user settings JSON from %s: %s", path, exc)
-        raise
-    except Exception:
-        logger.exception("Unexpected error while loading user settings from %s", path)
-        raise
+        return cls(
+            profile_name=data["profile_name"],
+            runtime_interval=data["runtime_interval"],
+            browser_target_port=data["browser_target_port"],
+            logs_level=data["logs_level"],
+        )
+
+    def save(self) -> bool:
+        """
+        Save user settings to the JSON file.
+        """
+        try:
+            raw = json.dumps(self.to_dict(), indent=4, ensure_ascii=False)
+            _write_file(self.filepath, raw)
+            logger.info("User settings saved to %s", self.filepath)
+            return True
+        except Exception:
+            logger.exception("Failed to save user settings to %s", self.filepath)
+            return False
+
+    def set_option(self, key: str, value: Any) -> None:
+        """
+        Set a user setting value by key.
+        """
+        if key not in self._allowed_keys:
+            raise AttributeError(f"No such option: {key}")
+
+        if key in ("runtime_interval", "browser_target_port"):
+            value = int(value)
+        else:
+            value = str(value)
+
+        if getattr(self, key) == value:
+            logger.info("No change for %s: value is already %r", key, value)
+            return
+
+        setattr(self, key, value)
+        logger.info("Set user setting %s to %r", key, value)
+        self.save()
+
+    def get_option(self, key: str) -> Any:
+        """
+        Get a user setting value by key.
+        """
+        if key not in self._allowed_keys:
+            raise AttributeError(f"No such option: {key}")
+        return getattr(self, key)
 
 
-def _atomic_write(path: str, data: str) -> None:
-    """Write data to path atomically using a temporary file and os.replace."""
-    dirpath = os.path.dirname(path) or "."
-    tmp_path = os.path.join(dirpath, f".{os.path.basename(path)}.tmp")
-    with open(tmp_path, "w", encoding="utf-8") as f:
-        f.write(data)
-    os.replace(tmp_path, path)
+_user_settings: UserSettings | None = None
 
 
-def save_us_to_file(us: UserSettings, filepath: Optional[str] = None) -> bool:
-    """Save user settings to a JSON file atomically.
-
-    Returns True on success, False on failure (and logs the exception).
+def get_user_settings() -> UserSettings:
     """
-    path = filepath or getattr(us, "_filepath", None) or config.user_settings_filename
-    try:
-        usd = UserSettingsData.from_user_settings(us)
-        raw = json.dumps(usd.to_dict(), indent=4, ensure_ascii=False)
-        # Ensure directory exists
-        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
-        _atomic_write(path, raw)
-        logger.info("Saved user settings to file %s", path)
-        return True
-    except Exception as exc:
-        logger.exception("Failed to save user settings to file %s: %s", path, exc)
-        return False
+    Get the singleton UserSettings instance.
+    """
+    if exist_us_file():
+        _user_settings = UserSettings.load_from_file()
+    else:
+        _user_settings = UserSettings(
+            profile_name=config.browser_profile_name,
+            runtime_interval=config.runtime_interval,
+            browser_target_port=config.browser_target_port,
+            logs_level=config.logs_level,
+        )
+        _user_settings.save()
+
+    return _user_settings

@@ -74,14 +74,16 @@ class Config:
     geckodriver_path: str = "geckodriver"
     runtime_interval: int = 2  # seconds
 
-    development_mode: bool = True
+    development_mode: bool = False
     frontend_dev_server_url: str = "http://localhost:5173"
     window_width: int = 950
     window_height: int = 650
 
     github_owner: str = "manucabral"
     github_repo: str = "RichPresencePlus"
-    github_token: str | None = None
+    github_token: str | None = (
+        ""
+    )
     meta_filename: str = ".meta.json"
     cache_filename: str = "presences.cache.json"
     cache_ttl_seconds: int = 300  # 5 minutes
