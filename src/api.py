@@ -14,8 +14,10 @@ from src.user import get_user_settings
 from src.logger import logger, set_log_level
 from src.github_sync import get_remote_presences_list, install, uninstall
 from src.process_manager import get_processes_by_port, close_pids, is_discord_running
+from src.steam import Steam
 
 
+# pylint: disable=too-many-public-methods
 class RPPApi:
     """
     API class for webview JavaScript interaction.
@@ -34,6 +36,13 @@ class RPPApi:
         self.pm = presence_manager
         self.rt = runtime
         self.us = get_user_settings()
+        self.steam = Steam()
+
+        if self.steam.enabled and self.steam.accounts:
+            steam_account = self.steam.accounts[0]
+            logger.info("Setting default Steam account: %s", steam_account)
+            self.pm.steam_account = steam_account
+
         self.force_cache = False
 
     def update_connected_browser(self) -> None:
@@ -240,3 +249,65 @@ class RPPApi:
         if key == "profile_name":
             self.bm.profile_name = str(value)
         return self.us.set_option(key, value)
+
+    def get_steam_accounts(self):
+        """Get the list of Steam accounts from user settings."""
+        if not self.steam.enabled:
+            raise RuntimeError("Steam is disabled or not configured properly")
+        accounts = self.steam.accounts
+        logger.info("Retrieving %d Steam accounts", len(accounts))
+        return [
+            {
+                "name": account.name,
+                "steam_id64": account.steam_id64,
+                "steam_id3": account.steam_id3,
+            }
+            for account in accounts
+        ]
+
+    def get_current_steam_path(self) -> str:
+        """Get the current Steam configuration file path."""
+        if not self.steam.enabled:
+            raise RuntimeError("Steam is disabled or not configured properly")
+        logger.info("Current Steam config path: %s", self.steam.config_path)
+        return self.steam.config_path
+
+    def get_current_steam_account(self):
+        """Get the currently active Steam account."""
+        if not self.steam.enabled:
+            raise RuntimeError("Steam is disabled or not configured properly")
+        account = self.pm.steam_account
+        if not account:
+            return None
+        logger.info("Current Steam account: %s", account)
+        return {
+            "name": account.name,
+            "steam_id64": account.steam_id64,
+            "steam_id3": account.steam_id3,
+        }
+
+    def set_steam_path(self, path: str) -> bool:
+        """Set the Steam configuration file path."""
+        logger.info("Setting Steam config path to: %s", path)
+        if not os.path.exists(path):
+            raise ValueError("The specified Steam config path does not exist")
+        self.steam.config_path = path
+        self.steam.accounts = []
+        self.steam.load_accounts()
+        return True
+
+    def set_steam_account(self, steam_id3: int) -> bool:
+        """Set the active Steam account by Steam ID3."""
+        logger.info("Setting active Steam account to Steam ID3: %d", steam_id3)
+        if not self.steam.enabled:
+            raise RuntimeError("Steam is disabled or not configured properly")
+        account = next(
+            (acc for acc in self.steam.accounts if acc.steam_id3 == steam_id3), None
+        )
+        if not account:
+            raise ValueError("The specified Steam account was not found")
+        self.pm.steam_account = account
+        logger.info("Active Steam account set to: %s", account)
+        logger.info("Stopping all presences to apply Steam account change")
+        self.pm.stop_all(only_web=False)
+        return True

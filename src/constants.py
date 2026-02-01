@@ -52,7 +52,7 @@ class Config:
     """
 
     title: str = "Rich Presence Plus"
-    version: str = "0.1.1"
+    version: str = "0.1.1-alpha"
     description: str = "An advanced and simple Rich Presence application."
     author: str = "Manuel Cabral"
 
@@ -81,10 +81,15 @@ class Config:
 
     github_owner: str = "manucabral"
     github_repo: str = "RichPresencePlus"
-    github_token: str | None = ""
+    github_token: str | None = (
+        ""
+    )
     meta_filename: str = ".meta.json"
     cache_filename: str = "presences.cache.json"
     cache_ttl_seconds: int = 300  # 5 minutes
+
+    steam_config_path: str = r"C:\Program Files (x86)\Steam\config\config.vdf"
+    steam_base_id4: int = 76561197960265728
 
 
 config = Config()

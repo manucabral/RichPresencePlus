@@ -22,6 +22,7 @@ from .constants import config
 from .worker_spec import WorkerSpecification
 from .rpc import ClientRPC
 from .runtime import Runtime, SimpleRuntimeShim
+from .steam import SteamAccount
 
 
 # pylint: disable=too-many-branches
@@ -35,6 +36,7 @@ def process_worker(
     client_id: Optional[str] = None,
     stop_event: Optional[Any] = None,
     shared_pages: Optional[Any] = None,
+    steam_account: Optional[SteamAccount] = None,
 ) -> None:
     """
     Worker process entrypoint. Loads and runs the specified presence worker.
@@ -47,6 +49,7 @@ def process_worker(
         client_id (Optional[str]): RPC client ID.
         stop_event (Optional[Any]): Multiprocessing Event to signal shutdown.
         shared_pages (Optional[Any]): Manager list proxy for shared pages.
+        steam_account (Optional[SteamAccount]): Steam account to use.
     """
     rpc: Optional[ClientRPC] = None
     runtime: Optional[Any] = None
@@ -226,6 +229,8 @@ def process_worker(
             "interval": interval,
             "runtime": runtime,
             "stop_event": stop_event,
+            "process_name": process_name,
+            "steam_account": steam_account,
         }
         try:
             signature = inspect.signature(func)
@@ -244,6 +249,8 @@ def process_worker(
                         args.append(stop_event)
                     elif p.name in ("runtime", "rt"):
                         args.append(runtime)
+                    elif p.name in ("steam_account", "sa"):
+                        args.append(steam_account)
                     elif p.name == "interval":
                         args.append(interval)
                     elif p.name == "logger":
@@ -302,7 +309,9 @@ class PresenceManager:
     Manages presence worker discovery and lifecycle.
     """
 
-    def __init__(self, default_backoff: int = 5, runtime: Optional[Runtime] = None):
+    def __init__(
+        self, default_backoff: int = 5, runtime: Optional[Runtime] = None
+    ) -> None:
         """
         Initializes the PresenceManager.
         """
@@ -310,6 +319,7 @@ class PresenceManager:
         self.presences_dir = config.presences_dir
         self.workers: Dict[str, WorkerSpecification] = {}
         self.supervisor_thread: Optional[threading.Thread] = None
+        self.steam_account: Optional[SteamAccount] = None
         self._stop_event = threading.Event()
         self._lock = threading.Lock()
         self._mp_manager = None
@@ -639,6 +649,7 @@ class PresenceManager:
             worker_spec.client_id,
             stop_event,
             self.shared_pages,
+            self.steam_account,
         )
         try:
             setattr(worker_spec, "stop_event", stop_event)
