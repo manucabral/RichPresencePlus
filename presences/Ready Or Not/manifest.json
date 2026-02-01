@@ -1,0 +1,28 @@
+{
+  "name": "Ready Or Not",
+  "version": "1.0.1",
+  "package": ">=0.1.1",
+  "description": {
+        "en": "A tactical first person shooter which places you in the boots of an elite SWAT team, tasked with diffusing hostile situations in intense, claustrophobic environments. It\u2019s set in a nondescript modern America, where an income disparity between the classes have become unsustainable and the country has been plunged into havoc. Bring order to chaos with up to 8 players in cooperative play, battle enemy squads in a close player-vs-player environment, or command AI in a striking single-player mode."
+  },
+  "client_id": "1298428908680511649",
+  "image": "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1144200/header.jpg?t=1753984272",
+  "entry": "main.py",
+  "author": "manucabral",
+  "contributors": [],
+  "category": "Games",
+  "color": "#FF0000",
+  "tags": [
+    "game",
+    "tactical",
+    "shooter",
+    "swat",
+    "multiplayer",
+    "singleplayer",
+    "cooperative"
+  ],
+  "web": false,
+  "interval": 7,
+  "imports": [
+  ]
+}
