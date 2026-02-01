@@ -24,7 +24,10 @@ Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 
 
 <p align="center">
-<img src="https://github.com/manucabral/RichPresencePlus/blob/main/assets/demov0.0.5.gif" width="650" title="RichPresencePlusDemo">
+<img width="929" height="632" alt="image" src="https://github.com/user-attachments/assets/a7443b2f-822b-4996-b33a-8e0af7cda656" />
+
+<img width="928" height="637" alt="image" src="https://github.com/user-attachments/assets/fbff0aed-1609-4178-bc94-483d44d05865" />
+
 </p>
 
 > [!IMPORTANT]  
