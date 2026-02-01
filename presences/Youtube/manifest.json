@@ -1,0 +1,25 @@
+{
+  "name": "YouTube",
+  "version": "1.0.3",
+  "package": ">=0.1.1",
+  "description": {
+        "en": "YouTube is a video-sharing platform where users can upload, watch, and interact with videos, ranging from music and tutorials to vlogs and live streams."
+  },
+  "client_id": "1113646725408772176",
+  "image": "https://www.youtube.com/s/desktop/6cd492c3/img/favicon_32x32.png",
+  "entry": "main.py",
+  "author": "manucabral",
+  "contributors": [],
+  "category": "Media",
+  "color": "#A56786",
+  "tags": [
+    "video",
+    "media"
+  ],
+  "web": true,
+  "interval": 5,
+  "imports": [
+    "state.py",
+    "utils.py"
+  ]
+}
