@@ -1,0 +1,23 @@
+{
+  "name": "Nepu",
+  "version": "0.0.1",
+  "package": ">=0.1.1",
+  "description": {
+        "en": "A multi-platform video-sharing website where users can upload, watch, and interact with videos."
+  },
+  "client_id": "1467328049774203023",
+  "image": "https://github.com/manucabral/RichPresencePlus/blob/main/presences/Nepu/logo.webp?raw=true",
+  "entry": "main.py",
+  "author": "manucabral",
+  "contributors": [],
+  "category": "Media",
+  "color": "#0A0A0A",
+  "tags": [
+    "video",
+    "media"
+  ],
+  "web": true,
+  "interval": 5,
+  "imports": [
+  ]
+}
