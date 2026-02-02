@@ -46,7 +46,6 @@ def start():
     logger.info("Starting backend...")
     user_settings = get_user_settings()
     set_log_level(user_settings.logs_level)
-
     rt = Runtime(
         origin="main",
         interval=user_settings.runtime_interval,
@@ -56,12 +55,19 @@ def start():
         profile_name=user_settings.profile_name,
         target_port=user_settings.browser_target_port,
     )
-    bm.load()
     pm = presence_manager = PresenceManager(runtime=rt)
-    presence_manager.discover(force=True, dev=config.development_mode)
 
+    def load_managers() -> None:
+        """Load browser and presence managers in background."""
+        bm.load()
+        presence_manager.discover(force=True, dev=config.development_mode)
+
+    background_thread = threading.Thread(target=load_managers, daemon=True)
+    background_thread.start()
     logger.info("Initializing API...")
-    api = RPPApi(browser_manager=bm, presence_manager=pm, runtime=rt)
+    api = RPPApi(
+        browser_manager=bm, presence_manager=pm, runtime=rt, user_settings=user_settings
+    )
 
     try:
         logger.info(
