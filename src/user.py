@@ -19,7 +19,7 @@ def exist_us_file(filepath: Optional[str] = None) -> bool:
     """
     path = filepath or SETTINGS_PATH
     exists = os.path.isfile(path)
-    logger.info("Checking if user settings file exists at %s: %s", path, exists)
+    logger.info("Settings %s: %s", path, exists)
     return exists
 
 
@@ -99,7 +99,7 @@ class UserSettings:
         if missing:
             raise ValueError(f"Missing keys in settings file: {missing}")
 
-        logger.info("Loaded user settings from %s", path)
+        logger.info("Loaded from %s", path)
 
         return cls(
             profile_name=data["profile_name"],
@@ -148,6 +148,7 @@ class UserSettings:
         if key not in self._allowed_keys:
             raise AttributeError(f"No such option: {key}")
         return getattr(self, key)
+
 
 def get_user_settings() -> UserSettings:
     """
