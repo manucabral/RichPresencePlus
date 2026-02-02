@@ -4,45 +4,35 @@ Configuration constants.
 
 # pylint: disable=invalid-name
 
+import os
 import sys
 import pathlib
-import multiprocessing
 from dataclasses import dataclass
 
-FROZEN_MODE = getattr(sys, "frozen", False)
 
-if FROZEN_MODE:
-    BASE_DIR = pathlib.Path(sys.executable).parent
-else:
-    BASE_DIR = pathlib.Path(__file__).resolve().parent
-
-try:
-    if multiprocessing.current_process().name == "MainProcess":
-        if FROZEN_MODE:
-            print(f"Running in frozen mode. BASE_DIR set to: {BASE_DIR}")
-        else:
-            print(f"Running in normal mode. BASE_DIR set to: {BASE_DIR}")
-except Exception:
-    if FROZEN_MODE:
-        print(f"Running in frozen mode. BASE_DIR set to: {BASE_DIR}")
+def _get_base_paths() -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
+    """
+    Determine base paths depending on frozen/development mode.
+    
+    Returns:
+        Tuple of (BASE_DIR, PRESENCES_DIR, FRONTEND_DIR)
+    """
+    frozen_mode = getattr(sys, "frozen", False)
+    
+    if frozen_mode:
+        base_dir = pathlib.Path(sys.executable).parent
+        presences_dir = base_dir / "presences"
+        frontend_dir = base_dir / "dist"
     else:
-        print(f"Running in normal mode. BASE_DIR set to: {BASE_DIR}")
-
-if FROZEN_MODE:
-    PRESENCES_DIR = BASE_DIR / "presences"
-    FRONTEND_DIR = BASE_DIR / "dist"
-else:
-    PRESENCES_DIR = BASE_DIR.parent / "presences"
-    FRONTEND_DIR = BASE_DIR.parent / "dist"
+        base_dir = pathlib.Path(__file__).resolve().parent
+        presences_dir = base_dir.parent / "presences"
+        frontend_dir = base_dir.parent / "dist"
+    
+    return base_dir, presences_dir, frontend_dir
 
 
-try:
-    if multiprocessing.current_process().name == "MainProcess":
-        print(f"PRESENCES_DIR set to: {PRESENCES_DIR}")
-        print(f"FRONTEND_DIR set to: {FRONTEND_DIR}")
-except Exception:
-    print(f"PRESENCES_DIR set to: {PRESENCES_DIR}")
-    print(f"FRONTEND_DIR set to: {FRONTEND_DIR}")
+FROZEN_MODE = getattr(sys, "frozen", False)
+BASE_DIR, PRESENCES_DIR, FRONTEND_DIR = _get_base_paths()
 
 
 @dataclass(frozen=True)
@@ -70,23 +60,27 @@ class Config:
     logs_default_name: str = "app"
 
     browser_profile_name: str = "RPP"
-    browser_target_port: int = 4969
+    browser_target_port: int = int(os.getenv("RPP_BROWSER_PORT", "4969"))
     geckodriver_path: str = "geckodriver"
     runtime_interval: int = 2  # seconds
 
-    development_mode: bool = True
-    frontend_dev_server_url: str = "http://localhost:5173"
+    development_mode: bool = not FROZEN_MODE
+    frontend_dev_server_url: str = os.getenv(
+        "RPP_DEV_SERVER_URL", "http://localhost:5173"
+    )
     window_width: int = 950
     window_height: int = 650
 
     github_owner: str = "manucabral"
     github_repo: str = "RichPresencePlus"
-    github_token: str | None = ""
+    github_token: str | None = os.getenv("RPP_GITHUB_TOKEN")
     meta_filename: str = ".meta.json"
     cache_filename: str = "presences.cache.json"
     cache_ttl_seconds: int = 300  # 5 minutes
 
-    steam_config_path: str = r"C:\Program Files (x86)\Steam\config\config.vdf"
+    steam_config_path: str = os.getenv(
+        "RPP_STEAM_CONFIG", r"C:\Program Files (x86)\Steam\config\config.vdf"
+    )
     steam_base_id4: int = 76561197960265728
 
 
