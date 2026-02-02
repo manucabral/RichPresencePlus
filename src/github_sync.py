@@ -132,11 +132,6 @@ def get_remote_presences_list(force_refresh: bool = False) -> List[dict]:
     return presences
 
 
-# ============================================================
-# REMOTE TREE
-# ============================================================
-
-
 def get_remote_tree(path: str) -> Dict[str, dict]:
     """
     Recursive listing of remote files.
@@ -206,7 +201,7 @@ def install(remote_folder: str, local_folder: str) -> Tuple[bool, str]:
     """
     Install presence from remote to local folder.
     """
-    logger.info("Installing presence from %s to %s", remote_folder, local_folder)
+    logger.info("Installing %s", remote_folder)
     remote_dir = "presences/" + remote_folder
     local_dir = Path(local_folder)
 
@@ -251,7 +246,8 @@ def sync(remote_folder: str, local_folder: str) -> Tuple[bool, str]:
     """
     local_dir = Path(local_folder)
     local_dir.mkdir(parents=True, exist_ok=True)
-    logger.info("Syncing presence from %s to %s", remote_folder, local_folder)
+    logger.info("Syncing %s", remote_folder)
+    logger.debug("For local: %s", local_dir.resolve())
     try:
         remote_files = get_remote_tree(remote_folder)
         local_meta = load_meta(local_dir)
