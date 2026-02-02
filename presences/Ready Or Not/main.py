@@ -9,7 +9,10 @@ from src.steam import SteamAccount, get_steam_presence
 
 LOGO = "https://shared.fastly.steamstatic.com/store_item_assets/steam/apps/1144200/header.jpg"
 
-def main(rpc: ClientRPC, interval: int, steam_account: SteamAccount, stop_event: Any) -> None:
+
+def main(
+    rpc: ClientRPC, interval: int, steam_account: SteamAccount, stop_event: Any
+) -> None:
     logger.info("Ready Or Not presence started")
 
     if not steam_account:
@@ -21,7 +24,10 @@ def main(rpc: ClientRPC, interval: int, steam_account: SteamAccount, stop_event:
         while not stop_event.is_set():
             payload = get_steam_presence(steam_account.steam_id3)
             if payload is None:
-                logger.warning("No presence data retrieved for Steam ID3: %d", steam_account.steam_id3)
+                logger.warning(
+                    "No presence data retrieved for Steam ID3: %d",
+                    steam_account.steam_id3,
+                )
                 continue
             if payload.get("name") == "Ready Or Not":
                 rpc.update(
