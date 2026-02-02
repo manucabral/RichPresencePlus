@@ -13,12 +13,12 @@ from dataclasses import dataclass
 def _get_base_paths() -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
     """
     Determine base paths depending on frozen/development mode.
-    
+
     Returns:
         Tuple of (BASE_DIR, PRESENCES_DIR, FRONTEND_DIR)
     """
     frozen_mode = getattr(sys, "frozen", False)
-    
+
     if frozen_mode:
         base_dir = pathlib.Path(sys.executable).parent
         presences_dir = base_dir / "presences"
@@ -27,7 +27,7 @@ def _get_base_paths() -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
         base_dir = pathlib.Path(__file__).resolve().parent
         presences_dir = base_dir.parent / "presences"
         frontend_dir = base_dir.parent / "dist"
-    
+
     return base_dir, presences_dir, frontend_dir
 
 
