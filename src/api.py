@@ -28,6 +28,7 @@ class RPPApi:
         browser_manager: BrowserManager,
         presence_manager: PresenceManager,
         runtime: Runtime,
+        user_settings=None,
     ):
         """
         Initializes the API with browser and presence managers.
@@ -35,14 +36,13 @@ class RPPApi:
         self.bm = browser_manager
         self.pm = presence_manager
         self.rt = runtime
-        self.us = get_user_settings()
+        self.us = user_settings if user_settings is not None else get_user_settings()
         self.steam = Steam()
 
         if self.steam.enabled and self.steam.accounts:
             steam_account = self.steam.accounts[0]
             logger.info("Setting default Steam account: %s", steam_account)
             self.pm.steam_account = steam_account
-
         self.force_cache = False
 
     def update_connected_browser(self) -> None:
