@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# RPP
+settings.json
+presences.cache.json
+presences/*/.meta.json
+
 # node
 logs
 *.log
