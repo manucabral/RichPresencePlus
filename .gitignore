@@ -10,6 +10,7 @@ __pycache__/
 settings.json
 presences.cache.json
 presences/*/.meta.json
+profiles
 
 # node
 logs
