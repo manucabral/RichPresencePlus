@@ -62,7 +62,7 @@ def format_rpc_data(media_session: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any):
+def main(rpc: ClientRPC, runtime: Optional[Runtime], interval: int, stop_event: Any):
     """Main loop of the YouTube Music worker."""
     if runtime is None:
         raise RuntimeError("Runtime is required for YouTube Music presence")
@@ -81,9 +81,7 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any):
             if len(pages) == 0:
                 # No YouTube Music tabs - update to idle
                 if not was_idle:
-                    logger.info(
-                        "No YouTube Music tabs - updating to idle"
-                    )
+                    logger.info("No YouTube Music tabs - updating to idle")
                     payload = {
                         "state": "No tabs open",
                         "details": "Waiting...",
@@ -101,9 +99,7 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any):
                     state.cleanup()
                     was_idle = True
 
-                logger.debug(
-                    "No YouTube Music pages detected. Waiting 5 seconds."
-                )
+                logger.debug("No YouTube Music pages detected. Waiting 5 seconds.")
                 stop_event.wait(5)
                 continue
 
@@ -169,7 +165,7 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any):
             else:
                 logger.debug("No RPC update needed, media unchanged")
 
-            stop_event.wait(5)
+            stop_event.wait(interval)
     finally:
         state.cleanup()
         logger.info("Stopping")

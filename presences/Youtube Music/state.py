@@ -1,4 +1,3 @@
-
 from typing import Optional, Dict, Any
 from src.runtime import Page
 from src.logger import logger
@@ -39,9 +38,7 @@ class YouTubeMusicState:
 
         if self.last_page_id and self.last_page_id in pages:
             page = pages[self.last_page_id]
-            logger.debug(
-                "Reusing previously connected page %s", self.last_page_id
-            )
+            logger.debug("Reusing previously connected page %s", self.last_page_id)
             return page
 
         #  take the last page (most recently opened)
