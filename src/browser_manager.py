@@ -9,9 +9,9 @@ import time
 import winreg
 import subprocess
 import socket
-import shutil
+import threading
 from contextlib import closing
-from typing import Optional, List, Dict, Set, Callable
+from typing import Optional, List, Dict, Set, Callable, Any
 import requests
 from websockets.sync.client import connect as ws_connect
 from requests.adapters import HTTPAdapter
@@ -111,15 +111,6 @@ def _wait_for_port(
     return False
 
 
-def _find_executable(name: str) -> str:
-    """Return a path to executable if found in PATH, otherwise return input name."""
-    try:
-        found = shutil.which(name)
-        return found or name
-    except Exception:
-        return name
-
-
 def read_smi() -> List[Dict[str, Optional[str]]]:
     """
     Reads the Start Menu Internet registry keys to find installed browsers.
@@ -181,8 +172,9 @@ class Browser:
         self.path = path
         self.port = port
         self.chromium = chromium
+        self.bidi_ws_url: Optional[str] = None # disabled for now
 
-    def to_dict(self) -> Dict[str, str | int]:
+    def to_dict(self) -> Dict[str, Any]:
         """
         Convert the Browser instance to a dictionary.
         """
@@ -192,6 +184,7 @@ class Browser:
             "path": self.path,
             "port": self.port,
             "chromium": self.chromium,
+            "bidi_ws_url": self.bidi_ws_url,
         }
 
 
@@ -223,6 +216,7 @@ class BrowserManager:
         adapter = HTTPAdapter(max_retries=retries)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
+        self.bidi_ws_url: Optional[str] = None # disabled for now
 
     def _wait_for_ws(self, ws_url: str, timeout: float = 5.0) -> bool:
         """
@@ -287,14 +281,22 @@ class BrowserManager:
     def update_launched_browser(self, callback: Optional[Callable] = None) -> None:
         """
         Update the currently launched browser based on CDP connection.
+        BiDi is disabled.
         """
         logger.info("Updating launched browser...")
+
+        if self.launched_browser:
+            logger.info("Browser already set: %s", self.launched_browser.name)
+            if callback:
+                callback(self.current_ws_url)
+            return
+
+        # try CDP
         url = self.current_cdp()
         if callback:
             logger.info("Calling callback with URL: %s", url)
             callback(url)
         if url:
-            # try identifying CDP browsers (Chromium)
             self.launched_browser = self.identify_cdp(url)
             if self.launched_browser:
                 logger.info("Current connected browser: %s", self.launched_browser.name)
@@ -326,7 +328,6 @@ class BrowserManager:
         profile_dir = (
             config.base_dir.parent / "profiles" / browser.name / self.profile_name
         )
-        profile_dir_str = str(profile_dir)
         logger.info("Using profile: %s", profile_dir)
         try:
             is_firefox = (
@@ -334,96 +335,15 @@ class BrowserManager:
                 or "firefox" in browser.id.lower()
             )
 
-            if is_firefox:
-                gd_cmd = _find_executable(
-                    getattr(config, "geckodriver_path", "geckodriver")
+            if is_firefox: # BiDi is disabled, not supported
+                logger.error(
+                    "Firefox detected but BiDi is disabled - Firefox is not supported"
                 )
-                gd_command = [gd_cmd, "--port", str(browser.port)]
-                logger.info(
-                    "Launching geckodriver with command: %s", " ".join(gd_command)
+                logger.error(
+                    "Please use a Chromium-based browser (Chrome, Edge, Brave, etc.)"
                 )
-                gd_proc = subprocess.Popen(
-                    gd_command,
-                    shell=False,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    creationflags=subprocess.CREATE_NO_WINDOW,
-                )
-                ok = _wait_for_port(
-                    browser.port, host="127.0.0.1", timeout=5.0, process=gd_proc
-                )
-                if not ok:
-                    logger.error("Geckodriver failed to start or port not open")
-                    gd_proc.terminate()
-                    try:
-                        gd_proc.wait(timeout=2)
-                    except Exception:
-                        pass
-                    return False
-                logger.info("Geckodriver started (PID: %d)", gd_proc.pid)
-                url = f"http://127.0.0.1:{self.target_port}/session"
-                resp = self.session.post(
-                    url,
-                    json={
-                        "capabilities": {
-                            "alwaysMatch": {
-                                "browserName": "firefox",
-                                "webSocketUrl": True,
-                                "moz:firefoxOptions": {
-                                    "binary": browser.path,
-                                    "args": [
-                                        "-profile",
-                                        profile_dir_str,
-                                        "-no-remote",
-                                        "-new-instance",
-                                    ],
-                                },
-                            }
-                        }
-                    },
-                    timeout=10,
-                )
-                if resp.status_code != 200:
-                    logger.error("Geckodriver session request failed: %s", resp.text)
-                    gd_proc.terminate()
-                    try:
-                        gd_proc.wait(timeout=2)
-                    except Exception:
-                        pass
-                    return False
-                data = resp.json()
-                ws_url = (
-                    data.get("value", {}).get("capabilities", {}).get("webSocketUrl")
-                    or data.get("value", {}).get("webSocketUrl")
-                    or None
-                )
-                if not ws_url:
-                    logger.error("No WebSocket URL returned from geckodriver session")
-                    gd_proc.terminate()
-                    try:
-                        gd_proc.wait(timeout=2)
-                    except Exception:
-                        pass
-                    return False
-                ok = self._wait_for_ws(ws_url, timeout=1.0)
-                if not ok:
-                    logger.error("WebSocket URL not accepting connections: %s", ws_url)
-                    gd_proc.terminate()
-                    try:
-                        gd_proc.wait(timeout=2)
-                    except Exception:
-                        pass
-                    return False
-                logger.info("WebSocket reachable at %s", ws_url)
-                self.current_ws_url = ws_url
-                self.processes[browser.id] = gd_proc
-                logger.info(
-                    "Launched %s using geckodriver (PID: %d)", browser.name, gd_proc.pid
-                )
-                self.launched_browser = browser
-                if callback:
-                    callback(ws_url)
-                return True
+                return False
+
             # Chromium-like browsers
             command = [
                 browser.path,
@@ -446,8 +366,46 @@ class BrowserManager:
             )
             logger.info("Launched %s (PID: %d)", browser.name, process.pid)
             self.launched_browser = browser
+
             if callback:
-                callback(f"ws://127.0.0.1:{browser.port}/json/version")
+
+                def wait_and_callback():
+                    logger.info("Waiting for CDP port %d to be ready...", browser.port)
+                    if _wait_for_port(browser.port, timeout=10.0, process=process):
+                        logger.info("CDP port %d is ready", browser.port)
+                        callback(f"ws://127.0.0.1:{browser.port}/json/version")
+                    else:
+                        logger.error(
+                            "CDP port %d did not become available", browser.port
+                        )
+                        try:
+                            process.terminate()
+                            process.wait(timeout=2)
+                        except Exception:
+                            try:
+                                process.kill()
+                            except Exception:
+                                pass
+                        self.launched_browser = None
+                        callback(None)
+
+                wait_thread = threading.Thread(target=wait_and_callback, daemon=True)
+                wait_thread.start()
+            else:
+                logger.info("Waiting for CDP port %d to be ready...", browser.port)
+                if not _wait_for_port(browser.port, timeout=10.0, process=process):
+                    logger.error("CDP port %d did not become available", browser.port)
+                    try:
+                        process.terminate()
+                        process.wait(timeout=2)
+                    except Exception:
+                        try:
+                            process.kill()
+                        except Exception:
+                            pass
+                    self.launched_browser = None
+                    return False
+
             return True
         except Exception as exc:
             logger.error("Error launching browser %s: %s", browser.name, exc)
