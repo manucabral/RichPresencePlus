@@ -8,9 +8,6 @@ from src.rpc import ActivityType, ClientRPC
 from src.runtime import Runtime
 from src.logger import logger
 
-POLL_INTERVAL = 5.0
-
-
 JS_EXTRACT_NEPU = r"""
 (() => {
   try {
@@ -27,9 +24,7 @@ JS_EXTRACT_NEPU = r"""
     const cover =
       getBgImage(document.querySelector(".media-cover")) || null;
 
-    // ======================
-    // 🎬 MOVIE
-    // ======================
+    // Movie
     if (path.includes("/movie/")) {
       const h1 = document.querySelector(".caption-content h1");
       const aka = document.querySelector(".caption-content h2");
@@ -55,9 +50,7 @@ JS_EXTRACT_NEPU = r"""
       };
     }
 
-    // ======================
-    // 📺 SERIES / EPISODE
-    // ======================
+    // Series / Episode
     if (
       path.includes("/season/") ||
       path.includes("/episode/") ||
@@ -99,7 +92,7 @@ JS_EXTRACT_NEPU = r"""
 """
 
 
-def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any) -> None:
+def main(rpc: ClientRPC, runtime: Optional[Runtime], interval: int, stop_event: Any) -> None:
     if runtime is None:
         raise RuntimeError("Runtime is required for Nepu presence")
 
@@ -195,7 +188,7 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any) -> None:
                 except Exception as exc:
                     logger.debug("Nepu presence error: %s", exc)
 
-            stop_event.wait(POLL_INTERVAL)
+            stop_event.wait(interval)
 
     finally:
         logger.info("Nepu presence stopped")
