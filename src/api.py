@@ -55,9 +55,22 @@ class RPPApi:
         """Close the browser associated with the given URL."""
         logger.info("Closing browser for URL: %s", url)
         try:
+            self.rt.close()
+            self.rt.protocol = None
+
+            # CDP browser only
             if not url:
                 url = self.bm.current_cdp() or ""
-                raise ValueError("Cannot found a connected browser to close")
+            if not url:
+                if self.bm.launched_browser:
+                    logger.info("Closing browser without CDP URL")
+                    try:
+                        self.close_network_processes(self.bm.target_port)
+                    except Exception:
+                        pass
+                    self.bm.launched_browser = None
+                    return True
+                raise ValueError("Cannot find a connected browser to close")
             browser = self.bm.identify_cdp(url)
             if not browser:
                 raise ValueError("No connected browser found")
@@ -78,7 +91,8 @@ class RPPApi:
     def get_current_cdp_url(self) -> Optional[str]:
         """Get the current CDP WebSocket URL."""
         cdp = self.bm.current_cdp()
-        logger.info("Getting current CDP URL: %s", cdp)
+        logger.info("Getting current CDP URL")
+        logger.info("URL %s", cdp)
         return cdp
 
     def get_connected_browser(self) -> Optional[Dict]:
@@ -103,7 +117,28 @@ class RPPApi:
         browser = self.bm.get_browser_by_name(browser_name)
         if not browser:
             raise ValueError(f"Browser '{browser_name}' not found")
-        result = self.bm.launch(browser)
+
+        # reset runtime state before launching new browser
+        self.rt.close()
+        self.rt.protocol = None
+
+        def on_port_ready(ws_url):
+            if ws_url is None:
+                logger.error("Browser launched but CDP port never became available")
+                return
+
+            logger.info("CDP port ready, initializing Runtime")
+            self.rt.protocol = "cdp"
+            try:
+                loaded = self.rt.load(start_background=True)
+                if loaded and self.rt.is_connected():
+                    logger.info("Runtime CDP connection established")
+                else:
+                    logger.error("Runtime failed to connect to CDP")
+            except Exception as exc:
+                logger.error("Failed to establish CDP connection: %s", exc)
+
+        result = self.bm.launch(browser, callback=on_port_ready)
         logger.info("Launching %s with result: %s", browser_name, result)
         return result
 
