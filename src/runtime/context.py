@@ -33,7 +33,9 @@ class Context:
         default_factory=threading.Lock, repr=False, compare=False
     )
     _next_id: int = field(default=0, repr=False, compare=False)
-    _bidi_adapter: Optional[Any] = field(default=None, repr=False, compare=False) # DISABLED
+    _bidi_adapter: Optional[Any] = field(
+        default=None, repr=False, compare=False
+    )  # DISABLED
     _prefetched_media_session: Optional[Dict[str, Any]] = field(
         default=None, repr=False, compare=False
     )

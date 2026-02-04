@@ -25,9 +25,7 @@ class Runtime:
         host: str = "localhost",
         interval: float = 2.0,
         protocol: Optional[str] = None,  # "cdp", "bidi", or None for auto-detect
-        origin: Optional[
-            str
-        ] = None,  # optional for logging/debugging
+        origin: Optional[str] = None,  # optional for logging/debugging
     ):
         self.host = host
         self.port = port
@@ -65,7 +63,7 @@ class Runtime:
         """Factory method to create appropriate adapter."""
         if protocol == "cdp":
             return CDPAdapter(self.host, self.port)
-        if protocol == "bidi": # is disabled
+        if protocol == "bidi":  # is disabled
             raise ValueError("BiDi protocol is disabled - use a Chromium-based browser")
         raise ValueError(f"Unsupported protocol: {protocol}")
 
@@ -111,7 +109,7 @@ class Runtime:
 
             if start_background and detected == "cdp" and self.interval > 0:
                 self._start_background_polling()
-            elif detected == "bidi": # is disabled
+            elif detected == "bidi":  # is disabled
                 logger.debug("BiDi protocol loaded, fetching initial contexts")
                 self._adapter.get_contexts()
 

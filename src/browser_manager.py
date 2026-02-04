@@ -172,7 +172,7 @@ class Browser:
         self.path = path
         self.port = port
         self.chromium = chromium
-        self.bidi_ws_url: Optional[str] = None # disabled for now
+        self.bidi_ws_url: Optional[str] = None  # disabled for now
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -216,7 +216,7 @@ class BrowserManager:
         adapter = HTTPAdapter(max_retries=retries)
         self.session.mount("http://", adapter)
         self.session.mount("https://", adapter)
-        self.bidi_ws_url: Optional[str] = None # disabled for now
+        self.bidi_ws_url: Optional[str] = None  # disabled for now
 
     def _wait_for_ws(self, ws_url: str, timeout: float = 5.0) -> bool:
         """
@@ -335,7 +335,7 @@ class BrowserManager:
                 or "firefox" in browser.id.lower()
             )
 
-            if is_firefox: # BiDi is disabled, not supported
+            if is_firefox:  # BiDi is disabled, not supported
                 logger.error(
                     "Firefox detected but BiDi is disabled - Firefox is not supported"
                 )

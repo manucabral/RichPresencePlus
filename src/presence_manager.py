@@ -21,7 +21,8 @@ from .logger import logger, get_logger
 from .constants import config
 from .worker_spec import WorkerSpecification
 from .rpc import ClientRPC
-from .runtime import Runtime, SimpleRuntimeShim
+from .runtime.runtime import Runtime
+from .runtime.runtime_shim import SimpleRuntimeShim
 from .steam import SteamAccount
 
 
@@ -82,22 +83,17 @@ def process_worker(
 
         process_name = "pp_" + module_path.name
 
-        # If manifest specifies imports, create a temporary package and preload files
+        # if manifest specifies imports, create a temporary package and preload files
         try:
             imports_list = None
             if mf_early and isinstance(mf_early, dict):
                 imports_list = mf_early.get("imports")
             if imports_list and isinstance(imports_list, list):
-                # sanitize folder name into a valid package identifier
                 package_base_name = re.sub(r"[^0-9a-zA-Z_]+", "_", module_path.name)
                 package_name = f"presences.{package_base_name}"
-
-                # insert a package module into sys.modules so relative imports work
                 pkg_mod = types.ModuleType(package_name)
                 pkg_mod.__path__ = [str(module_path)]
                 sys.modules[package_name] = pkg_mod
-
-                # preload each listed file as a submodule of the package
                 for fname in imports_list:
                     try:
                         file_path = module_path / fname
@@ -128,7 +124,6 @@ def process_worker(
                 entry_stem = pathlib.Path(entrypoint).stem
                 process_name = f"{package_name}.{entry_stem}"
         except Exception:
-            # fallback to default process_name
             process_name = "pp_" + module_path.name
 
         spec = importlib.util.spec_from_file_location(
@@ -360,6 +355,15 @@ class PresenceManager:
         while not self._stop_event.is_set():
             try:
                 if self.shared_pages is not None and self._runtime is not None:
+                    # skip sync if runtime has no protocol set (no browser connected)
+                    if not getattr(self._runtime, "protocol", None):
+                        self._stop_event.wait(
+                            self._pages_sync_interval
+                            if getattr(self, "_pages_sync_interval", None) is not None
+                            else 1.0
+                        )
+                        continue
+
                     try:
                         # pylint: disable=not-callable
                         load_fn = getattr(self._runtime, "load", None)
@@ -375,16 +379,17 @@ class PresenceManager:
                         pages = list(self._runtime.pages)
                     except Exception:
                         pages = []
+
                     for p in pages:
                         try:
-                            snapshot.append(
-                                {
-                                    "id": getattr(p, "id", None),
-                                    "url": getattr(p, "url", None),
-                                    "title": getattr(p, "title", None),
-                                    "ws_url": getattr(p, "ws_url", None),
-                                }
-                            )
+                            page_data = {
+                                "id": getattr(p, "id", None),
+                                "url": getattr(p, "url", None),
+                                "title": getattr(p, "title", None),
+                                "ws_url": getattr(p, "ws_url", None),
+                                "protocol": getattr(p, "protocol", "shim"),
+                            }
+                            snapshot.append(page_data)
                         except Exception:
                             continue
                     try:
@@ -603,11 +608,23 @@ class PresenceManager:
             logger.warning("%s is already running", worker_spec.name)
             return
 
-        stop_event = _mp.Event()
+        # Check if web presence requires a browser connection
         try:
-            needs_shared = getattr(worker_spec, "web", False)
+            needs_browser = getattr(worker_spec, "web", False)
         except Exception:
-            needs_shared = False
+            needs_browser = False
+
+        if needs_browser:
+            # validate that a browser is connected before starting web presence
+            if not self._runtime or not self._runtime.is_connected():
+                raise RuntimeError("No browser connected. Please start a browser first")
+            logger.debug(
+                "Browser connected, proceeding to start web presence %s",
+                worker_spec.name,
+            )
+
+        stop_event = _mp.Event()
+        needs_shared = needs_browser
         if needs_shared and self._mp_manager is None:
             try:
                 self._mp_manager = _mp.Manager()
