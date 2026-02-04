@@ -57,13 +57,13 @@ def close_pids(processes: Iterable[ProcessInfo]):
                 raise ValueError("PID is None")
             ival = int(pid)
         except Exception:
-            logger.warning("Skipping invalid pid: %r", pid)
+            logger.debug("Skipping invalid pid: %r", pid)
             continue
         if ival <= 0:
-            logger.warning("Skipping non-positive pid: %d", ival)
+            logger.debug("Skipping non-positive pid: %d", ival)
             continue
         if ival == os.getpid():
-            logger.warning("Skipping current process pid: %d", ival)
+            logger.debug("Skipping current process pid: %d", ival)
             continue
         to_kill.add(ival)
 
