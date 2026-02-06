@@ -47,7 +47,7 @@ def start():
     user_settings = get_user_settings()
     set_log_level(user_settings.logs_level)
     rt = Runtime(
-        origin="main",
+        origin="user",
         interval=user_settings.runtime_interval,
         port=user_settings.browser_target_port,
     )
@@ -61,7 +61,8 @@ def start():
         """Load browser and presence managers in background."""
         bm.load()
         presence_manager.discover(force=True, dev=config.development_mode)
-
+        rt.load(True)
+        
     background_thread = threading.Thread(target=load_managers, daemon=True)
     background_thread.start()
     logger.info("Initializing API...")
