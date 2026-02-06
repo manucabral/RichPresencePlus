@@ -1,7 +1,7 @@
 """
 YouTube Presence for Rich Presence Plus.
 """
-
+import time
 from typing import Optional, Any, Dict
 from src.rpc import ActivityType, ClientRPC
 from src.runtime import Runtime, Page
@@ -21,11 +21,8 @@ from .utils import (
     eval_page,
 )
 
-POLL_INTERVAL = 5.0
-
 
 def get_youtube_pages(runtime: Runtime) -> Dict[str, Page]:
-    """Get all YouTube pages from the runtime."""
     pages: Dict[str, Page] = {}
     for page in runtime.pages:
         try:
@@ -84,23 +81,32 @@ def build_rpc_payload(snapshot: Dict[str, Any]) -> Dict[str, Any]:
     return payload
 
 
-def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any) -> None:
+def main(
+    rpc: ClientRPC,
+    shared_state: dict,
+    runtime: Optional[Runtime] = None,
+    interval: int = 5,
+    stop_event: Any = None,
+) -> None:
     if runtime is None:
         raise RuntimeError("Runtime is required for YouTube presence")
 
     logger.info("Presence started.")
-    rpc.update(
-        state="Idle",
-        details=None,
-        activity_type=ActivityType.WATCHING,
-        start_time=None,
-        end_time=None,
-        large_image="youtube_logo",
-        large_text="YouTube",
-        small_image=None,
-        small_text=None,
-        buttons=[],
-    )
+    payload = {
+        "state": "Idle",
+        "details": None,
+        "activity_type": ActivityType.WATCHING,
+        "start_time": None,
+        "end_time": None,
+        "large_image": "youtube_logo",
+        "large_text": "YouTube",
+        "small_image": None,
+        "small_text": None,
+        "buttons": [],
+    }
+    rpc.update(**payload)
+    shared_state["last_rpc_update"] = payload
+    shared_state["last_update_time"] = time.time()
     state = YouTubeState()
     was_idle = False
 
@@ -112,24 +118,27 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any) -> None:
                 if not was_idle:
                     logger.info("No YouTube tabs - setting idle")
                     try:
-                        rpc.update(
-                            state="No tabs open",
-                            details="Waiting...",
-                            activity_type=ActivityType.WATCHING,
-                            start_time=None,
-                            end_time=None,
-                            large_image="youtube_logo",
-                            large_text="YouTube",
-                            small_image=None,
-                            small_text=None,
-                            buttons=[],
-                        )
+                        payload = {
+                            "state": "No tabs open",
+                            "details": "Waiting...",
+                            "activity_type": ActivityType.WATCHING,
+                            "start_time": None,
+                            "end_time": None,
+                            "large_image": "youtube_logo",
+                            "large_text": "YouTube",
+                            "small_image": None,
+                            "small_text": None,
+                            "buttons": [],
+                        }
+                        rpc.update(**payload)
+                        shared_state["last_rpc_update"] = payload
+                        shared_state["last_update_time"] = time.time()
                         logger.info("Set idle!")
                     except Exception:
                         logger.debug("Idle RPC update failed", exc_info=True)
                     state.cleanup()
                     was_idle = True
-                stop_event.wait(POLL_INTERVAL)
+                stop_event.wait(interval)
                 continue
 
             was_idle = False
@@ -158,7 +167,7 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any) -> None:
                 page = recent
 
             if page is None:
-                stop_event.wait(POLL_INTERVAL)
+                stop_event.wait(interval)
                 continue
 
             try:
@@ -167,26 +176,22 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any) -> None:
                     state.connected_page = page
                     state.last_page_id = page.id
             except Exception as exc:
-                logger.warning(
-                    "Error connecting to page %s: %s", page.id, str(exc)
-                )
+                logger.warning("Error connecting to page %s: %s", page.id, str(exc))
                 state.cleanup()
-                stop_event.wait(POLL_INTERVAL)
+                stop_event.wait(interval)
                 continue
 
-            # collect snapshot
             snapshot: Dict[str, Any] = {}
             js_location = "(function(){try{return window.location.href;}catch(e){return null;}})()"
             real_url = eval_page(page, js_location) or page.url or ""
+            logger.debug("Page URL: page.url=%s, js_location=%s, real_url=%s", page.url, eval_page(page, js_location), real_url)
             snapshot["url"] = real_url
             snapshot["video_id"] = extract_video_id(page, real_url) or None
 
-            # Home / browse
             if real_url.rstrip("/") == "https://www.youtube.com":
                 snapshot["title"] = "Browsing YouTube"
                 snapshot["author"] = None
                 snapshot["author_url"] = None
-            # Shorts
             elif "/shorts/" in real_url:
                 snapshot["title"] = extract_shorts_title(page) or "Watching Shorts"
                 snapshot["author"] = extract_shorts_author(page)
@@ -205,6 +210,8 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any) -> None:
                 logger.info("Snapshot changed, updating RPC: %s", snapshot)
                 payload = build_rpc_payload(snapshot)
                 try:
+                    shared_state["last_rpc_update"] = payload
+                    shared_state["last_update_time"] = time.time()
                     rpc.update(**payload)
                 except Exception:
                     logger.debug("RPC update failed", exc_info=True)
@@ -212,7 +219,7 @@ def main(rpc: ClientRPC, runtime: Optional[Runtime], stop_event: Any) -> None:
             else:
                 logger.debug("No RPC update needed")
 
-            stop_event.wait(POLL_INTERVAL)
+            stop_event.wait(interval)
     finally:
         try:
             state.cleanup()

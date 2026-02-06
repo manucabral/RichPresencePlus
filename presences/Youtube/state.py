@@ -1,5 +1,5 @@
 from typing import Any, Dict, Optional
-from src.page import Page
+from src.runtime import Page
 from src.logger import logger
 
 

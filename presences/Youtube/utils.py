@@ -2,7 +2,7 @@ import time
 from typing import Any, Optional
 from urllib.parse import parse_qs, urlparse
 from src.logger import logger
-from src.page import Page
+from src.runtime import Page
 
 
 def eval_page(page: Page, expression: str, timeout: float = 3.0) -> Any:
@@ -15,7 +15,23 @@ def eval_page(page: Page, expression: str, timeout: float = 3.0) -> Any:
 
 
 def extract_title(page: Page) -> Optional[str]:
-    js = "(function(){try{const el=document.querySelector('h1.title')||document.querySelector('.title')||document.querySelector('meta[name=title]'); if(el){ return (el.innerText||el.textContent||el.content)||null;} return document.title||null;}catch(e){return null;}})()"
+    js = """(function(){
+        try {
+            const ytTitle = document.querySelector('h1.ytd-video-primary-info-renderer yt-formatted-string, h1 yt-formatted-string, h1.title yt-formatted-string');
+            if (ytTitle && ytTitle.textContent) return ytTitle.textContent.trim();
+            const h1 = document.querySelector('h1.title, h1');
+            if (h1 && h1.textContent) return h1.textContent.trim();
+            if (window.ytInitialPlayerResponse && ytInitialPlayerResponse.videoDetails && ytInitialPlayerResponse.videoDetails.title) {
+                return ytInitialPlayerResponse.videoDetails.title;
+            }
+            const meta = document.querySelector('meta[name=title]');
+            if (meta && meta.content) return meta.content.trim();
+            if (document.title) return document.title.trim();
+            return null;
+        } catch(e) {
+            return null;
+        }
+    })();"""
     return eval_page(page, js) or None
 
 
@@ -25,7 +41,24 @@ def extract_shorts_title(page: Page) -> Optional[str]:
 
 
 def extract_author(page: Page) -> Optional[str]:
-    js = "(function(){try{const el=document.querySelector('#owner #text')||document.querySelector('#text a'); if(!el) return null; return el.innerText||el.textContent||null;}catch(e){return null;}})()"
+    js = """(function(){
+        try {
+            const attributedLink = document.querySelector('#attributed-channel-name a, #upload-info yt-attributed-string a');
+            if (attributedLink && attributedLink.textContent) {
+                return attributedLink.textContent.trim();
+            }
+            const channelLink = document.querySelector('#owner ytd-video-owner-renderer a, #owner #channel-name a, ytd-channel-name a');
+            if (channelLink && channelLink.textContent) return channelLink.textContent.trim();
+            const ownerText = document.querySelector('#owner #text, #owner #channel-name yt-formatted-string');
+            if (ownerText && ownerText.textContent) return ownerText.textContent.trim();
+            if (window.ytInitialPlayerResponse && ytInitialPlayerResponse.videoDetails && ytInitialPlayerResponse.videoDetails.author) {
+                return ytInitialPlayerResponse.videoDetails.author;
+            }
+            return null;
+        } catch(e) {
+            return null;
+        }
+    })();"""
     return eval_page(page, js) or None
 
 
@@ -40,12 +73,6 @@ def extract_author_url(page: Page) -> Optional[str]:
 
 
 def extract_video_id(page: Page, url: Optional[str]) -> Optional[str]:
-    """Obtiene el video_id real incluso en navegación SPA.
-
-    Prioridad: ytplayer config > canonical link > URL (v= / youtu.be / shorts) > og:video:url
-    Además hace logging de la fuente usada para facilitar debug.
-    """
-
     def id_from_url(u: Optional[str]) -> Optional[str]:
         if not u:
             return None
@@ -59,7 +86,11 @@ def extract_video_id(page: Page, url: Optional[str]) -> Optional[str]:
             return q[0]
         return None
 
-    # try ytplayer config (spa-safe)
+    vid = id_from_url(url)
+    if vid:
+        logger.debug("video_id source=url id=%s url=%s", vid, url)
+        return vid
+
     js_ytplayer = """
     (function(){
         try {
@@ -78,7 +109,6 @@ def extract_video_id(page: Page, url: Optional[str]) -> Optional[str]:
         logger.debug("video_id source=ytplayer id=%s", vid)
         return vid
 
-    # canonical link
     js_canonical = "(function(){try{const c=document.querySelector('link[rel=\"canonical\"]'); return c ? c.href : location.href;}catch(e){return null;}})()"
     try:
         canonical = eval_page(page, js_canonical)
@@ -88,14 +118,7 @@ def extract_video_id(page: Page, url: Optional[str]) -> Optional[str]:
     if vid:
         logger.debug("video_id source=canonical href=%s id=%s", canonical, vid)
         return vid
-    
-    # URL
-    vid = id_from_url(url)
-    if vid:
-        logger.debug("video_id source=url id=%s url=%s", vid, url)
-        return vid
 
-    # og:video:url
     js_og = "(function(){try{const m=document.querySelector('meta[property=\"og:video:url\"]'); return m ? m.content : null;}catch(e){return null;}})()"
     try:
         og = eval_page(page, js_og)
