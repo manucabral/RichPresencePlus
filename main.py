@@ -8,6 +8,10 @@ import threading
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 import webview
+from dotenv import load_dotenv
+
+env_path = Path(__file__).parent / ".env"
+load_dotenv(dotenv_path=env_path)
 
 from src.api import RPPApi
 from src.constants import config
@@ -42,7 +46,6 @@ def find_free_port() -> int:
 
 def start():
     """Start the main application and webview window."""
-
     logger.info("Starting backend...")
     user_settings = get_user_settings()
     set_log_level(user_settings.logs_level)
@@ -62,7 +65,7 @@ def start():
         bm.load()
         presence_manager.discover(force=True, dev=config.development_mode)
         rt.load(True)
-        
+
     background_thread = threading.Thread(target=load_managers, daemon=True)
     background_thread.start()
     logger.info("Initializing API...")
