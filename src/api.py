@@ -109,7 +109,7 @@ class RPPApi:
         browsers = self.bm.all_in_obj()
         return browsers
 
-    def launch_browser(self, browser_name: str):
+    def launch_browser(self, browser_name: str, safe_profile: bool = True) -> bool:
         """Launch a browser by name."""
         logger.info("Launching browser: %s", browser_name)
         if self.bm.launched_browser:
@@ -138,9 +138,33 @@ class RPPApi:
             except Exception as exc:
                 logger.error("Failed to establish CDP connection: %s", exc)
 
-        result = self.bm.launch(browser, callback=on_port_ready)
+        result = self.bm.launch(browser, safe_profile=safe_profile, callback=on_port_ready)
         logger.info("Launching %s with result: %s", browser_name, result)
         return result
+
+    def get_presence_shared_state(self, presence_name: str) -> Dict:
+        """Get the shared state for a specific presence."""
+        logger.info("Getting shared state for %s", presence_name)
+        spec = self.pm.get_worker(presence_name)
+        if not spec:
+            raise ValueError(f"Presence '{presence_name}' not found")
+        if not spec.shared_state:
+            logger.info("No shared state for %s", presence_name)
+            return {}
+        
+        state_dict = dict(spec.shared_state)
+        last_rpc = state_dict.get("last_rpc_update", {})
+        
+        return {
+            "state": last_rpc.get("state"),
+            "details": last_rpc.get("details"),
+            "start_time": last_rpc.get("start_time"),
+            "end_time": last_rpc.get("end_time"),
+            "large_image": last_rpc.get("large_image"),
+            "large_text": last_rpc.get("large_text"),
+            "small_image": last_rpc.get("small_image"),
+            "small_text": last_rpc.get("small_text"),
+        } 
 
     def get_installed_presences(self) -> list:
         """Get a list of installed presences."""

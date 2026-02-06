@@ -305,7 +305,7 @@ class BrowserManager:
         logger.info("No CDP browser currently connected.")
         self.launched_browser = None
 
-    def launch(self, browser: Browser, callback: Optional[Callable] = None) -> bool:
+    def launch(self, browser: Browser, safe_profile: bool = True, callback: Optional[Callable] = None) -> bool:
         """
         Launch the specified browser with the configured profile and CDP port.
         """
@@ -325,10 +325,15 @@ class BrowserManager:
         if browser.id in self.processes and self.launched_browser is not None:
             logger.error("%s is already launched", browser.id)
             return False
-        profile_dir = (
-            config.base_dir.parent / "profiles" / browser.name / self.profile_name
-        )
-        logger.info("Using profile: %s", profile_dir)
+        
+        if safe_profile:
+            profile_dir = (
+                config.base_dir.parent / "profiles" / browser.name / self.profile_name
+            )
+            logger.info("Profile: %s", profile_dir)
+        else:
+            logger.warning("Launching without custom profile!")
+        
         try:
             is_firefox = (
                 "firefox" in os.path.basename(browser.path).lower()
@@ -349,8 +354,10 @@ class BrowserManager:
                 browser.path,
                 "--remote-allow-origins=*",
                 f"--remote-debugging-port={browser.port}",
-                f"--user-data-dir={profile_dir}",
             ]
+            
+            if safe_profile:
+                command.append(f"--user-data-dir={profile_dir}")
             process = subprocess.Popen(
                 command,
                 shell=False,
@@ -360,10 +367,9 @@ class BrowserManager:
             )
             self.processes[browser.id] = process
             logger.info(
-                "Launching browser %s with command: %s",
-                browser.name,
-                " ".join(command),
+                "Launching browser %s", browser.name
             )
+            logger.info("Command: %s", " ".join(command))
             logger.info("Launched %s (PID: %d)", browser.name, process.pid)
             self.launched_browser = browser
 
