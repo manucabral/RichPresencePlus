@@ -38,6 +38,7 @@ def process_worker(
     stop_event: Optional[Any] = None,
     shared_pages: Optional[Any] = None,
     steam_account: Optional[SteamAccount] = None,
+    shared_state: Optional[Any] = None,
 ) -> None:
     """
     Worker process entrypoint. Loads and runs the specified presence worker.
@@ -51,6 +52,7 @@ def process_worker(
         stop_event (Optional[Any]): Multiprocessing Event to signal shutdown.
         shared_pages (Optional[Any]): Manager list proxy for shared pages.
         steam_account (Optional[SteamAccount]): Steam account to use.
+        shared_state (Optional[Any]): Manager dict proxy for sharing RPC state.
     """
     rpc: Optional[ClientRPC] = None
     runtime: Optional[Any] = None
@@ -226,6 +228,7 @@ def process_worker(
             "stop_event": stop_event,
             "process_name": process_name,
             "steam_account": steam_account,
+            "shared_state": shared_state,
         }
         try:
             signature = inspect.signature(func)
@@ -250,6 +253,8 @@ def process_worker(
                         args.append(interval)
                     elif p.name == "logger":
                         args.append(get_logger("worker"))
+                    elif p.name == "shared_state":
+                        args.append(shared_state)
                     else:
                         args.append(context)
                 result = func(*args)
@@ -625,9 +630,19 @@ class PresenceManager:
 
         stop_event = _mp.Event()
         needs_shared = needs_browser
-        if needs_shared and self._mp_manager is None:
+        
+        # init multiprocessing Manager if needed
+        if self._mp_manager is None:
             try:
                 self._mp_manager = _mp.Manager()
+                logger.debug("Initialized multiprocessing.Manager")
+            except Exception:
+                logger.exception("Failed to create multiprocessing.Manager")
+                self._mp_manager = None
+        
+        # initialize shared_pages for web workers
+        if needs_shared and self.shared_pages is None and self._mp_manager:
+            try:
                 self.shared_pages = self._mp_manager.list()
                 try:
                     snapshot = self._build_pages_snapshot()
@@ -646,18 +661,25 @@ class PresenceManager:
                     )
                     self._pages_sync_thread.start()
                 logger.debug(
-                    "Initialized multiprocessing.Manager and pages sync thread"
-                )
-                logger.debug(
                     "PresenceManager: passing shared_pages proxy to workers (pages=%d)",
                     len(self.shared_pages),
                 )
             except Exception:
-                logger.exception(
-                    "Failed to create multiprocessing.Manager for shared_pages at start()"
-                )
-                self._mp_manager = None
+                logger.exception("Failed to create shared_pages for worker")
                 self.shared_pages = None
+        
+        shared_state = None
+        if self._mp_manager:
+            try:
+                shared_state = self._mp_manager.dict()
+                logger.debug("Created shared_state dict for worker %s", worker_spec.name)
+            except Exception:
+                logger.exception("Failed to create shared_state for worker %s", worker_spec.name)
+                shared_state = {}
+        else:
+            shared_state = {}
+        setattr(worker_spec, "shared_state", shared_state)
+        
         arguments = (
             str(worker_spec.path),
             worker_spec.entrypoint,
@@ -667,6 +689,7 @@ class PresenceManager:
             stop_event,
             self.shared_pages,
             self.steam_account,
+            worker_spec.shared_state,
         )
         try:
             setattr(worker_spec, "stop_event", stop_event)

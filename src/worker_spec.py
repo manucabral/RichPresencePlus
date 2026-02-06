@@ -32,5 +32,6 @@ class WorkerSpecification:
     # thread: Optional[threading.Thread] = dataclasses.field(default=None, repr=False)  # Not used
     process: Optional[Any] = dataclasses.field(default=None, repr=False)
     stop_event: Optional[threading.Event] = dataclasses.field(default=None, repr=False)
+    shared_state: Optional[Any] = dataclasses.field(default=None, repr=False)
     # last_exception: Optional[str] = dataclasses.field(default=None, repr=False)  # Not used
     # runtime: Optional[Any] = dataclasses.field(default=None, repr=False)  # Not used
