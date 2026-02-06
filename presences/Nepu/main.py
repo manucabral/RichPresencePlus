@@ -92,7 +92,9 @@ JS_EXTRACT_NEPU = r"""
 """
 
 
-def main(rpc: ClientRPC, runtime: Optional[Runtime], interval: int, stop_event: Any) -> None:
+def main(
+    rpc: ClientRPC, runtime: Optional[Runtime], interval: int, stop_event: Any
+) -> None:
     if runtime is None:
         raise RuntimeError("Runtime is required for Nepu presence")
 

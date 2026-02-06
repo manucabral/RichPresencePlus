@@ -1,6 +1,7 @@
 """
 YouTube Presence for Rich Presence Plus.
 """
+
 import time
 from typing import Optional, Any, Dict
 from src.rpc import ActivityType, ClientRPC
@@ -184,7 +185,12 @@ def main(
             snapshot: Dict[str, Any] = {}
             js_location = "(function(){try{return window.location.href;}catch(e){return null;}})()"
             real_url = eval_page(page, js_location) or page.url or ""
-            logger.debug("Page URL: page.url=%s, js_location=%s, real_url=%s", page.url, eval_page(page, js_location), real_url)
+            logger.debug(
+                "Page URL: page.url=%s, js_location=%s, real_url=%s",
+                page.url,
+                eval_page(page, js_location),
+                real_url,
+            )
             snapshot["url"] = real_url
             snapshot["video_id"] = extract_video_id(page, real_url) or None
 
