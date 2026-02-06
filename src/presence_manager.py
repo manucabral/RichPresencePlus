@@ -630,7 +630,7 @@ class PresenceManager:
 
         stop_event = _mp.Event()
         needs_shared = needs_browser
-        
+
         # init multiprocessing Manager if needed
         if self._mp_manager is None:
             try:
@@ -639,7 +639,7 @@ class PresenceManager:
             except Exception:
                 logger.exception("Failed to create multiprocessing.Manager")
                 self._mp_manager = None
-        
+
         # initialize shared_pages for web workers
         if needs_shared and self.shared_pages is None and self._mp_manager:
             try:
@@ -667,19 +667,23 @@ class PresenceManager:
             except Exception:
                 logger.exception("Failed to create shared_pages for worker")
                 self.shared_pages = None
-        
+
         shared_state = None
         if self._mp_manager:
             try:
                 shared_state = self._mp_manager.dict()
-                logger.debug("Created shared_state dict for worker %s", worker_spec.name)
+                logger.debug(
+                    "Created shared_state dict for worker %s", worker_spec.name
+                )
             except Exception:
-                logger.exception("Failed to create shared_state for worker %s", worker_spec.name)
+                logger.exception(
+                    "Failed to create shared_state for worker %s", worker_spec.name
+                )
                 shared_state = {}
         else:
             shared_state = {}
         setattr(worker_spec, "shared_state", shared_state)
-        
+
         arguments = (
             str(worker_spec.path),
             worker_spec.entrypoint,

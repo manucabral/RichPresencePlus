@@ -138,7 +138,9 @@ class RPPApi:
             except Exception as exc:
                 logger.error("Failed to establish CDP connection: %s", exc)
 
-        result = self.bm.launch(browser, safe_profile=safe_profile, callback=on_port_ready)
+        result = self.bm.launch(
+            browser, safe_profile=safe_profile, callback=on_port_ready
+        )
         logger.info("Launching %s with result: %s", browser_name, result)
         return result
 
@@ -151,10 +153,10 @@ class RPPApi:
         if not spec.shared_state:
             logger.info("No shared state for %s", presence_name)
             return {}
-        
+
         state_dict = dict(spec.shared_state)
         last_rpc = state_dict.get("last_rpc_update", {})
-        
+
         return {
             "state": last_rpc.get("state"),
             "details": last_rpc.get("details"),
@@ -164,7 +166,7 @@ class RPPApi:
             "large_text": last_rpc.get("large_text"),
             "small_image": last_rpc.get("small_image"),
             "small_text": last_rpc.get("small_text"),
-        } 
+        }
 
     def get_installed_presences(self) -> list:
         """Get a list of installed presences."""
