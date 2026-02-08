@@ -64,7 +64,7 @@ class Config:
     geckodriver_path: str = "geckodriver"
     runtime_interval: int = 2  # seconds
 
-    development_mode: bool = not FROZEN_MODE
+    development_mode: bool = True
     frontend_dev_server_url: str = os.getenv(
         "RPP_DEV_SERVER_URL", "http://localhost:5173"
     )
