@@ -3,10 +3,10 @@ Main entry point for the application.
 """
 
 import os
+from pathlib import Path
 import socket
 import threading
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from pathlib import Path
 import webview
 from dotenv import load_dotenv
 
@@ -92,7 +92,7 @@ def start():
                 width=config.window_width,
                 height=config.window_height,
             )
-            webview.start(debug=True)
+            webview.start(debug=True, gui="edgechromium")
             return
 
         dist_dir = Path(config.frontend_dir)
@@ -112,7 +112,7 @@ def start():
             width=config.window_width,
             height=config.window_height,
         )
-        webview.start(debug=False)
+        webview.start(debug=False, gui="edgechromium")
 
     finally:
         logger.info("Shutting down...")
