@@ -1,0 +1,23 @@
+{
+  "name": "Netflix",
+  "version": "0.0.1",
+  "package": ">=0.1.1",
+  "description": {
+        "en": "Show what you're watching on Netflix!"
+  },
+  "client_id": "1470878282420453497",
+  "image": "https://images.ctfassets.net/4cd45et68cgf/Rx83JoRDMkYNlMC9MKzcB/2b14d5a59fc3937afd3f03191e19502d/Netflix-Symbol.png?w=700&h=456",
+  "entry": "main.py",
+  "author": "manucabral",
+  "contributors": [],
+  "category": "Media",
+  "color": "#E50914",
+  "tags": [
+    "video",
+    "media"
+  ],
+  "web": true,
+  "interval": 8,
+  "imports": [
+  ]
+}
