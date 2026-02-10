@@ -6,6 +6,7 @@ import json
 import time
 import base64
 import shutil
+import hashlib
 from pathlib import Path
 from typing import Dict, List, Tuple
 import requests
@@ -22,6 +23,23 @@ def github_headers() -> dict:
         logger.debug("Using GitHub token for authentication")
         headers["Authorization"] = f"Bearer {config.github_token}"
     return headers
+
+
+def calculate_file_sha(file_path: Path) -> str:
+    """
+    Calculate SHA-1 hash of a file (Git blob format).
+    Matches the SHA format used by GitHub API.
+    """
+    try:
+        if not file_path.exists():
+            return ""
+        with open(file_path, "rb") as f:
+            content = f.read()
+        blob = b"blob " + str(len(content)).encode() + b"\0" + content
+        return hashlib.sha1(blob).hexdigest()
+    except Exception as exc:
+        logger.debug("Failed to calculate SHA for %s: %s", file_path, exc)
+        return ""
 
 
 def load_cache() -> List[dict] | None:
@@ -242,32 +260,119 @@ def uninstall(local_folder: str) -> Tuple[bool, str]:
 
 def sync(remote_folder: str, local_folder: str) -> Tuple[bool, str]:
     """
-    Sync presence between remote and local folder.
+    Check if local presence is synchronized with remote.
     """
     local_dir = Path(local_folder)
     local_dir.mkdir(parents=True, exist_ok=True)
-    logger.info("Syncing %s", remote_folder)
-    logger.debug("For local: %s", local_dir.resolve())
+    logger.info("Checking sync status for %s", remote_folder)
+    logger.debug("Local path: %s", local_dir.resolve())
+    
+    try:
+        remote_files = get_remote_tree(remote_folder)
+        local_meta = load_meta(local_dir)
+        
+        remote_modified = []
+        missing_files = []
+        obsolete_files = []
+        locally_modified = []
+
+        # Check for remote changes (modified or new files)
+        for rel, info in remote_files.items():
+            if rel not in local_meta:
+                missing_files.append(rel)
+            elif local_meta.get(rel) != info["sha"]:
+                remote_modified.append(rel)
+
+        # check for obsolete local files (not in remote)
+        for rel in local_meta:
+            if rel not in remote_files:
+                obsolete_files.append(rel)
+
+        # check for local modifications
+        for rel, expected_sha in local_meta.items():
+            local_file = local_dir / rel
+            if local_file.exists():
+                actual_sha = calculate_file_sha(local_file)
+                if actual_sha and actual_sha != expected_sha:
+                    locally_modified.append(rel)
+                    logger.debug(
+                        "Local modification detected in %s: expected %s, got %s",
+                        rel, expected_sha[:8], actual_sha[:8]
+                    )
+
+        if remote_modified or missing_files or obsolete_files or locally_modified:
+            parts = []
+            if remote_modified:
+                parts.append(f"{len(remote_modified)} remote change/s")
+            if missing_files:
+                parts.append(f"{len(missing_files)} missing")
+            if obsolete_files:
+                parts.append(f"{len(obsolete_files)} obsolete")
+            if locally_modified:
+                parts.append(f"{len(locally_modified)} local modification/s")
+            
+            message = "Out of sync: " + ", ".join(parts)
+            logger.warning("Presence %s is out of sync: %s", remote_folder, message)
+            return False, message
+        
+        logger.debug("Presence %s is up to date", remote_folder)
+        return True, "Already up to date"
+
+    except Exception as exc:
+        logger.error("Failed to check sync status for %s: %s", remote_folder, exc)
+        return False, f"Sync check failed: {exc}"
+
+
+def force_sync(remote_folder: str, local_folder: str) -> Tuple[bool, str]:
+    """
+    Force synchronization of local presence with remote repository.
+    Downloads updated files and removes obsolete ones.
+    """
+    local_dir = Path(local_folder)
+    local_dir.mkdir(parents=True, exist_ok=True)
+    logger.info("Force syncing %s", remote_folder)
+    logger.debug("Local path: %s", local_dir.resolve())
+    
     try:
         remote_files = get_remote_tree(remote_folder)
         local_meta = load_meta(local_dir)
         new_meta = {}
+        
+        updated_files = []
+        removed_files = []
 
-        # update / download
         for rel, info in remote_files.items():
             if local_meta.get(rel) != info["sha"]:
+                logger.debug("Downloading updated file: %s", rel)
                 download_file(info["download_url"], local_dir / rel)
+                updated_files.append(rel)
             new_meta[rel] = info["sha"]
 
-        # remove obsolete
+        # Remove obsolete files
         for rel in local_meta:
             if rel not in new_meta:
                 f = local_dir / rel
                 if f.exists():
+                    logger.debug("Removing obsolete file: %s", rel)
                     f.unlink()
+                    removed_files.append(rel)
 
         save_meta(local_dir, new_meta)
-        return True, "Sync complete"
+        
+        if updated_files or removed_files:
+            parts = []
+            if updated_files:
+                parts.append(f"{len(updated_files)} file(s) updated")
+            if removed_files:
+                parts.append(f"{len(removed_files)} file(s) removed")
+            message = "Sync complete: " + ", ".join(parts)
+            logger.info("Force sync completed for %s: %s", remote_folder, message)
+        else:
+            message = "Already up to date"
+            logger.debug("No changes needed for %s", remote_folder)
+        
+        return True, message
 
     except Exception as exc:
+        logger.error("Force sync failed for %s: %s", remote_folder, exc)
         return False, f"Sync failed: {exc}"

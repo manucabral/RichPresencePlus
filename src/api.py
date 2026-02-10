@@ -12,7 +12,7 @@ from src.presence_manager import PresenceManager
 from src.runtime import Runtime
 from src.user import get_user_settings
 from src.logger import logger, set_log_level
-from src.github_sync import get_remote_presences_list, install, uninstall
+from src.github_sync import get_remote_presences_list, install, sync, force_sync, uninstall
 from src.process_manager import get_processes_by_port, close_pids, is_discord_running
 from src.steam import Steam
 
@@ -198,9 +198,16 @@ class RPPApi:
         logger.info("Starting presence: %s", presence_name)
         spec = self.pm.get_worker(presence_name)
         if not spec:
-            raise ValueError(f"Presence '{presence_name}' not found")
+            raise ValueError(f"{presence_name} not found")
         if spec.enabled is False:
-            raise RuntimeError(f"Presence '{presence_name}' is disabled")
+            raise RuntimeError(f"{presence_name} is disabled")
+        if not config.development_mode:
+            logger.info("Checking synchronization status for presence '%s'", presence_name)
+            remote_spec = "presences/" + presence_name
+            success, sync_msg = sync(remote_spec, spec.path)
+            logger.info("Sync check for '%s': %s", presence_name, sync_msg)
+            if not success:
+                raise RuntimeError(sync_msg)
         self.pm.start(spec)
 
     def stop_presence(self, presence_name: str):
@@ -208,7 +215,7 @@ class RPPApi:
         logger.info("Stopping presence: %s", presence_name)
         spec = self.pm.get_worker(presence_name)
         if not spec:
-            raise ValueError(f"Presence '{presence_name}' not found")
+            raise ValueError(f"{presence_name} not found")
         self.pm.stop(spec)
 
     def get_remote_presences(self):
@@ -249,6 +256,43 @@ class RPPApi:
         self.force_cache = True
         self.pm.discover(force=True, dev=config.development_mode)
         return {"success": success, "message": msg}
+
+    def sync_presence(self, presence_name: str):
+        """Force synchronization of a presence with remote repository."""
+        logger.info("Syncing presence: %s", presence_name)
+        if not presence_name:
+            raise ValueError("Presence name is required for synchronization")
+        
+        spec = self.pm.get_worker(presence_name)
+        if not spec:
+            raise ValueError(f"Presence '{presence_name}' not found")
+        
+        if spec.running:
+            raise RuntimeError(f"Cannot sync while presence is running. Stop '{presence_name}' first.")
+        
+        remote_spec = "presences/" + presence_name
+        success, msg = force_sync(remote_spec, spec.path)
+        logger.info("Sync result for '%s': %s", presence_name, msg)
+        
+        # Rediscover to reload updated files
+        self.pm.discover(force=True, dev=config.development_mode)
+        
+        return {"success": success, "message": msg}
+
+    def check_presence_sync_status(self, presence_name: str):
+        """Check if a presence is synchronized with remote repository."""
+        logger.info("Checking sync status for: %s", presence_name)
+        if not presence_name:
+            raise ValueError("Presence name is required")
+        
+        spec = self.pm.get_worker(presence_name)
+        if not spec:
+            raise ValueError(f"Presence '{presence_name}' not found")
+        
+        remote_spec = "presences/" + presence_name
+        success, msg = sync(remote_spec, spec.path)
+        
+        return {"in_sync": success, "message": msg}
 
     def get_network_processes(self):
         """Get processes using specific ports."""

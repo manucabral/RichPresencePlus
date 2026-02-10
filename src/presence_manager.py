@@ -16,7 +16,7 @@ import types
 from typing import Dict, Optional, Any
 
 from .utils import _resolve_callable
-from .github_sync import sync
+from .github_sync import sync, force_sync
 from .logger import logger, get_logger
 from .constants import config
 from .worker_spec import WorkerSpecification
@@ -470,11 +470,20 @@ class PresenceManager:
                 continue
 
             sync_result, sync_msg = sync(f"presences/{name}", str(entry))
-            if not sync_result and not dev:
-                logger.warning(
-                    "Presence %s failed to sync from remote: %s", name, sync_msg
-                )
-                continue
+            if not sync_result:
+                if dev:
+                    logger.info("Dev mode: forcing sync for %s", name)
+                    sync_result, sync_msg = force_sync(f"presences/{name}", str(entry))
+                    if sync_result:
+                        logger.info("Presence %s: %s", name, sync_msg)
+                    else:
+                        logger.warning("Failed to force sync %s: %s", name, sync_msg)
+                        continue
+                else:
+                    logger.warning("Presence %s skipped: %s", name, sync_msg)
+                    continue
+            else:
+                logger.debug("Presence %s: %s", name, sync_msg)
 
             manifest = entry / "manifest.json"
             if not manifest.exists():
