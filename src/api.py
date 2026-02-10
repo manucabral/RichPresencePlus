@@ -12,7 +12,14 @@ from src.presence_manager import PresenceManager
 from src.runtime import Runtime
 from src.user import get_user_settings
 from src.logger import logger, set_log_level
-from src.github_sync import get_remote_presences_list, install, sync, force_sync, uninstall
+from src.github_sync import (
+    get_remote_presences_list,
+    install,
+    sync,
+    force_sync,
+    uninstall,
+    check_version_update,
+)
 from src.process_manager import get_processes_by_port, close_pids, is_discord_running
 from src.steam import Steam
 
@@ -44,6 +51,26 @@ class RPPApi:
             logger.info("Setting default Steam account: %s", steam_account)
             self.pm.steam_account = steam_account
         self.force_cache = False
+
+    def get_rpp_metadata(self) -> Dict:
+        """Get application metadata."""
+        return {
+            "title": config.title,
+            "version": config.version,
+            "description": config.description,
+        }
+
+    def check_for_updates(self) -> Dict:
+        """Check if the application version is outdated."""
+        logger.info("Checking for application updates")
+        result = check_version_update()
+        logger.info(
+            "Update check result: current=%s, remote=%s, outdated=%s",
+            result.get("current"),
+            result.get("remote"),
+            result.get("outdated"),
+        )
+        return result
 
     def update_connected_browser(self) -> None:
         """Update the currently connected browser."""

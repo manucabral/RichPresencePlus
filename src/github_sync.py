@@ -7,8 +7,9 @@ import time
 import base64
 import shutil
 import hashlib
+import re
 from pathlib import Path
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Optional
 import requests
 from .logger import logger
 from .constants import config
@@ -40,6 +41,156 @@ def calculate_file_sha(file_path: Path) -> str:
     except Exception as exc:
         logger.debug("Failed to calculate SHA for %s: %s", file_path, exc)
         return ""
+
+
+def parse_version(version: str) -> Optional[Tuple[int, int, int, str, int]]:
+    """
+    Parse semantic version with prerelease suffixes.
+    
+    Examples:
+        "0.1.1-beta" -> (0, 1, 1, "beta", 0)
+        "1.2.3-rc2" -> (1, 2, 3, "rc", 2)
+        "2.0.0" -> (2, 0, 0, "", 0)
+    
+    Returns:
+        Tuple of (major, minor, patch, suffix, suffix_number) or None if invalid
+    """
+    pattern = r"^(\d+)\.(\d+)\.(\d+)(?:-([a-z]+)(\d*))?$"
+    match = re.match(pattern, version.strip())
+    
+    if not match:
+        return None
+    
+    major = int(match.group(1))
+    minor = int(match.group(2))
+    patch = int(match.group(3))
+    suffix = match.group(4) or ""
+    suffix_num = int(match.group(5)) if match.group(5) else 0
+    
+    return (major, minor, patch, suffix, suffix_num)
+
+
+def compare_versions(current: str, remote: str) -> Optional[int]:
+    """
+    Compare two semantic versions.
+    """
+    current_parsed = parse_version(current)
+    remote_parsed = parse_version(remote)
+    
+    if not current_parsed or not remote_parsed:
+        logger.warning("Invalid version format: current=%s, remote=%s", current, remote)
+        return None
+    
+    curr_major, curr_minor, curr_patch, curr_suffix, curr_num = current_parsed
+    rem_major, rem_minor, rem_patch, rem_suffix, rem_num = remote_parsed
+    
+    # major.minor.patch
+    if (curr_major, curr_minor, curr_patch) < (rem_major, rem_minor, rem_patch):
+        return -1
+    if (curr_major, curr_minor, curr_patch) > (rem_major, rem_minor, rem_patch):
+        return 1
+    
+    # compare suffixes
+    suffix_priority = {"alpha": 1, "beta": 2, "rc": 3, "": 4}
+    
+    curr_priority = suffix_priority.get(curr_suffix, 0)
+    rem_priority = suffix_priority.get(rem_suffix, 0)
+    
+    if curr_priority < rem_priority:
+        return -1
+    if curr_priority > rem_priority:
+        return 1
+    
+    # compare suffix numbers
+    if curr_num < rem_num:
+        return -1
+    if curr_num > rem_num:
+        return 1
+    
+    return 0
+
+
+def get_remote_version() -> Optional[str]:
+    """
+    Fetch the remote version from GitHub repository.
+    """
+    try:
+        url = (
+            f"https://api.github.com/repos/{config.github_owner}/"
+            f"{config.github_repo}/contents/src/constants.py"
+        )
+        
+        resp = requests.get(url, headers=github_headers(), timeout=10)
+        resp.raise_for_status()
+        
+        data = resp.json()
+        if data.get("encoding") == "base64":
+            content = base64.b64decode(data["content"]).decode("utf-8")
+            match = re.search(r'version:\s*str\s*=\s*["\']([^"\']+)["\']', content)
+            if match:
+                version = match.group(1)
+                logger.debug("Remote version found: %s", version)
+                return version
+        
+        logger.warning("Could not extract version from remote constants.py")
+        return None
+        
+    except Exception as exc:
+        logger.error("Failed to fetch remote version: %s", exc)
+        return None
+
+
+def check_version_update() -> Dict:
+    """
+    Check if current version is outdated compared to remote.
+    """
+    current_version = config.version
+    remote_version = get_remote_version()
+    
+    if not remote_version:
+        return {
+            "current": current_version,
+            "remote": None,
+            "outdated": False,
+            "comparison": None,
+            "message": "Could not fetch remote version"
+        }
+    
+    comparison = compare_versions(current_version, remote_version)
+    
+    if comparison is None:
+        return {
+            "current": current_version,
+            "remote": remote_version,
+            "outdated": False,
+            "comparison": None,
+            "message": "Invalid version format"
+        }
+    
+    if comparison < 0:
+        return {
+            "current": current_version,
+            "remote": remote_version,
+            "outdated": True,
+            "comparison": comparison,
+            "message": f"Update available: {remote_version}"
+        }
+    elif comparison > 0:
+        return {
+            "current": current_version,
+            "remote": remote_version,
+            "outdated": False,
+            "comparison": comparison,
+            "message": "Ahead of remote version"
+        }
+    else:
+        return {
+            "current": current_version,
+            "remote": remote_version,
+            "outdated": False,
+            "comparison": comparison,
+            "message": "Up to date"
+        }
 
 
 def load_cache() -> List[dict] | None:

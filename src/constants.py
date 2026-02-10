@@ -42,7 +42,7 @@ class Config:
     """
 
     title: str = "Rich Presence Plus"
-    version: str = "0.1.1-beta"
+    version: str = "0.1.1-rc"
     description: str = "An advanced and simple Rich Presence application."
     author: str = "Manuel Cabral"
 
