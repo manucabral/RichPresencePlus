@@ -6,7 +6,7 @@
 <h1 align="center">Rich Presence Plus</h1>
 
 <div align="center">
-    <img src="https://img.shields.io/badge/version-0.1.1b-blue" />
+    <img src="https://img.shields.io/badge/version-0.1.1rc-blue" />
     <img src="https://img.shields.io/github/downloads/manucabral/RichPresencePlus/total" />
     <img src="https://img.shields.io/github/contributors/manucabral/RichPresencePlus" />
     <img src="https://img.shields.io/github/license/manucabral/RichPresencePlus" />
@@ -21,9 +21,8 @@ A simple Discord Rich Presence (Discord RPC) application manager for custom desk
 <p align="center">
 Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 </p>
-<p align="center">
-<img width="929" height="632" alt="image" src="https://github.com/user-attachments/assets/68cac48b-12e7-4095-9182-e75bcf3d06b6" />
-</p>
+
+![demorpprc](https://github.com/user-attachments/assets/8daa958e-7639-4d56-bee1-e1e3ea124cb2)
 
 > [!IMPORTANT]  
 > Currently in the early development phase. Please take this into consideration.
