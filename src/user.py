@@ -46,6 +46,7 @@ class UserSettings:
         "runtime_interval",
         "browser_target_port",
         "logs_level",
+        "safe_profile",
     )
 
     def __init__(
@@ -54,21 +55,24 @@ class UserSettings:
         runtime_interval: int,
         browser_target_port: int,
         logs_level: str,
+        safe_profile: bool = True,
         filepath: Optional[str] = None,
     ) -> None:
         self.profile_name = str(profile_name)
         self.runtime_interval = int(runtime_interval)
         self.browser_target_port = int(browser_target_port)
         self.logs_level = str(logs_level)
+        self.safe_profile = bool(safe_profile)
         self.filepath = filepath if filepath is not None else SETTINGS_PATH
 
         logger.info(
             "UserSettings initialized: profile_name=%s, runtime_interval=%d, "
-            "browser_target_port=%d, logs_level=%s",
+            "browser_target_port=%d, logs_level=%s, safe_profile=%s",
             self.profile_name,
             self.runtime_interval,
             self.browser_target_port,
             self.logs_level,
+            self.safe_profile,
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -80,6 +84,7 @@ class UserSettings:
             "runtime_interval": self.runtime_interval,
             "browser_target_port": self.browser_target_port,
             "logs_level": self.logs_level,
+            "safe_profile": self.safe_profile,
         }
 
     @classmethod
@@ -106,6 +111,7 @@ class UserSettings:
             runtime_interval=data["runtime_interval"],
             browser_target_port=data["browser_target_port"],
             logs_level=data["logs_level"],
+            safe_profile=data["safe_profile"],
         )
 
     def save(self) -> bool:
@@ -130,6 +136,11 @@ class UserSettings:
 
         if key in ("runtime_interval", "browser_target_port"):
             value = int(value)
+        elif key == "safe_profile":
+            if isinstance(value, str):
+                value = value.lower() == "true"
+            else:
+                value = bool(value)
         else:
             value = str(value)
 
@@ -162,6 +173,7 @@ def get_user_settings() -> UserSettings:
             runtime_interval=config.runtime_interval,
             browser_target_port=config.browser_target_port,
             logs_level=config.logs_level,
+            safe_profile=config.safe_profile,
         )
         user_settings.save()
 
