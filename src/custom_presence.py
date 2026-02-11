@@ -11,8 +11,6 @@ from src.constants import config
 from src.utils import is_valid_url
 
 
-
-
 class CustomPresence:
     """
     Manages custom Discord Rich Presence activities.
@@ -351,7 +349,9 @@ class CustomPresence:
     def _save_presets_file(presets: Dict[str, Dict[str, Any]]) -> bool:
         """Save presets to JSON file."""
         try:
-            directory = os.path.dirname(config.custom_presets_path) or str(config.base_dir.parent)
+            directory = os.path.dirname(config.custom_presets_path) or str(
+                config.base_dir.parent
+            )
             os.makedirs(directory, exist_ok=True)
 
             with open(config.custom_presets_path, "w", encoding="utf-8") as f:

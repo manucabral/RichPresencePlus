@@ -24,8 +24,8 @@ def build():
         "--windows-product-name=Rich Presence Plus",
         "--windows-file-description=Discord Rich Presence Manager for Desktop and Web presences",
         "--windows-company-name=Manuel Cabral",
-        "--windows-file-version=0.1.1",
-        "--windows-product-version=0.1.1",
+        "--windows-file-version=0.1.1.2",
+        "--windows-product-version=0.1.1.2",
         # data directories
         "--include-data-dir=presences=presences",
         "--include-data-dir=frontend/dist=dist",

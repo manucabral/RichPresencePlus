@@ -456,8 +456,17 @@ class PresenceManager:
             logger.warning("Presences directory does not exist")
             return
 
+        running_workers = {}
         if force:
             logger.info("Forcing rediscovery of presence workers")
+            for name, spec in self.workers.items():
+                if spec.running and spec.process and spec.process.is_alive():
+                    running_workers[name] = {
+                        "process": spec.process,
+                        "stop_event": getattr(spec, "stop_event", None),
+                        "shared_state": getattr(spec, "shared_state", None),
+                    }
+                    logger.debug("Preserving running state for worker %s", name)
             self.workers.clear()
 
         for entry in self.presences_dir.iterdir():
@@ -523,6 +532,17 @@ class PresenceManager:
             except json.JSONDecodeError as exc:
                 logger.error("Failed to parse manifest for presence %s: %s", name, exc)
                 continue
+
+            if name in running_workers:
+                saved_state = running_workers[name]
+                specification.running = True
+                specification.process = saved_state["process"]
+                if saved_state["stop_event"] is not None:
+                    setattr(specification, "stop_event", saved_state["stop_event"])
+                if saved_state["shared_state"] is not None:
+                    setattr(specification, "shared_state", saved_state["shared_state"])
+                logger.info("Restored running state for worker %s", name)
+
             self.workers[name] = specification
 
     def get_worker(self, name: str) -> Optional[WorkerSpecification]:
