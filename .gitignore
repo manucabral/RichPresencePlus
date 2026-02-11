@@ -11,6 +11,8 @@ settings.json
 presences.cache.json
 presences/*/.meta.json
 profiles
+env312
+env312
 
 # node
 logs
