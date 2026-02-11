@@ -10,7 +10,7 @@ import pathlib
 from dataclasses import dataclass
 
 
-def _get_base_paths() -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
+def _get_base_paths() -> tuple:
     """
     Determine base paths depending on frozen/development mode.
 
@@ -23,16 +23,18 @@ def _get_base_paths() -> tuple[pathlib.Path, pathlib.Path, pathlib.Path]:
         base_dir = pathlib.Path(sys.executable).parent
         presences_dir = base_dir / "presences"
         frontend_dir = base_dir / "dist"
+        custom_presets_path = base_dir.parent / "custom_presets.json"
     else:
         base_dir = pathlib.Path(__file__).resolve().parent
         presences_dir = base_dir.parent / "presences"
         frontend_dir = base_dir.parent / "dist"
+        custom_presets_path = base_dir.parent / "custom_presets.json"
 
-    return base_dir, presences_dir, frontend_dir
+    return base_dir, presences_dir, frontend_dir, custom_presets_path
 
 
 FROZEN_MODE = getattr(sys, "frozen", False)
-BASE_DIR, PRESENCES_DIR, FRONTEND_DIR = _get_base_paths()
+BASE_DIR, PRESENCES_DIR, FRONTEND_DIR, CUSTOM_PRESETS_PATH = _get_base_paths()
 
 
 @dataclass(frozen=True)
@@ -63,6 +65,10 @@ class Config:
     browser_target_port: int = int(os.getenv("RPP_BROWSER_PORT", "4969"))
     geckodriver_path: str = "geckodriver"
     runtime_interval: int = 2  # seconds
+    safe_profile: bool = True
+    custom_app_id: str = ""
+    custom_presets_filename: str = "custom_presets.json"
+    custom_presets_path: pathlib.Path = CUSTOM_PRESETS_PATH
 
     development_mode: bool = True
     frontend_dev_server_url: str = os.getenv(
