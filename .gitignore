@@ -13,6 +13,7 @@ presences/*/.meta.json
 profiles
 env312
 env312
+custom_presets.json
 
 # node
 logs
