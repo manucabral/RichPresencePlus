@@ -22,6 +22,7 @@ from src.github_sync import (
 )
 from src.process_manager import get_processes_by_port, close_pids, is_discord_running
 from src.steam import Steam
+from src.custom_presence import CustomPresence
 
 
 # pylint: disable=too-many-public-methods
@@ -45,6 +46,7 @@ class RPPApi:
         self.rt = runtime
         self.us = user_settings if user_settings is not None else get_user_settings()
         self.steam = Steam()
+        self.custom_presence = CustomPresence(debug=config.development_mode)
 
         if self.steam.enabled and self.steam.accounts:
             steam_account = self.steam.accounts[0]
@@ -447,3 +449,189 @@ class RPPApi:
         logger.info("Stopping all presences to apply Steam account change")
         self.pm.stop_all(only_web=False)
         return True
+
+    def connect_custom_presence(self, client_id) -> bool:
+        """
+        Connect custom presence with the specified client ID.
+        """
+        # Handle dict input from JavaScript
+        if isinstance(client_id, dict):
+            client_id = client_id.get("client_id")
+
+        if not client_id:
+            logger.error("Client ID is required")
+            return False
+
+        logger.info("Connecting custom presence with client_id=%s", client_id)
+        return self.custom_presence.connect(client_id=client_id)
+
+    # pylint: disable=too-many-arguments
+    def update_custom_presence(
+        self,
+        state: Optional[str] = None,
+        details: Optional[str] = None,
+        activity_type: int = 0,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+        large_image: Optional[str] = None,
+        large_text: Optional[str] = None,
+        small_image: Optional[str] = None,
+        small_text: Optional[str] = None,
+        buttons: Optional[list] = None,
+    ) -> bool:
+        """
+        Update the custom Discord Rich Presence activity.
+        """
+        logger.info("Updating custom presence")
+        return self.custom_presence.update(
+            state=state,
+            details=details,
+            activity_type=activity_type,
+            start_time=start_time,
+            end_time=end_time,
+            large_image=large_image,
+            large_text=large_text,
+            small_image=small_image,
+            small_text=small_text,
+            buttons=buttons,
+        )
+
+    def clear_custom_presence(self) -> bool:
+        """
+        Clear the current custom presence activity.
+        """
+        logger.info("Clearing custom presence")
+        return self.custom_presence.clear()
+
+    def disconnect_custom_presence(self) -> bool:
+        """
+        Disconnect and close the custom presence RPC connection.
+        """
+        logger.info("Disconnecting custom presence")
+        return self.custom_presence.disconnect()
+
+    def get_custom_presence_status(self) -> Dict:
+        """
+        Get the current status of custom presence.
+        """
+        logger.info("Getting custom presence status")
+        return self.custom_presence.get_status()
+
+    # pylint: disable=too-many-arguments
+    def save_custom_preset(
+        self,
+        preset_name: str,
+        client_id: str,
+        state: Optional[str] = None,
+        details: Optional[str] = None,
+        activity_type: int = 0,
+        start_time: Optional[int] = None,
+        end_time: Optional[int] = None,
+        large_image: Optional[str] = None,
+        large_text: Optional[str] = None,
+        small_image: Optional[str] = None,
+        small_text: Optional[str] = None,
+        buttons: Optional[list] = None,
+    ) -> bool:
+        """
+        Save a custom presence preset.
+        """
+        logger.info("Saving custom preset '%s'", preset_name)
+        return self.custom_presence.save_preset(
+            preset_name=preset_name,
+            client_id=client_id,
+            state=state,
+            details=details,
+            activity_type=activity_type,
+            start_time=start_time,
+            end_time=end_time,
+            large_image=large_image,
+            large_text=large_text,
+            small_image=small_image,
+            small_text=small_text,
+            buttons=buttons,
+        )
+
+    def load_custom_preset(self, preset_name) -> Optional[Dict]:
+        """
+        Load a custom presence preset by name.
+        """
+        if not preset_name:
+            logger.error("Preset name is required")
+            return None
+
+        logger.info("Loading custom preset '%s'", preset_name)
+        return self.custom_presence.load_preset(preset_name)
+
+    def apply_custom_preset(self, preset_name, connect: bool = False) -> bool:
+        """
+        Apply a saved preset to the current custom presence.
+        """
+        if isinstance(preset_name, dict):
+            connect = preset_name.get("connect", False)
+            preset_name = preset_name.get("preset_name")
+
+        if not preset_name:
+            logger.error("Preset name is required")
+            return False
+
+        logger.info("Applying custom preset '%s' (connect=%s)", preset_name, connect)
+        return self.custom_presence.apply_preset(preset_name, connect=connect)
+
+    def list_custom_presets(self) -> list:
+        """
+        List all saved custom presence presets.
+        """
+        logger.info("Listing all custom presets")
+        return self.custom_presence.list_presets()
+
+    def delete_custom_preset(self, preset_name) -> bool:
+        """
+        Delete a custom presence preset.
+
+        """
+        # Handle dict input from JavaScript
+        if isinstance(preset_name, dict):
+            preset_name = preset_name.get("preset_name")
+
+        if not preset_name:
+            logger.error("Preset name is required")
+            return False
+
+        logger.info("Deleting custom preset '%s'", preset_name)
+        return self.custom_presence.delete_preset(preset_name)
+
+    def get_custom_preset_details(self, preset_name) -> Optional[Dict]:
+        """
+        Get full details of a specific preset.
+        """
+        if isinstance(preset_name, dict):
+            preset_name = preset_name.get("preset_name")
+
+        if not preset_name:
+            logger.error("Preset name is required")
+            return None
+
+        logger.info("Getting details for custom preset '%s'", preset_name)
+        return self.custom_presence.get_preset_details(preset_name)
+
+    def get_current_custom_preset_name(self) -> Optional[str]:
+        """
+        Get the name of the currently active preset.
+        """
+        logger.info("Getting current custom preset name")
+        return self.custom_presence.get_current_preset_name()
+
+    def apply_current_custom_data(self) -> bool:
+        """
+        Apply the currently stored preset data to the RPC.
+        """
+        logger.info("Applying current custom data to RPC")
+        return self.custom_presence.apply_current_data()
+
+    def update_current_custom_preset(self) -> bool:
+        """
+        Update the currently active preset with the current presence data.
+        """
+        logger.info("Updating current custom preset")
+        return self.custom_presence.update_current_preset()

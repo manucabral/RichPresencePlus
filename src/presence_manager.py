@@ -15,7 +15,7 @@ import re
 import types
 from typing import Dict, Optional, Any
 
-from .utils import _resolve_callable
+from .utils import resolve_callable
 from .github_sync import sync, force_sync
 from .logger import logger, get_logger
 from .constants import config
@@ -138,7 +138,7 @@ def process_worker(
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
 
-        func, resolved_name = _resolve_callable(module, callable_name)
+        func, resolved_name = resolve_callable(module, callable_name)
         if func is None:
             logger.error(
                 "Callable %s not found in module %s", callable_name, entrypoint

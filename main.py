@@ -118,6 +118,8 @@ def start():
         logger.info("Shutting down...")
         try:
             pm.stop_all()
+            if api.custom_presence.is_connected:
+                api.custom_presence.disconnect()
         except Exception as exc:
             logger.error("Error stopping presences: %s", exc)
 
