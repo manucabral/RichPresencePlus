@@ -18,7 +18,6 @@ def build():
         "--windows-console-mode=disable",
         "--output-dir=dist_build",
         "--output-filename=Rich Presence Plus",
-        
         # metadata
         "--windows-icon-from-ico=assets/logo.ico",
         "--windows-product-name=Rich Presence Plus",
@@ -26,17 +25,14 @@ def build():
         "--windows-company-name=Manuel Cabral",
         "--windows-file-version=0.1.1",
         "--windows-product-version=0.1.1",
-
         # data directories
         "--include-data-dir=presences=presences",
         "--include-data-dir=frontend/dist=dist",
-
         # modules
         "--include-module=webview",
         "--include-module=requests",
         "--include-module=websockets",
         "--include-module=pythonnet",
-
         # exclude testing frameworks
         "--nofollow-import-to=unittest",
         "--nofollow-import-to=unittest.mock",
@@ -49,7 +45,6 @@ def build():
         "--nofollow-import-to=webview.platforms.qt",
         "--nofollow-import-to=webview.platforms.android",
         "--nofollow-import-to=webview.platforms.linux",
-
         # exclude GUI frameworks
         "--nofollow-import-to=tkinter",
         "--nofollow-import-to=_tkinter",
@@ -58,12 +53,10 @@ def build():
         "--nofollow-import-to=PySide2",
         "--nofollow-import-to=PySide6",
         "--nofollow-import-to=gi",
-
         # exclude build/documentation tools
         "--nofollow-import-to=pydoc",
         "--nofollow-import-to=distutils",
         "--nofollow-import-to=setuptools",
-    
         # optimization flags
         "--remove-output",
         "--python-flag=no_docstrings",
