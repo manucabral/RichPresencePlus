@@ -7,6 +7,7 @@ import sys
 import subprocess
 from src.logger import logger
 
+
 def build():
     """Build the application with Nuitka."""
 
