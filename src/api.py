@@ -229,7 +229,9 @@ class RPPApi:
         if spec.enabled is False:
             raise RuntimeError(f"{presence_name} is disabled")
         if not config.development_mode:
-            logger.info("Checking synchronization status for presence '%s'", presence_name)
+            logger.info(
+                "Checking synchronization status for presence '%s'", presence_name
+            )
             remote_spec = "presences/" + presence_name
             success, sync_msg = sync(remote_spec, spec.path)
             logger.info("Sync check for '%s': %s", presence_name, sync_msg)
@@ -289,21 +291,23 @@ class RPPApi:
         logger.info("Syncing presence: %s", presence_name)
         if not presence_name:
             raise ValueError("Presence name is required for synchronization")
-        
+
         spec = self.pm.get_worker(presence_name)
         if not spec:
             raise ValueError(f"Presence '{presence_name}' not found")
-        
+
         if spec.running:
-            raise RuntimeError(f"Cannot sync while presence is running. Stop '{presence_name}' first.")
-        
+            raise RuntimeError(
+                f"Cannot sync while presence is running. Stop '{presence_name}' first."
+            )
+
         remote_spec = "presences/" + presence_name
         success, msg = force_sync(remote_spec, spec.path)
         logger.info("Sync result for '%s': %s", presence_name, msg)
-        
+
         # Rediscover to reload updated files
         self.pm.discover(force=True, dev=config.development_mode)
-        
+
         return {"success": success, "message": msg}
 
     def check_presence_sync_status(self, presence_name: str):
@@ -311,14 +315,14 @@ class RPPApi:
         logger.info("Checking sync status for: %s", presence_name)
         if not presence_name:
             raise ValueError("Presence name is required")
-        
+
         spec = self.pm.get_worker(presence_name)
         if not spec:
             raise ValueError(f"Presence '{presence_name}' not found")
-        
+
         remote_spec = "presences/" + presence_name
         success, msg = sync(remote_spec, spec.path)
-        
+
         return {"in_sync": success, "message": msg}
 
     def get_network_processes(self):
