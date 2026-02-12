@@ -8,6 +8,7 @@
 <div align="center">
     <img src="https://img.shields.io/badge/version-0.1.1rc-blue" />
     <img src="https://img.shields.io/github/downloads/manucabral/RichPresencePlus/total" />
+    <img src="https://img.shields.io/badge/code%20style-black-000000.svg" />
     <img src="https://img.shields.io/github/contributors/manucabral/RichPresencePlus" />
     <img src="https://img.shields.io/github/license/manucabral/RichPresencePlus" />
     <img src="https://img.shields.io/github/commit-activity/m/manucabral/RichPresencePlus" />
