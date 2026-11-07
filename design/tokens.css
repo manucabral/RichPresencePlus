@@ -1,0 +1,72 @@
+/*
+ * The colors of Rich Presence Plus: one file for the application and the
+ * website. Pages use the roles at the end, never the scales directly, so a
+ * change here reaches both. Rules and contrast: docs/DESIGN.md.
+ * tools/test/design.test.mjs checks the contrast of every pairing.
+ */
+:root {
+  /* Green, the brand. 300 and 500 are the two greens of the logo. */
+  --green-50: #e9fff6;
+  --green-100: #c8fde8;
+  --green-200: #94fbd3;
+  --green-300: #4bf6b6;
+  --green-400: #3ddc9f;
+  --green-500: #19c283;
+  --green-600: #12a06c;
+  --green-700: #0e7d54;
+  --green-800: #0b5e40;
+  --green-900: #08402c;
+  --green-950: #04140e;
+
+  /* Gray, cool and close to black, for everything that is not a state. */
+  --gray-50: #fbfbfb;
+  --gray-100: #f7f8f8;
+  --gray-200: #e2e4e7;
+  --gray-300: #c9ccd1;
+  --gray-400: #a1a5ad;
+  --gray-500: #8a8f98;
+  --gray-600: #787c83;
+  --gray-700: #34363b;
+  --gray-800: #222326;
+  --gray-850: #17181a;
+  --gray-900: #0f1011;
+  --gray-950: #08090a;
+
+  /* States that are not green. */
+  --amber-500: #f5b83d;
+  --red-500: #f2555a;
+
+  /* Surfaces, from the back to the front. */
+  --surface-page: var(--gray-950);
+  --surface-panel: var(--gray-900);
+  --surface-raised: var(--gray-850);
+  --surface-hover: rgb(255 255 255 / 0.04);
+  --surface-selected: rgb(255 255 255 / 0.06);
+
+  /* Lines. */
+  --border: var(--gray-800);
+  --border-strong: var(--gray-700);
+
+  /* Text, from the most important down. Nothing dimmer carries information. */
+  --text-primary: var(--gray-100);
+  --text-secondary: var(--gray-400);
+  --text-muted: var(--gray-500);
+  --text-hint: var(--gray-600);
+
+  /* Brand: actions, "on", and what is showing. */
+  --accent: var(--green-500);
+  --accent-hover: var(--green-400);
+  --accent-strong: var(--green-300);
+  --accent-ink: var(--green-950);
+  --accent-tint: rgb(25 194 131 / 0.15);
+  --accent-glow: rgb(25 194 131 / 0.2);
+  --accent-glow-soft: rgb(75 246 182 / 0.08);
+  --accent-line: var(--green-800);
+  --focus: rgb(75 246 182 / 0.6);
+
+  /* States. */
+  --warning: var(--amber-500);
+  --warning-tint: rgb(245 184 61 / 0.1);
+  --danger: var(--red-500);
+  --danger-tint: rgb(242 85 90 / 0.1);
+}

@@ -1,0 +1,4 @@
+ignoredBuiltDependencies:
+  - esbuild
+overrides:
+  rollup: ^4.67.4

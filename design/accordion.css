@@ -1,0 +1,103 @@
+/*
+ * The collapsible of the application and the website: a native <details>, so it
+ * works from the keyboard and without scripts. Several in one .accordion read
+ * as a list; `name` on them lets only one stay open.
+ */
+:root {
+  interpolate-size: allow-keywords;
+}
+
+.accordion {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-panel);
+}
+
+.accordion details + details {
+  border-top: 1px solid var(--border);
+}
+
+.accordion summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.875rem;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.4;
+  list-style: none;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.12s;
+}
+
+.accordion summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Drawn with borders: the website's security policy allows no inline images. */
+.accordion summary::after {
+  content: "";
+  flex: none;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  margin-left: auto;
+  border-right: 1.5px solid var(--text-muted);
+  border-bottom: 1.5px solid var(--text-muted);
+  transform: translateY(-2px) rotate(45deg);
+  transition: transform 0.16s ease;
+}
+
+.accordion summary:hover {
+  background: var(--surface-hover);
+}
+
+.accordion summary:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: -2px;
+  border-radius: 8px;
+}
+
+.accordion details[open] > summary::after {
+  transform: translateY(1px) rotate(-135deg);
+}
+
+.accordion details[open] > summary {
+  background: var(--surface-hover);
+}
+
+.accordion details::details-content {
+  overflow: hidden;
+  block-size: 0;
+  transition: block-size 0.16s ease, content-visibility 0.16s allow-discrete;
+}
+
+.accordion details[open]::details-content {
+  block-size: auto;
+}
+
+.accordion-body {
+  padding: 0.75rem 0.875rem 0.875rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.accordion-flush {
+  padding: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .accordion summary::after {
+    transition: none;
+  }
+
+  /* Apart: a browser without this selector would drop a list that holds it. */
+  .accordion details::details-content {
+    transition: none;
+  }
+}

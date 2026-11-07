@@ -1,0 +1,92 @@
+@import "tailwindcss";
+@import "../../design/tokens.css";
+@import "../../design/accordion.css";
+@import "@fontsource-variable/inter";
+
+/*
+ * The colors live in design/tokens.css, shared with the website. This maps
+ * them to Tailwind's names, so `bg-neutral-900` or `text-accent` follow them.
+ * See docs/DESIGN.md.
+ */
+@theme {
+  --font-sans: "Inter Variable", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+
+  --color-neutral-50: var(--gray-50);
+  --color-neutral-100: var(--gray-100);
+  --color-neutral-200: var(--gray-200);
+  --color-neutral-300: var(--gray-300);
+  --color-neutral-400: var(--gray-400);
+  --color-neutral-500: var(--gray-500);
+  --color-neutral-600: var(--gray-600);
+  --color-neutral-700: var(--gray-700);
+  --color-neutral-800: var(--gray-800);
+  --color-neutral-850: var(--gray-850);
+  --color-neutral-900: var(--gray-900);
+  --color-neutral-950: var(--gray-950);
+
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-strong);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-ink: var(--accent-ink);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+}
+
+html {
+  font-family: var(--font-sans);
+  font-feature-settings: "cv01", "ss03";
+  -webkit-font-smoothing: antialiased;
+  background: var(--surface-page);
+}
+
+h1, h2, h3 {
+  letter-spacing: -0.012em;
+}
+
+dialog::backdrop { background: rgb(0 0 0 / 0.65); }
+button, input, select { min-height: 34px; }
+/* Check boxes and radio buttons take the brand green instead of the system blue. */
+input[type="checkbox"], input[type="radio"] { accent-color: var(--color-accent); min-height: 0; }
+/* The system draws lists, check boxes and scroll corners from this. */
+:root { color-scheme: dark; }
+select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239a9fa8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5 6 7.5 9 4.5'/%3E%3C/svg%3E");
+  background-position: right 0.55rem center;
+  background-repeat: no-repeat;
+  padding-right: 1.75rem;
+}
+pre { overflow-wrap: anywhere; }
+.project-color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+.project-color-picker::-webkit-color-swatch { border: 0; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-hint);
+}
+
+*:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--accent-tint);
+  color: inherit;
+}
