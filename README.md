@@ -30,11 +30,6 @@ Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
 
 > Only compatible with Microsoft Windows systems.
 
-# Why Rust
-- Less memory and processor time, so the app can stay open all day, even while you play.
-- A small installer.
-- Presences run in a sandbox and only reach the sites and programs their manifest asks for.
-
 # Download
 The new version has no release yet. The installers of the Python version are [here](https://github.com/manucabral/RichPresencePlus/releases).
 
@@ -49,7 +44,7 @@ The new version has no release yet. The installers of the Python version are [he
 - English and Spanish.
 
 # Supported browsers
-- Chromium browsers: Chrome, Edge, Brave, Opera, Vivaldi and Yandex.
+- Chromium browsers (Chrome, Edge, Brave, Opera and others).
 - Mozilla Firefox.
 
 If you want support for another browser or find a bug, create an [issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
