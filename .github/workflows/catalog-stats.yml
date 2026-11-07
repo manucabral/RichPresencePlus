@@ -1,0 +1,50 @@
+name: catalog-stats
+
+# Adds up the downloads GitHub counts for each presence bundle, plus the
+# counts of deleted bundles kept in retired.json, and keeps the result in
+# stats.json on the catalog-stats branch, one commit a day, so the history
+# shows which presences grow. The application sends nothing for this.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: catalog-stats
+  cancel-in-progress: false
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - name: Count installs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          git fetch origin catalog-stats || true
+          git show origin/catalog-stats:retired.json > "$RUNNER_TEMP/retired.json" 2>/dev/null || echo '{"assets":{}}' > "$RUNNER_TEMP/retired.json"
+          node tools/catalog-releases.mjs stats --repo "$GITHUB_REPOSITORY" --ledger "$RUNNER_TEMP/retired.json" --out "$RUNNER_TEMP/stats.json"
+      - name: Keep the result on the catalog-stats branch
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+          git fetch origin catalog-stats || true
+          if git rev-parse --verify origin/catalog-stats >/dev/null 2>&1; then
+            git switch --detach origin/catalog-stats
+          else
+            git switch --orphan catalog-stats
+            git rm -rf --quiet . || true
+          fi
+          cp "$RUNNER_TEMP/stats.json" stats.json
+          git add stats.json
+          git commit -m "chore: catalog installs on $(date -u +%F)"
+          git push origin HEAD:refs/heads/catalog-stats

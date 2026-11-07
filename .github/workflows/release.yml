@@ -1,0 +1,101 @@
+name: release
+
+# Builds the installer for a version tag, signs it for the updater and drafts a
+# release for a maintainer to review. The build job runs every dependency's
+# code, so it gets no secret; signing happens on a machine that builds nothing.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@a15d269cd4658e1107c09f1fabf4cbd7bd1f308a # v4.4.0
+        with:
+          version: 10
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - name: Check before building
+        run: |
+          cargo fmt --check
+          cargo clippy --workspace --all-targets -- -D warnings
+          cargo test --workspace
+          node tools/check-locales.mjs
+          node --test "tools/test/*.test.mjs"
+      - name: Build the interface
+        run: |
+          pnpm --dir frontend install --frozen-lockfile
+          pnpm --dir frontend test
+          pnpm --dir frontend build
+      - name: Build the installer
+        env:
+          # Keeps the build machine's paths out of panic messages.
+          RUSTFLAGS: --remap-path-prefix=C:\Users\runneradmin\.cargo=/cargo --remap-path-prefix=${{ github.workspace }}=/src
+        run: |
+          cargo install tauri-cli --version "=2.12.4" --locked
+          cargo tauri build
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: installer
+          path: target/release/bundle/nsis/*-setup.exe
+          if-no-files-found: error
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+      - run: cargo install tauri-cli --version "=2.12.4" --locked
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: installer
+          path: installer
+      - name: Sign the installer
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        run: cargo tauri signer sign installer/*-setup.exe
+      - name: Describe the release for the updater
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          installer=$(ls installer/*-setup.exe | head -n 1)
+          node tools/latest-json.mjs --version "$version" --repo "$GITHUB_REPOSITORY" \
+            --installer "$installer" --signature "$installer.sig" --out installer/latest.json
+      - name: Draft the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" --draft --generate-notes --repo "$GITHUB_REPOSITORY" \
+            installer/*-setup.exe \
+            installer/*-setup.exe.sig \
+            installer/latest.json

@@ -1,0 +1,85 @@
+name: ci
+
+# The same checks a release runs, on every push to main and every pull request.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rust:
+    # rpp-host calls Win32 and WinRT, so the workspace builds on Windows.
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+      - run: cargo fmt --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+      - run: cargo doc --workspace --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@a15d269cd4658e1107c09f1fabf4cbd7bd1f308a # v4.4.0
+        with:
+          version: 10
+      - name: Lint presences, extension and tools
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm lint
+      - name: Interface
+        run: |
+          pnpm --dir frontend install --frozen-lockfile
+          pnpm --dir frontend exec tsc -b
+          pnpm --dir frontend test
+          pnpm --dir frontend build
+          node tools/try-interface.mjs
+      - name: Extension
+        run: |
+          pnpm --dir extension install --frozen-lockfile
+          pnpm --dir extension test
+      - name: Tools and translations
+        run: |
+          node --test "tools/test/*.test.mjs"
+          node tools/check-locales.mjs
+      - name: Known vulnerabilities in JavaScript packages
+        run: |
+          pnpm --dir frontend audit --prod
+          pnpm --dir extension audit
+          pnpm --dir website audit
+
+  audit:
+    # Advisories, licenses and sources of every crate in Cargo.lock (deny.toml).
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - run: cargo install cargo-deny --locked
+      - run: cargo deny --locked check

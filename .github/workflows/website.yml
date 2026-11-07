@@ -1,0 +1,74 @@
+name: website
+
+# Builds the site and, from main, publishes it on GitHub Pages. A new release
+# also rebuilds it, since the download button comes from the latest release.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "website/**"
+      - "presences/*/manifest.json"
+      - "presences/*/locales/**"
+      - "frontend/src/shared/browse.ts"
+      - "frontend/src/shared/presence.ts"
+      - ".github/workflows/website.yml"
+  pull_request:
+    paths:
+      - "website/**"
+      - "presences/*/manifest.json"
+      - ".github/workflows/website.yml"
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - uses: pnpm/action-setup@a15d269cd4658e1107c09f1fabf4cbd7bd1f308a # v4.4.0
+        with:
+          version: 10
+      - name: Build and check
+        working-directory: website
+        env:
+          # Only for the release lookup during the build; it never reaches a page.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm exec astro check
+          pnpm build
+          pnpm test
+      - uses: actions/upload-pages-artifact@56afc609e74202658d3ffba0e8f6dda462b719fa # v3.0.1
+        if: github.event_name != 'pull_request'
+        with:
+          path: website/dist
+
+  publish:
+    if: github.event_name != 'pull_request' && github.ref_type != 'tag' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4.0.5

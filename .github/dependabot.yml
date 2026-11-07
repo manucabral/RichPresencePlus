@@ -1,0 +1,34 @@
+# Proposes updates every week. Nothing merges by itself: each one passes CI and
+# a review.
+version: 2
+updates:
+  - package-ecosystem: cargo
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      rust:
+        update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    groups:
+      interface:
+        update-types: [minor, patch]
+  - package-ecosystem: npm
+    directory: /extension
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /website
+    schedule:
+      interval: weekly
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
