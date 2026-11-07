@@ -652,7 +652,7 @@ async function run(page, shots) {
   await type("Programa", "my-editor.exe");
   await type("Primera línea, como Escribiendo código", "Escribiendo código");
   await type("Segunda línea (opcional)", "En casa");
-  check(await press("Crear presencia"), "the create button is ready");
+  check(await pressSoon("Crear presencia"), "the create button is ready");
   const made = await called("create_program_presence");
   check(
     same(made, {
