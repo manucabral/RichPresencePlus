@@ -1,0 +1,22 @@
+[package]
+name = "rpp-plugins"
+description = "Sandboxed JavaScript runtime that turns presence scripts into activities."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+rpp-core = { path = "../rpp-core" }
+rquickjs = "0.14"
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+url.workspace = true
+
+[dev-dependencies]
+proptest.workspace = true
+
+[lints]
+workspace = true
