@@ -1,0 +1,38 @@
+# What cargo-deny checks in the dependencies. Run: cargo deny check
+
+[graph]
+# The installer is for Windows; Linux crates in the lock file never reach it.
+targets = ["x86_64-pc-windows-msvc"]
+all-features = true
+
+[advisories]
+yanked = "deny"
+
+[licenses]
+# Licenses that let the installer carry a component with a notice.
+allow = [
+    "0BSD",
+    "Apache-2.0",
+    "BSD-3-Clause",
+    "CC0-1.0",
+    "CDLA-Permissive-2.0",
+    "ISC",
+    "MIT",
+    "MIT-0",
+    "MPL-2.0",
+    "Unicode-3.0",
+    "Unlicense",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+# Tauri pulls several versions of some crates; they are seen, not fatal.
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[sources]
+# Everything comes from crates.io: a git dependency would skip its review.
+unknown-registry = "deny"
+unknown-git = "deny"

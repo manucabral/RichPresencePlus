@@ -1,0 +1,33 @@
+[workspace]
+resolver = "3"
+members = ["crates/rpp-core", "crates/rpp-discord", "crates/rpp-plugins", "crates/rpp-host", "crates/rpp-service", "crates/rpp-bridge", "crates/rpp-config", "crates/rpp-testkit", "crates/rpp-app", "crates/rpp-catalog", "src-tauri"]
+
+[workspace.package]
+version = "0.1.0-rc.1"
+edition = "2024"
+license = "MIT"
+authors = ["Manuel Cabral"]
+rust-version = "1.90"
+publish = false
+
+[workspace.dependencies]
+proptest = { version = "1", default-features = false, features = ["std"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tracing = "0.1"
+thiserror = "2"
+url = "2"
+uuid = { version = "1", features = ["v4"] }
+tokio = { version = "1", features = ["rt", "macros", "time", "io-util", "net", "sync"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true

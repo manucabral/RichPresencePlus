@@ -1,0 +1,8 @@
+/target
+/node_modules
+/frontend/dist
+*.log
+# Written by the Tauri CLI at every build.
+/src-tauri/gen/schemas
+.env
+/dist
