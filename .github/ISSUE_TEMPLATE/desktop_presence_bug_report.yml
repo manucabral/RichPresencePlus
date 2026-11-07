@@ -1,0 +1,77 @@
+name: Desktop presence bug report
+description: A presence for a game or program shows the wrong thing or nothing.
+labels: ["bug", "desktop"]
+
+body:
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Before you start
+      options:
+        - label: I searched the existing issues and this one is new.
+          required: true
+  - type: input
+    id: presence
+    attributes:
+      label: Presence
+      placeholder: Roblox
+    validations:
+      required: true
+  - type: input
+    id: program
+    attributes:
+      label: Program or game, and its version
+      placeholder: Roblox 0.650
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the game
+        2. Join a server
+        3. Look at Discord
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What Discord should show
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What Discord shows
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Settings, at the bottom of the page.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 Pro 24H2
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Diagnostics report
+      description: Settings, Diagnostics, Copy report.
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+  - type: textarea
+    id: comments
+    attributes:
+      label: Anything else

@@ -1,0 +1,57 @@
+name: Desktop presence request
+description: Ask for a presence for a game or a program.
+labels: ["request", "desktop"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [list of presences](https://github.com/manucabral/RichPresencePlus/tree/main/presences) and the open requests first. If you want to write it yourself, the [developer guide](https://github.com/manucabral/RichPresencePlus/blob/main/docs/developers/en/01-home.md) explains how.
+  - type: input
+    id: name
+    attributes:
+      label: Program or game
+      placeholder: TeamViewer
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Official website
+      placeholder: https://www.teamviewer.com
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - Game
+        - Program
+    validations:
+      required: true
+  - type: textarea
+    id: show
+    attributes:
+      label: What Discord should show
+      description: Say where that information can be found, if you know (window title, a log file, a server list).
+      placeholder: The server name and the number of players, from the game's log
+    validations:
+      required: true
+  - type: dropdown
+    id: paid
+    attributes:
+      label: Is it paid?
+      options:
+        - "No"
+        - Paid
+        - Free with paid parts
+    validations:
+      required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Helping
+      options:
+        - label: I can help test it.
+        - label: I would like to write it myself.

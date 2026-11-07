@@ -1,0 +1,73 @@
+name: Web presence request
+description: Ask for a presence for a website.
+labels: ["request", "web"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check the [list of presences](https://github.com/manucabral/RichPresencePlus/tree/main/presences) and the open requests first. If you want to write it yourself, the [developer guide](https://github.com/manucabral/RichPresencePlus/blob/main/docs/developers/en/01-home.md) explains how.
+  - type: input
+    id: name
+    attributes:
+      label: Website name
+      placeholder: Netflix
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Website address
+      placeholder: https://www.netflix.com
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: What the site is
+      placeholder: Streaming of movies and series
+    validations:
+      required: true
+  - type: textarea
+    id: show
+    attributes:
+      label: What Discord should show
+      placeholder: The title, the episode and the time left
+    validations:
+      required: true
+  - type: dropdown
+    id: paid
+    attributes:
+      label: Does it need an account or a subscription?
+      options:
+        - "No"
+        - Account only
+        - Paid subscription
+    validations:
+      required: true
+  - type: dropdown
+    id: region
+    attributes:
+      label: Is it available only in some countries?
+      options:
+        - "No"
+        - "Yes"
+        - I do not know
+    validations:
+      required: true
+  - type: dropdown
+    id: adult
+    attributes:
+      label: Is it meant for adults only?
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Helping
+      options:
+        - label: I can help test it.
+        - label: I would like to write it myself.

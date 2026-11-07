@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions and ideas
+    url: https://github.com/manucabral/RichPresencePlus/discussions
+    about: Ask how something works or share an idea before it becomes a request.
+  - name: Discord server
+    url: https://discord.gg/NjXFRqWarc
+    about: Talk with other users and get help.
+  - name: Security problem
+    url: https://github.com/manucabral/RichPresencePlus/security/policy
+    about: Do not open a public issue; follow the steps in SECURITY.md.

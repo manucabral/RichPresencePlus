@@ -1,0 +1,74 @@
+name: Application bug report
+description: Something in the Rich Presence Plus application does not work.
+labels: ["bug", "application"]
+
+body:
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Before you start
+      options:
+        - label: I searched the existing issues and this one is new.
+          required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the app
+        2. Go to...
+        3. Click...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened instead
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App version
+      description: Settings, at the bottom of the page.
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: dropdown
+    id: discord
+    attributes:
+      label: Discord client
+      options:
+        - Discord
+        - Discord PTB
+        - Discord Canary
+        - Not running
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 Pro 24H2
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Diagnostics report
+      description: Settings, Diagnostics, Copy report. It leaves out page addresses, titles and your Discord name.
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+  - type: textarea
+    id: comments
+    attributes:
+      label: Anything else

@@ -1,0 +1,87 @@
+name: Web presence bug report
+description: A presence for a website shows the wrong thing or nothing.
+labels: ["bug", "web"]
+
+body:
+  - type: checkboxes
+    id: searched
+    attributes:
+      label: Before you start
+      options:
+        - label: I searched the existing issues and this one is new.
+          required: true
+  - type: input
+    id: presence
+    attributes:
+      label: Presence
+      placeholder: YouTube
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Page where it happens
+      description: Remove anything private from the address.
+      placeholder: https://www.youtube.com/watch?v=...
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open the page
+        2. Play a video
+        3. Look at Discord
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What Discord should show
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: What Discord shows
+    validations:
+      required: true
+  - type: dropdown
+    id: browsers
+    attributes:
+      label: Browser
+      multiple: true
+      options:
+        - Chrome
+        - Edge
+        - Firefox
+        - Brave
+        - Opera
+        - Vivaldi
+        - Yandex
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: App and extension versions
+      description: The app shows its version in Settings; the extension shows it in its popup.
+      placeholder: app 0.1.0, extension 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Diagnostics report
+      description: Settings, Diagnostics, Copy report.
+      render: text
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+  - type: textarea
+    id: comments
+    attributes:
+      label: Anything else

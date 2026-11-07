@@ -1,0 +1,32 @@
+name: Presence improvement
+description: Suggest a change to a presence that already exists.
+labels: ["idea", "enhancement"]
+
+body:
+  - type: input
+    id: presence
+    attributes:
+      label: Presence
+      placeholder: YouTube
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: The change
+      placeholder: Show the channel name as a button
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why it helps
+      placeholder: Friends could open the channel from my profile
+  - type: dropdown
+    id: option
+    attributes:
+      label: Should people be able to turn it off?
+      options:
+        - "Yes, as an option"
+        - "No, for everyone"
+        - I do not know
