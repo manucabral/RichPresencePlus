@@ -1,0 +1,12 @@
+{
+  "name": "rich-presence-plus",
+  "private": true,
+  "description": "Lint and format for presences, the browser extension and tools.",
+  "scripts": {
+    "lint": "biome check",
+    "lint:fix": "biome check --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.2"
+  }
+}
