@@ -1,0 +1,7 @@
+{
+  "description": "Shows the San Andreas Multiplayer server you are playing on.",
+  "option.show_players": "Show player count",
+  "option.show_address": "Show server IP and port",
+  "playing": "Playing SA-MP",
+  "players": "{count}/{max} players"
+}

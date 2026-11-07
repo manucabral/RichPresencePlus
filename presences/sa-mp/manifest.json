@@ -1,0 +1,32 @@
+{
+  "name": "SA-MP",
+  "version": "1.0.0",
+  "description": "Shows the San Andreas Multiplayer server you are playing on.",
+  "client_id": "1567517110601646181",
+  "kind": "game",
+  "interval": 10,
+  "entry": "main.js",
+  "permissions": {
+    "args": {
+      "gta_sa.exe": ["-h", "-p"]
+    },
+    "query": ["samp"],
+    "window": true
+  },
+  "options": [
+    {
+      "type": "boolean",
+      "key": "show_players",
+      "default": true
+    },
+    {
+      "type": "boolean",
+      "key": "show_address",
+      "default": false
+    }
+  ],
+  "author": "manucabral",
+  "color": "#F97316",
+  "tags": ["game", "multiplayer"],
+  "icon": "icon.webp"
+}

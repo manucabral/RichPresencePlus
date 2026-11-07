@@ -1,0 +1,7 @@
+{
+  "description": "Muestra la canción que estás escuchando en YouTube Music.",
+  "listening": "Escuchando música",
+  "playing": "Reproduciendo",
+  "paused": "En pausa",
+  "option.show_album": "Mostrar el álbum"
+}

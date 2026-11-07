@@ -1,0 +1,7 @@
+{
+  "description": "Muestra el servidor de San Andreas Multiplayer en el que estás jugando.",
+  "option.show_players": "Mostrar cantidad de jugadores",
+  "option.show_address": "Mostrar IP y puerto del servidor",
+  "playing": "Jugando SA-MP",
+  "players": "{count}/{max} jugadores"
+}

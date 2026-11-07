@@ -1,0 +1,52 @@
+{
+  "name": "YouTube",
+  "version": "2.0.0",
+  "description": "Shows the YouTube video you are watching.",
+  "client_id": "1113646725408772176",
+  "kind": "video",
+  "interval": 5,
+  "entry": "main.js",
+  "domains": ["youtube.com"],
+  "page": {
+    "matches": ["*://www.youtube.com/*"],
+    "extract": {
+      "title": {
+        "from": "text",
+        "selector": "h1.ytd-video-primary-info-renderer yt-formatted-string, h1 yt-formatted-string"
+      },
+      "shorts_title": {
+        "from": "text",
+        "selector": "yt-shorts-video-title-view-model h2"
+      },
+      "author": {
+        "from": "text",
+        "selector": "ytd-video-owner-renderer ytd-channel-name a, ytd-channel-name a"
+      },
+      "shorts_author": {
+        "from": "text",
+        "selector": "yt-reel-channel-bar-view-model a"
+      },
+      "author_url": {
+        "from": "attr",
+        "selector": "#owner #text > a, #text a",
+        "name": "href"
+      },
+      "player": {
+        "from": "media",
+        "selector": "video"
+      }
+    }
+  },
+  "options": [
+    {
+      "type": "choice",
+      "key": "image",
+      "default": "thumbnail",
+      "choices": ["thumbnail", "logo"]
+    }
+  ],
+  "author": "manucabral",
+  "color": "#A56786",
+  "tags": ["video", "streaming"],
+  "icon": "icon.webp"
+}

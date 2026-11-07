@@ -1,0 +1,9 @@
+{
+  "description": "Muestra lo que estás viendo en Netflix.",
+  "browsing": "Explorando",
+  "looking": "Buscando algo para ver",
+  "watching": "Viendo Netflix",
+  "watch": "Ver en Netflix",
+  "playing": "Reproduciendo",
+  "paused": "En pausa"
+}

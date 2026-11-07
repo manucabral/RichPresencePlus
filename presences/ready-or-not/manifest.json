@@ -1,0 +1,16 @@
+{
+  "name": "Ready Or Not",
+  "version": "2.0.0",
+  "description": "Shows that you are playing Ready Or Not.",
+  "client_id": "1298428908680511649",
+  "kind": "game",
+  "interval": 10,
+  "entry": "main.js",
+  "permissions": {
+    "process": true
+  },
+  "author": "manucabral",
+  "color": "#FF0000",
+  "tags": ["game", "multiplayer"],
+  "icon": "icon.webp"
+}

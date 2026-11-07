@@ -1,0 +1,10 @@
+{
+  "description": "Shows the Dailymotion video you are watching.",
+  "browsing": "Browsing Dailymotion",
+  "watching": "Watching Dailymotion",
+  "by": "By {channel}",
+  "watch": "Watch on Dailymotion",
+  "channel": "Channel",
+  "playing": "Playing",
+  "paused": "Paused"
+}

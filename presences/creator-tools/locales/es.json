@@ -1,0 +1,8 @@
+{
+  "description": "Muestra en qué editor de código o herramienta de diseño estás trabajando.",
+  "coding": "Escribiendo código",
+  "designing": "Diseñando",
+  "editing": "Editando video",
+  "music": "Haciendo música",
+  "modeling": "Modelando en 3D"
+}

@@ -1,0 +1,11 @@
+{
+  "description": "Shows the Roblox game you are playing.",
+  "menu": "In menu",
+  "browsing": "Browsing...",
+  "loading": "Loading...",
+  "playing": "Playing",
+  "by": "By {creator}",
+  "unknown": "Unknown",
+  "players": "{count} playing",
+  "option.show_players": "Show how many people are playing"
+}

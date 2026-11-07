@@ -1,0 +1,13 @@
+{
+  "description": "Muestra el video de YouTube que estás viendo.",
+  "browsing": "Navegando en YouTube",
+  "watching": "Viendo YouTube",
+  "by": "De {author}",
+  "watch": "Ver en YouTube",
+  "author": "Autor",
+  "playing": "Reproduciendo",
+  "paused": "En pausa",
+  "option.image": "Imagen grande",
+  "option.image.thumbnail": "Miniatura del video",
+  "option.image.logo": "Logo de YouTube"
+}

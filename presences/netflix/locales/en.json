@@ -1,0 +1,9 @@
+{
+  "description": "Shows what you are watching on Netflix.",
+  "browsing": "Browsing",
+  "looking": "Looking for something to watch",
+  "watching": "Watching Netflix",
+  "watch": "Watch on Netflix",
+  "playing": "Playing",
+  "paused": "Paused"
+}
