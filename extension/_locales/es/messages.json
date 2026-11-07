@@ -1,0 +1,140 @@
+{
+  "extDescription": {
+    "message": "Envía lo que mirás o escuchás en la web a la aplicación de escritorio Rich Presence Plus."
+  },
+  "checking": {
+    "message": "Comprobando…"
+  },
+  "connected": {
+    "message": "Conectada a la aplicación de escritorio"
+  },
+  "untrusted": {
+    "message": "Otro programa respondió en el puerto de la app. No se envió nada."
+  },
+  "waiting": {
+    "message": "Esperando a la aplicación de escritorio"
+  },
+  "missingHost": {
+    "message": "No se encuentra la app de escritorio. Abrila una vez, o usá el código de su página Navegador."
+  },
+  "looking": {
+    "message": "Buscando la aplicación de escritorio"
+  },
+  "pairTitle": {
+    "message": "Vincular con un código"
+  },
+  "pairHint": {
+    "message": "Pegá el código de la página Navegador de la app."
+  },
+  "pairButton": {
+    "message": "Vincular"
+  },
+  "codeInvalid": {
+    "message": "Ese código no es válido."
+  },
+  "sitesNeeded": {
+    "message": "Algunas presencias necesitan acceso a estos sitios:"
+  },
+  "allow": {
+    "message": "Permitir"
+  },
+  "forMoment": {
+    "message": "conectada recién"
+  },
+  "forMinutes": {
+    "message": "conectada hace $1 min"
+  },
+  "forHours": {
+    "message": "conectada hace $1 h"
+  },
+  "thisPage": {
+    "message": "Esta página"
+  },
+  "noPresence": {
+    "message": "Ninguna presencia que activaste lee este sitio."
+  },
+  "unknownPage": {
+    "message": "Abrí el popup en una página para revisarla."
+  },
+  "readsPage": {
+    "message": "$1 lee esta página"
+  },
+  "needsAccess": {
+    "message": "$1 necesita acceso a este sitio"
+  },
+  "notReadYet": {
+    "message": "$1 puede leer esta página"
+  },
+  "allowSite": {
+    "message": "Permitir este sitio"
+  },
+  "presences": {
+    "message": "Presencias en este navegador"
+  },
+  "noRules": {
+    "message": "Activá una presencia web en la app de escritorio."
+  },
+  "allowed": {
+    "message": "con acceso"
+  },
+  "notAllowed": {
+    "message": "sin acceso"
+  },
+  "reading": {
+    "message": "Leyendo $1 pestañas"
+  },
+  "pause": {
+    "message": "Pausar este navegador"
+  },
+  "pauseHint": {
+    "message": "Mientras está activo, este navegador no envía nada."
+  },
+  "pausedNow": {
+    "message": "En pausa. Este navegador no envía nada."
+  },
+  "footer": {
+    "message": "Elegí presencias y privacidad en la app de escritorio."
+  },
+  "perSite": {
+    "message": "sitio por sitio"
+  },
+  "removeSite": {
+    "message": "Quitar este sitio"
+  },
+  "makeSite": {
+    "message": "Crear presencia"
+  },
+  "pickFirst": {
+    "message": "Hacé clic en el texto de la primera línea."
+  },
+  "pickSecond": {
+    "message": "Hacé clic en el texto de la segunda línea, o saltala."
+  },
+  "pickSkip": {
+    "message": "Saltar"
+  },
+  "pickCancel": {
+    "message": "Cancelar"
+  },
+  "pickName": {
+    "message": "Nombre de la presencia"
+  },
+  "pickCreate": {
+    "message": "Crear"
+  },
+  "pickClose": {
+    "message": "Cerrar"
+  },
+  "pickDone": {
+    "message": "Listo. Abrí esta extensión y permití este sitio."
+  },
+  "pickFailed": {
+    "message": "No funcionó. Fijate que la app de escritorio esté abierta."
+  },
+  "pickRefused": {
+    "message": "Elegí un texto visible, no un campo de formulario."
+  },
+  "makeSiteHint": {
+    "message": "Hacé clic en los textos de este sitio para mostrarlos en Discord."
+  }
+}

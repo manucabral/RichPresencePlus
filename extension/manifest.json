@@ -1,0 +1,43 @@
+{
+  "manifest_version": 3,
+  "name": "Rich Presence Plus",
+  "version": "0.1.0",
+  "version_name": "0.1.0-rc.1",
+  "description": "__MSG_extDescription__",
+  "default_locale": "en",
+  "minimum_chrome_version": "116",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4M7xlA4rcv8gwsJK+SqrHPXqgoARklMX4hxI1COdE5WeFtIIF8bqbnjOKoDTyT0dUX/HqgDVaWyutLfAoYzCM0oTOGKkyXszEyf29NZ6Rh7mVcsHo6dBju7hG5d3fmSvlboK+1jC7ePKsNiY0/X3whLgvG2+DOfL654k4QDWTRoKkA58VVBYCPlUv9jh4vUIzN39yu0zyQP7a0mIOWLN3q+YghdBbrLHTk8zzsv9DF03fE2lNkodHRNC/hYVdazZ5EgUI/5u7pEnb+iVwWOYrnuAByAdFPOOg0TM4sh/w89b2vDLpG/KUih/hjXQKFMcuuLxX891Pu8tUX0Pgqge6QIDAQAB",
+  "permissions": ["storage", "scripting", "alarms", "nativeMessaging", "activeTab"],
+  "optional_host_permissions": ["*://*/*"],
+  "background": {
+    "service_worker": "background.js",
+    "scripts": ["background.js"],
+    "type": "module"
+  },
+  "action": {
+    "default_title": "Rich Presence Plus",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    },
+    "default_popup": "popup.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "richpresenceplus@manucabral.dev",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": ["browsingActivity", "websiteContent"]
+      }
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

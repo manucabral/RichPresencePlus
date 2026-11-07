@@ -1,0 +1,140 @@
+{
+  "extDescription": {
+    "message": "Sends what you watch or listen to on the web to the Rich Presence Plus desktop app."
+  },
+  "checking": {
+    "message": "Checking…"
+  },
+  "connected": {
+    "message": "Connected to the desktop app"
+  },
+  "untrusted": {
+    "message": "Another program answered on the app's port. Nothing was sent."
+  },
+  "waiting": {
+    "message": "Waiting for the desktop app"
+  },
+  "missingHost": {
+    "message": "Desktop app not found. Open it once, or use the code from its Browser page."
+  },
+  "looking": {
+    "message": "Looking for the desktop app"
+  },
+  "pairTitle": {
+    "message": "Pair with a code"
+  },
+  "pairHint": {
+    "message": "Paste the code from the app's Browser page."
+  },
+  "pairButton": {
+    "message": "Pair"
+  },
+  "codeInvalid": {
+    "message": "That code is not valid."
+  },
+  "sitesNeeded": {
+    "message": "Some presences need access to these sites:"
+  },
+  "allow": {
+    "message": "Allow"
+  },
+  "forMoment": {
+    "message": "connected just now"
+  },
+  "forMinutes": {
+    "message": "connected for $1 min"
+  },
+  "forHours": {
+    "message": "connected for $1 h"
+  },
+  "thisPage": {
+    "message": "This page"
+  },
+  "noPresence": {
+    "message": "No presence you turned on reads this site."
+  },
+  "unknownPage": {
+    "message": "Open the popup on a page to check it."
+  },
+  "readsPage": {
+    "message": "$1 reads this page"
+  },
+  "needsAccess": {
+    "message": "$1 needs access to this site"
+  },
+  "notReadYet": {
+    "message": "$1 can read this page"
+  },
+  "allowSite": {
+    "message": "Allow this site"
+  },
+  "presences": {
+    "message": "Presences in this browser"
+  },
+  "noRules": {
+    "message": "Turn on a web presence in the desktop app."
+  },
+  "allowed": {
+    "message": "allowed"
+  },
+  "notAllowed": {
+    "message": "needs access"
+  },
+  "reading": {
+    "message": "Reading $1 tabs"
+  },
+  "pause": {
+    "message": "Pause this browser"
+  },
+  "pauseHint": {
+    "message": "Nothing is sent from this browser while on."
+  },
+  "pausedNow": {
+    "message": "Paused. Nothing is sent from this browser."
+  },
+  "footer": {
+    "message": "Choose presences and privacy in the desktop app."
+  },
+  "perSite": {
+    "message": "site by site"
+  },
+  "removeSite": {
+    "message": "Stop on this site"
+  },
+  "makeSite": {
+    "message": "Make a presence"
+  },
+  "pickFirst": {
+    "message": "Click the text for the first line."
+  },
+  "pickSecond": {
+    "message": "Click the text for the second line, or skip it."
+  },
+  "pickSkip": {
+    "message": "Skip"
+  },
+  "pickCancel": {
+    "message": "Cancel"
+  },
+  "pickName": {
+    "message": "Name of the presence"
+  },
+  "pickCreate": {
+    "message": "Create"
+  },
+  "pickClose": {
+    "message": "Close"
+  },
+  "pickDone": {
+    "message": "Done. Open this extension and allow this site."
+  },
+  "pickFailed": {
+    "message": "That did not work. Check that the desktop app is open."
+  },
+  "pickRefused": {
+    "message": "Choose a visible text, not a form field."
+  },
+  "makeSiteHint": {
+    "message": "Click the texts of this site to show them on Discord."
+  }
+}

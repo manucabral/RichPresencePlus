@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Rich Presence Plus</title>
+    <style>
+      /* The desktop app's palette (docs/DESIGN.md). */
+      :root {
+        /* The values of design/tokens.css: a store package holds only this folder. */
+        --page: #08090a;
+        --panel: #0f1011;
+        --border: #222326;
+        --border-strong: #34363b;
+        --text: #f7f8f8;
+        --muted: #8a8f98;
+        --hint: #787c83;
+        --accent: #19c283;
+        --accent-soft: #4bf6b6;
+        --accent-hover: #3ddc9f;
+        --accent-ink: #04140e;
+        --accent-tint: rgb(25 194 131 / 0.15);
+        --focus: rgb(75 246 182 / 0.6);
+        --warning: #f5b83d;
+        --danger: #f2555a;
+      }
+      * { box-sizing: border-box; }
+      body {
+        width: 340px;
+        margin: 0;
+        padding: 14px;
+        background: var(--page);
+        color: var(--text);
+        font: 13px/1.45 "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+      }
+      header { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+      header svg { width: 22px; height: 22px; flex: none; }
+      h1 { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+      .version { margin-left: auto; color: var(--hint); font-size: 11px; }
+      h2 { margin: 14px 0 6px; color: var(--muted); font-size: 12px; font-weight: 500; }
+      p { margin: 0; }
+      .panel { border: 1px solid var(--border); border-radius: 8px; background: var(--panel); }
+      .row { display: flex; align-items: center; gap: 10px; padding: 9px 12px; }
+      .row + .row { border-top: 1px solid var(--border); }
+      .grow { min-width: 0; flex: 1; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--hint); flex: none; }
+      .dot.on { background: var(--accent); }
+      .dot.warn { background: var(--warning); }
+      .dot.bad { background: var(--danger); }
+      .hint { color: var(--muted); font-size: 12px; }
+      .small { color: var(--hint); font-size: 11px; }
+      .tag { flex: none; padding: 0 6px; border-radius: 4px; background: var(--border); color: var(--muted); font-size: 11px; }
+      .tag.on { background: var(--accent-tint); color: var(--accent-soft); }
+      .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+      ul { margin: 0; padding: 0; list-style: none; }
+      details summary { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; color: var(--text); font-weight: 500; list-style: none; cursor: pointer; }
+      details summary::-webkit-details-marker { display: none; }
+      details summary::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted); transform: translateY(-2px) rotate(45deg); transition: transform 0.16s ease; }
+      details summary:hover { background: rgb(255 255 255 / 0.04); }
+      details[open] summary { border-bottom: 1px solid var(--border); }
+      details[open] summary::after { transform: translateY(1px) rotate(-135deg); }
+      .body { padding: 10px 12px; display: grid; gap: 8px; }
+      input[type="text"] {
+        width: 100%;
+        padding: 6px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--page);
+        color: var(--text);
+        font: 12px ui-monospace, Consolas, monospace;
+      }
+      :focus-visible { outline: 1px solid var(--focus); outline-offset: 2px; }
+      button {
+        justify-self: start;
+        flex: none;
+        padding: 5px 12px;
+        border: 0;
+        border-radius: 6px;
+        background: var(--accent);
+        color: var(--accent-ink);
+        font: 600 12px/1.4 inherit;
+        font-family: inherit;
+        cursor: pointer;
+      }
+      button:hover { background: var(--accent-hover); }
+      .switch { position: relative; flex: none; width: 34px; height: 20px; }
+      .switch input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: pointer; }
+      .switch span { position: absolute; inset: 0; border: 1px solid var(--border-strong); border-radius: 10px; background: var(--border); transition: background 0.15s; pointer-events: none; }
+      .switch span::after { content: ""; position: absolute; top: 1px; left: 1px; width: 16px; height: 16px; border-radius: 50%; background: #a1a5ad; transition: left 0.15s; }
+      .switch input:checked + span { border-color: var(--warning); background: var(--warning); }
+      .switch input:checked + span::after { left: 15px; background: #fff; }
+      .switch input:focus-visible + span { outline: 1px solid var(--focus); outline-offset: 2px; }
+      .error { color: var(--danger); font-size: 12px; }
+      .sites { font: 11px ui-monospace, Consolas, monospace; color: var(--text); word-break: break-all; }
+      footer { margin-top: 12px; color: var(--hint); font-size: 11px; }
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+      [hidden] { display: none !important; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <svg viewBox="0 0 65 66" fill="none" aria-hidden="true">
+        <path d="M48.68 5H18C10.82 5 5 10.82 5 18v29.63c0 7.18 5.82 13 13 13h30.68" stroke="#4BF6B6" stroke-width="10" stroke-linecap="round" />
+        <path d="M44 32.4H21" stroke="#19C283" stroke-width="5" stroke-linecap="round" />
+        <path d="M32.6 21v23" stroke="#4BF6B6" stroke-width="5" stroke-linecap="round" />
+      </svg>
+      <h1>Rich Presence Plus</h1>
+      <span id="version" class="version"></span>
+    </header>
+
+    <div class="panel" role="status">
+      <div class="row">
+        <span id="dot" class="dot"></span>
+        <div class="grow">
+          <p id="state" data-i18n="checking">Checking…</p>
+          <p id="detail" class="small truncate"></p>
+        </div>
+      </div>
+      <label class="row">
+        <div class="grow">
+          <p data-i18n="pause">Pause this browser</p>
+          <p class="small" data-i18n="pauseHint">Nothing is sent from this browser while it is on.</p>
+        </div>
+        <span class="switch"><input id="paused" type="checkbox" /><span></span></span>
+      </label>
+    </div>
+
+    <h2 data-i18n="thisPage">This page</h2>
+    <div class="panel">
+      <div class="row">
+        <span id="pageDot" class="dot"></span>
+        <p id="page" class="grow" data-i18n="unknownPage">Open the popup on a page to see whether a presence reads it.</p>
+        <button id="allowPage" data-i18n="allowSite" hidden>Allow this site</button>
+        <button id="removePage" data-i18n="removeSite" hidden>Stop on this site</button>
+      </div>
+      <div id="makeRow" class="row" hidden>
+        <p class="grow small" data-i18n="makeSiteHint">Click the texts of this site to show them on Discord.</p>
+        <button id="makeSite" data-i18n="makeSite">Make a presence</button>
+      </div>
+    </div>
+
+    <h2 id="presencesTitle" data-i18n="presences">Presences in this browser</h2>
+    <div class="panel">
+      <ul id="presences"></ul>
+      <p id="noRules" class="row hint" data-i18n="noRules">Turn on a web presence in the desktop app and it shows here.</p>
+    </div>
+
+    <section id="allow" class="panel body" hidden style="margin-top: 10px">
+      <p class="hint" data-i18n="sitesNeeded">Some presences need access to these sites:</p>
+      <p id="sites" class="sites"></p>
+      <button id="grant" data-i18n="allow">Allow</button>
+    </section>
+
+    <details id="pair" class="panel" style="margin-top: 10px">
+      <summary data-i18n="pairTitle">Pair with a code</summary>
+      <div class="body">
+        <p class="hint" data-i18n="pairHint">Paste the pairing code from the Browser page of the desktop app.</p>
+        <input id="code" type="text" placeholder="38417:0123…" autocomplete="off" spellcheck="false" />
+        <button id="save" data-i18n="pairButton">Pair</button>
+        <p id="error" class="error" data-i18n="codeInvalid" hidden>That code is not valid.</p>
+      </div>
+    </details>
+
+    <footer data-i18n="footer">Choose presences and privacy in the desktop app.</footer>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>
