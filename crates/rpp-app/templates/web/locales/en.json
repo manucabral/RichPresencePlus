@@ -1,0 +1,5 @@
+{
+  "description": "Shows the page you are on.",
+  "browsing": "Browsing",
+  "option.include_page_title": "Show the page title"
+}

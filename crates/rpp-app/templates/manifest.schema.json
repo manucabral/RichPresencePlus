@@ -1,0 +1,460 @@
+{
+  "title": "Rich Presence Plus presence",
+  "description": "The manifest.json of a presence.",
+  "type": "object",
+  "required": [
+    "name",
+    "version",
+    "client_id"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "pattern": {
+      "type": "string",
+      "description": "A match pattern, like *://www.example.com/*.",
+      "pattern": "^(\\*|https?)://[^/]+/.*$",
+      "maxLength": 256
+    },
+    "path": {
+      "type": "string",
+      "description": "Names separated by dots, like app.video.title.",
+      "pattern": "^[A-Za-z_$][A-Za-z0-9_$]*(\\.[A-Za-z0-9_$]+)*$"
+    },
+    "extractors": {
+      "type": "object",
+      "maxProperties": 32,
+      "propertyNames": {
+        "pattern": "^[A-Za-z0-9_]{1,64}$"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/extractor"
+      }
+    },
+    "extractor": {
+      "type": "object",
+      "required": [
+        "from"
+      ],
+      "oneOf": [
+        {
+          "description": "Visible text of the first element that matches.",
+          "properties": {
+            "from": {
+              "const": "text"
+            },
+            "selector": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "selector"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "An attribute of the first element that matches.",
+          "properties": {
+            "from": {
+              "const": "attr"
+            },
+            "selector": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "selector",
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "Every element that matches, as a list of texts, or of an attribute with name.",
+          "properties": {
+            "from": {
+              "const": "list"
+            },
+            "selector": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 32
+            }
+          },
+          "required": [
+            "selector"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "Content of a meta tag, by name or property.",
+          "properties": {
+            "from": {
+              "const": "meta"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "paused, current, duration and rate of a video or audio element.",
+          "properties": {
+            "from": {
+              "const": "media"
+            },
+            "selector": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        {
+          "description": "What the page keeps in a global variable: a text, number, boolean, or small list or object.",
+          "properties": {
+            "from": {
+              "const": "variable"
+            },
+            "path": {
+              "$ref": "#/definitions/path"
+            }
+          },
+          "required": [
+            "path"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "JSON written in an element, such as script#__NEXT_DATA__.",
+          "properties": {
+            "from": {
+              "const": "json"
+            },
+            "selector": {
+              "type": "string"
+            },
+            "path": {
+              "$ref": "#/definitions/path"
+            }
+          },
+          "required": [
+            "selector"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "An entry of localStorage or sessionStorage.",
+          "properties": {
+            "from": {
+              "const": "storage"
+            },
+            "area": {
+              "enum": [
+                "local",
+                "session"
+              ]
+            },
+            "key": {
+              "type": "string"
+            },
+            "path": {
+              "$ref": "#/definitions/path"
+            }
+          },
+          "required": [
+            "key"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "A computed CSS property, such as background-image.",
+          "properties": {
+            "from": {
+              "const": "style"
+            },
+            "selector": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "selector",
+            "name"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "description": "title, artist, album, artwork and state from the site's Media Session.",
+          "properties": {
+            "from": {
+              "const": "session"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    },
+    "setting": {
+      "type": "object",
+      "required": [
+        "type",
+        "key",
+        "default"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "boolean",
+            "number",
+            "text",
+            "choice"
+          ]
+        },
+        "key": {
+          "type": "string"
+        },
+        "default": {},
+        "when": {
+          "type": "string",
+          "description": "Shows this option only while that boolean option is on."
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "max_length": {
+          "type": "integer",
+          "maximum": 256
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The name people see. It must be unique."
+    },
+    "version": {
+      "type": "string",
+      "description": "Raise it each time you change a published presence."
+    },
+    "description": {
+      "type": "string",
+      "description": "One line for the card."
+    },
+    "client_id": {
+      "type": "string",
+      "description": "The Discord application. 1567580382377803786 is shared by any presence; set name in activity() to show your own."
+    },
+    "kind": {
+      "enum": [
+        "game",
+        "video",
+        "music",
+        "other"
+      ],
+      "description": "Decides which presence wins when several run at once."
+    },
+    "interval": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Seconds between two calls to the script."
+    },
+    "hide_when_paused": {
+      "type": "boolean",
+      "description": "Hide the activity while meta() says paused."
+    },
+    "entry": {
+      "type": "string",
+      "description": "The file with the code."
+    },
+    "domains": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Sites involved, so people can exclude them in Privacy."
+    },
+    "permissions": {
+      "type": "object",
+      "description": "What the script may read from the computer.",
+      "additionalProperties": false,
+      "properties": {
+        "http": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "host.http.get(), to these exact hosts."
+        },
+        "process": {
+          "type": "boolean",
+          "description": "host.process.list()"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "description": "host.process.args(), with only these options of each program."
+        },
+        "window": {
+          "type": "boolean",
+          "description": "host.window.foreground()"
+        },
+        "media": {
+          "type": "boolean",
+          "description": "host.media.current()"
+        },
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "host.files, inside these folders."
+        },
+        "query": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "samp"
+            ]
+          },
+          "description": "host.query(), for these protocols."
+        }
+      }
+    },
+    "page": {
+      "type": "object",
+      "description": "What to read from websites.",
+      "required": [
+        "matches"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "matches": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/definitions/pattern"
+          }
+        },
+        "extract": {
+          "$ref": "#/definitions/extractors"
+        },
+        "frames": {
+          "type": "object",
+          "description": "Embedded frames to read as well, such as a video player on another site.",
+          "required": [
+            "matches",
+            "extract"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "matches": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/definitions/pattern"
+              }
+            },
+            "extract": {
+              "$ref": "#/definitions/extractors"
+            }
+          }
+        }
+      }
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/setting"
+      },
+      "description": "Options for each person."
+    },
+    "author": {
+      "type": "string",
+      "maxLength": 64
+    },
+    "contributors": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "string",
+        "maxLength": 64
+      }
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9A-Fa-f]{6}$"
+    },
+    "tags": {
+      "type": "array",
+      "description": "Words that describe the presence, chosen from this list.",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": [
+          "video",
+          "streaming",
+          "movie",
+          "series",
+          "anime",
+          "live",
+          "sport",
+          "music",
+          "radio",
+          "podcast",
+          "game",
+          "multiplayer",
+          "reading",
+          "manga",
+          "news",
+          "wiki",
+          "blog",
+          "code",
+          "design",
+          "study",
+          "social",
+          "chat",
+          "forum",
+          "shopping",
+          "ai",
+          "tool"
+        ]
+      }
+    },
+    "icon": {
+      "type": "string",
+      "description": "A square .png or .webp of the folder, or an https address."
+    }
+  }
+}

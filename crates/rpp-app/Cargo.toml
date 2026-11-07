@@ -1,0 +1,33 @@
+[package]
+name = "rpp-app"
+description = "Application controller: settings, presences, bridge and service behind one API."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+base64 = "0.23"
+rpp-bridge = { path = "../rpp-bridge" }
+rpp-catalog = { path = "../rpp-catalog" }
+rpp-config = { path = "../rpp-config" }
+rpp-core = { path = "../rpp-core" }
+rpp-discord = { path = "../rpp-discord" }
+rpp-plugins = { path = "../rpp-plugins" }
+rpp-service = { path = "../rpp-service" }
+serde.workspace = true
+semver = "1"
+sha2 = "0.11"
+serde_json = { workspace = true, features = ["preserve_order"] }
+thiserror.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+rpp-testkit = { path = "../rpp-testkit" }
+tempfile = "3"
+tokio = { workspace = true, features = ["test-util", "rt-multi-thread"] }
+
+[lints]
+workspace = true
