@@ -1,0 +1,26 @@
+[package]
+name = "rpp-service"
+description = "Runs presence scripts, chooses one activity and publishes it to Discord."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+rpp-core = { path = "../rpp-core" }
+rpp-discord = { path = "../rpp-discord" }
+rpp-plugins = { path = "../rpp-plugins" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+tokio.workspace = true
+
+[dev-dependencies]
+rpp-bridge = { path = "../rpp-bridge" }
+rpp-testkit = { path = "../rpp-testkit" }
+tokio = { workspace = true, features = ["test-util", "rt-multi-thread"] }
+
+[lints]
+workspace = true
