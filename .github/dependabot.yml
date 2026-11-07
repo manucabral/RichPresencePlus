@@ -1,5 +1,6 @@
-# Proposes updates every week. Nothing merges by itself: each one passes CI and
-# a review.
+# Proposes updates; nothing merges without CI and a review. Minor and patch
+# updates come grouped. Major versions of @types/node wait for the Node version
+# the workflows use.
 version: 2
 updates:
   - package-ecosystem: cargo
@@ -20,15 +21,30 @@ updates:
     groups:
       interface:
         update-types: [minor, patch]
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
   - package-ecosystem: npm
     directory: /extension
     schedule:
       interval: weekly
+    groups:
+      extension:
+        update-types: [minor, patch]
   - package-ecosystem: npm
     directory: /website
     schedule:
       interval: weekly
+    groups:
+      website:
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: [version-update:semver-major]
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]
