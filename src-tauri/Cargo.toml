@@ -1,0 +1,44 @@
+[package]
+name = "rpp-desktop"
+description = "Rich Presence Plus desktop application."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+authors.workspace = true
+build = "build.rs"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+rpp-app = { path = "../crates/rpp-app" }
+rpp-bridge = { path = "../crates/rpp-bridge" }
+rpp-catalog = { path = "../crates/rpp-catalog" }
+rpp-config = { path = "../crates/rpp-config" }
+rpp-core = { path = "../crates/rpp-core" }
+rpp-discord = { path = "../crates/rpp-discord" }
+rpp-host = { path = "../crates/rpp-host" }
+rpp-service = { path = "../crates/rpp-service" }
+serde.workspace = true
+serde_json.workspace = true
+sys-locale = "0.3"
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-global-shortcut = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-updater = "2"
+tracing.workspace = true
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", default-features = false, features = ["fmt", "registry", "std"] }
+
+[features]
+# Serves the built frontend from the binary instead of the dev server.
+custom-protocol = ["tauri/custom-protocol"]
+
+[lints.rust]
+unsafe_code = "forbid"
+missing_docs = "warn"
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
