@@ -1,0 +1,11 @@
+---
+import Shell from "../../components/Shell.astro";
+import { STRINGS } from "../../i18n/strings";
+import { Content } from "../../../../docs/changelog.es.md";
+
+const t = STRINGS.es.changelog;
+---
+
+<Shell language="es" title={`${t.title} - Rich Presence Plus`} description={t.meta} paths={{ en: "/changelog/", es: "/es/changelog/" }}>
+  <article class="page wrap narrow legal"><Content /></article>
+</Shell>

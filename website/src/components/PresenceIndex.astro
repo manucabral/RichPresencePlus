@@ -1,0 +1,51 @@
+---
+import { join } from "node:path";
+import Logo from "./Logo.astro";
+import Shell from "./Shell.astro";
+import { STRINGS, type Language } from "../i18n/strings";
+import { byCategory, loadPresences } from "../data/presences";
+import { presenceIndex, presencePath } from "../data/paths";
+
+interface Props {
+  language: Language;
+}
+
+const { language } = Astro.props;
+const t = STRINGS[language];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const groups = byCategory(loadPresences(join(process.cwd(), "..", "presences")));
+const paths = { en: presenceIndex("en"), es: presenceIndex("es") };
+---
+
+<Shell language={language} title={`${t.presence.index} - Rich Presence Plus`} description={t.presence.indexMeta} paths={paths} script="/search.js">
+  <div class="page wrap narrow">
+    <h1>{t.presence.index}</h1>
+    <p class="lead">{t.presence.indexLead}</p>
+    <div class="search" hidden>
+      <input type="search" placeholder={t.search.box} aria-label={t.search.box} />
+      <div class="chips">
+        <button type="button" data-value="" aria-pressed="true">{t.search.all}</button>
+        {groups.map(([category]) => (
+          <button type="button" data-value={category} aria-pressed="false">{t.categories[category as keyof typeof t.categories]}</button>
+        ))}
+      </div>
+    </div>
+    <p class="hint search-empty" hidden>{t.search.none}</p>
+    {groups.map(([category, presences]) => (
+      <section data-group>
+        <h2 class="label">{t.categories[category as keyof typeof t.categories]}</h2>
+        <ul class="panel list">
+          {presences.map((presence) => (
+            <li data-name={presence.name.toLowerCase()} data-category={category}>
+              <a href={`${base}${presencePath(language, presence.folder)}`}>
+                <Logo name={presence.name} color={presence.color} folder={presence.folder} />
+                <span class="row-name">{presence.name}</span>
+                <span class="row-text">{presence.description[language] ?? presence.description.en}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    ))}
+  </div>
+</Shell>

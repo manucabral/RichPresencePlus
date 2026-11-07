@@ -1,0 +1,17 @@
+---
+import Shell from "./Shell.astro";
+import { STRINGS, type Language } from "../i18n/strings";
+
+interface Props {
+  language: Language;
+  page: "privacy" | "terms";
+}
+
+const { language, page } = Astro.props;
+const text = STRINGS[language].legal[page];
+const paths = { en: `/${page}/`, es: `/es/${page}/` };
+---
+
+<Shell language={language} title={`${text.title} - Rich Presence Plus`} description={text.meta} paths={paths}>
+  <article class="page wrap narrow legal"><slot /></article>
+</Shell>

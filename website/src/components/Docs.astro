@@ -1,0 +1,73 @@
+---
+import "../styles/docs.css";
+import DocLinks from "./DocLinks.astro";
+import Shell from "./Shell.astro";
+import { STRINGS, type Language } from "../i18n/strings";
+import { DOC_PAGES, docsPath } from "../data/docs";
+
+interface Props {
+  language: Language;
+  slug: string;
+}
+
+interface Doc {
+  frontmatter: { title: string; description: string };
+  Content: (props: object) => unknown;
+  getHeadings: () => { depth: number; slug: string; text: string }[];
+}
+
+const { language, slug } = Astro.props;
+const t = STRINGS[language].docs;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const files = import.meta.glob<Doc>("../../../docs/developers/*/*.md", { eager: true });
+const load = (file: string) => {
+  const found = Object.entries(files).find(([path]) => path.endsWith(`/${language}/${file}.md`));
+  if (!found) throw new Error(`no ${language} page ${file}`);
+  return found[1];
+};
+
+const pages = DOC_PAGES.map((page) => ({
+  slug: page.slug,
+  href: `${base}${docsPath(language, page.slug)}`,
+  title: load(page.file).frontmatter.title,
+}));
+const at = DOC_PAGES.findIndex((page) => page.slug === slug);
+const doc = load(DOC_PAGES[at].file);
+const { Content } = doc;
+const headings = doc.getHeadings().filter((heading) => heading.depth === 2);
+const previous = pages[at - 1];
+const next = pages[at + 1];
+const paths = { en: docsPath("en", slug), es: docsPath("es", slug) };
+---
+
+<Shell language={language} title={`${doc.frontmatter.title} - ${t.suffix}`} description={doc.frontmatter.description} paths={paths}>
+  <div class="docs wrap">
+    <details class="docs-menu">
+      <summary>{t.menu}</summary>
+      <ol>
+        {pages.map((page) => <li><a href={page.href} aria-current={page.slug === slug ? "page" : undefined}>{page.title}</a></li>)}
+      </ol>
+    </details>
+    <nav class="docs-nav" aria-label={t.label}>
+      <p>{t.label}</p>
+      <ol>
+        {pages.map((page) => <li><a href={page.href} aria-current={page.slug === slug ? "page" : undefined}>{page.title}</a></li>)}
+      </ol>
+    </nav>
+    <article class="docs-body">
+      <DocLinks language={language}><Content /></DocLinks>
+      <nav class="docs-pager" aria-label={t.pager}>
+        {previous && <a href={previous.href} rel="prev"><small>{t.previous}</small>{previous.title}</a>}
+        {next && <a class="next" href={next.href} rel="next"><small>{t.next}</small>{next.title}</a>}
+      </nav>
+    </article>
+    {headings.length > 0 && (
+      <nav class="docs-toc" aria-label={t.onThisPage}>
+        <p>{t.onThisPage}</p>
+        <ul>
+          {headings.map((heading) => <li><a href={`#${heading.slug}`}>{heading.text}</a></li>)}
+        </ul>
+      </nav>
+    )}
+  </div>
+</Shell>

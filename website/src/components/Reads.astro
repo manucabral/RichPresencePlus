@@ -1,0 +1,35 @@
+---
+import { STRINGS, type Language } from "../i18n/strings";
+import type { Read } from "../data/presences";
+
+interface Props {
+  language: Language;
+  reads: Read[];
+}
+
+const { language, reads } = Astro.props;
+const kinds = STRINGS[language].kinds;
+
+function details(read: Read): string {
+  switch (read.kind) {
+    case "page":
+    case "http":
+      return read.hosts.join(", ");
+    case "files":
+      return read.paths.join(", ");
+    case "args":
+      return read.programs.join(", ");
+    default:
+      return "";
+  }
+}
+---
+
+<ul class="reads">
+  {reads.map((read) => (
+    <li>
+      <span>{kinds[read.kind]}</span>
+      {details(read) && <code>{details(read)}</code>}
+    </li>
+  ))}
+</ul>

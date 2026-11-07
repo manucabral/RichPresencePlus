@@ -1,0 +1,54 @@
+---
+import Logo from "./Logo.astro";
+import Reads from "./Reads.astro";
+import Shell from "./Shell.astro";
+import { STRINGS, type Language } from "../i18n/strings";
+import { homePath, presenceIndex, presencePath } from "../data/paths";
+import type { Listed } from "../data/presences";
+
+interface Props {
+  language: Language;
+  presence: Listed;
+}
+
+const { language, presence } = Astro.props;
+const t = STRINGS[language];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const title = t.presence.title.replace("{name}", presence.name);
+const description = presence.description[language] ?? presence.description.en;
+const paths = { en: presencePath("en", presence.folder), es: presencePath("es", presence.folder) };
+const crumbs = {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: [
+    { "@type": "ListItem", position: 1, name: t.presence.index, item: new URL(`${base}${presenceIndex(language)}`, Astro.site).href },
+    { "@type": "ListItem", position: 2, name: presence.name },
+  ],
+};
+---
+
+<Shell
+  language={language}
+  title={`${title} - Rich Presence Plus`}
+  description={t.presence.meta.replace("{name}", presence.name)}
+  paths={paths}
+  data={crumbs}
+>
+  <article class="page wrap narrow">
+    <p class="crumb"><a href={`${base}${presenceIndex(language)}`}>{t.presence.all}</a></p>
+    <div class="page-head">
+      <Logo name={presence.name} color={presence.color} folder={presence.folder} />
+      <div>
+        <h1>{title}</h1>
+        <span class="chip">{t.categories[presence.category as keyof typeof t.categories]}</span>
+      </div>
+    </div>
+    <p class="lead">{description}</p>
+    <h2 class="label">{t.presence.reads}</h2>
+    <div class="panel"><Reads language={language} reads={presence.reads} /></div>
+    <p class="hint">{t.presence.readsNote}</p>
+    <h2 class="label">{t.presence.shows}</h2>
+    <p class="panel padded">{t.presence.showsNote}</p>
+    <p class="actions"><a class="button primary" href={`${base}${homePath(language)}#download`}>{t.nav.download}</a></p>
+  </article>
+</Shell>

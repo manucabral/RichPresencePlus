@@ -1,0 +1,310 @@
+/*
+ * The developer documentation. Only these pages load it. Colors come from
+ * design/tokens.css, the same roles the application uses.
+ */
+.docs.wrap {
+  max-width: 82rem;
+}
+
+.docs {
+  display: grid;
+  grid-template-columns: 13rem minmax(0, 1fr) 12rem;
+  gap: 3.5rem;
+  align-items: start;
+  padding-block: 2.5rem 4rem;
+}
+
+.docs-nav,
+.docs-toc {
+  position: sticky;
+  top: 5.5rem;
+  font-size: 0.875rem;
+}
+
+.docs-nav p,
+.docs-toc p {
+  margin: 0 0 0.625rem;
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.docs-nav ol,
+.docs-menu ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: page;
+}
+
+.docs-nav li,
+.docs-menu li {
+  counter-increment: page;
+}
+
+.docs-nav a,
+.docs-menu li a {
+  display: block;
+  padding: 0.375rem 0.625rem;
+  border-radius: 0.375rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.docs-nav a::before,
+.docs-menu li a::before {
+  content: counter(page) ". ";
+  color: var(--text-muted);
+}
+
+.docs-nav a:hover,
+.docs-menu li a:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.docs-nav a[aria-current],
+.docs-menu li a[aria-current] {
+  background: var(--surface-selected);
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.docs-toc ul {
+  margin: 0;
+  padding: 0 0 0 0.75rem;
+  border-left: 1px solid var(--border);
+  list-style: none;
+}
+
+.docs-toc a {
+  display: block;
+  padding-block: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  text-decoration: none;
+}
+
+.docs-toc a:hover {
+  color: var(--text-primary);
+}
+
+.docs-menu {
+  display: none;
+}
+
+.docs-body {
+  min-width: 0;
+}
+
+.docs-body h1 {
+  margin: 0 0 1.25rem;
+  color: var(--text-primary);
+  font-size: 2.25rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.docs-body h2 {
+  margin: 2.75rem 0 0.75rem;
+  padding-top: 1.75rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 1.375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: left;
+  scroll-margin-top: 4rem;
+}
+
+.docs-body > p,
+.docs-body > ul,
+.docs-body > ol {
+  max-width: 44rem;
+  margin: 0 0 1rem;
+}
+
+.docs-body > ul,
+.docs-body > ol {
+  padding-left: 1.25rem;
+  list-style: revert;
+}
+
+.docs-body li::marker {
+  color: var(--text-muted);
+}
+
+.docs-body li {
+  margin-bottom: 0.375rem;
+}
+
+.docs-body a {
+  color: var(--text-primary);
+  text-decoration-color: var(--accent);
+  text-underline-offset: 0.2em;
+}
+
+.docs-body a:hover {
+  color: var(--accent);
+}
+
+.docs-body strong {
+  color: var(--text-primary);
+}
+
+.docs-body :not(pre) > code {
+  padding: 0.125rem 0.3125rem;
+  border-radius: 0.25rem;
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  overflow-wrap: anywhere;
+}
+
+.docs-body pre {
+  margin: 0 0 1.25rem;
+  padding: 0.875rem 1rem;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  background: var(--surface-panel);
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.docs-body pre code {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+.docs-body table {
+  display: block;
+  width: 100%;
+  margin: 0 0 1.25rem;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.docs-body th,
+.docs-body td {
+  padding: 0.5rem 1rem 0.5rem 0;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.docs-body th {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.docs-pager {
+  display: flex;
+  gap: 1rem;
+  margin-top: 3rem;
+}
+
+.docs-pager a {
+  flex: 1;
+  max-width: 50%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.docs-pager a:hover {
+  background: var(--surface-hover);
+  color: var(--text-primary);
+}
+
+.docs-pager a.next {
+  margin-left: auto;
+  text-align: right;
+}
+
+.docs-pager small {
+  display: block;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+/* Code colors, as classes: they cost far fewer bytes than a style on each word. */
+.token.comment {
+  color: var(--text-muted);
+}
+
+.token.keyword,
+.token.boolean,
+.token.null {
+  color: var(--green-300);
+}
+
+.token.string,
+.token.template-string,
+.token.regex {
+  color: var(--amber-500);
+}
+
+.token.function,
+.token.property {
+  color: var(--green-200);
+}
+
+.token.number {
+  color: var(--gray-300);
+}
+
+.token.punctuation,
+.token.operator {
+  color: var(--text-secondary);
+}
+
+@media (max-width: 75rem) {
+  .docs {
+    grid-template-columns: 13rem minmax(0, 1fr);
+  }
+
+  .docs-toc {
+    display: none;
+  }
+}
+
+@media (max-width: 52rem) {
+  .docs {
+    display: block;
+    padding-top: 1.25rem;
+  }
+
+  .docs-nav {
+    display: none;
+  }
+
+  .docs-menu {
+    display: block;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    background: var(--surface-panel);
+  }
+
+  .docs-menu summary {
+    padding: 0.625rem 0.875rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .docs-menu ol {
+    padding: 0 0.375rem 0.375rem;
+  }
+
+  .docs-body h1 {
+    font-size: 1.875rem;
+  }
+}

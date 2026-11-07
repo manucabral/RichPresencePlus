@@ -1,0 +1,20 @@
+---
+// The documentation links its pages by file, as in `03-structure.md#options`, so they
+// also work on GitHub. This turns those links into the addresses of the site.
+import { docsPath } from "../data/docs";
+import type { Language } from "../i18n/strings";
+
+interface Props {
+  language: Language;
+}
+
+const { language } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const rendered = await Astro.slots.render("default");
+const html = rendered.replace(/href="0\d-([a-z]+)\.md(#[^"]*)?"/g, (_, page: string, anchor = "") => {
+  const slug = page === "home" ? "" : page;
+  return `href="${base}${docsPath(language, slug)}${anchor}"`;
+});
+---
+
+<Fragment set:html={html} />

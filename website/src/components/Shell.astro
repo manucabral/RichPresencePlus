@@ -1,0 +1,83 @@
+---
+import Icon from "./Icon.astro";
+import Base from "../layouts/Base.astro";
+import { LANGUAGES, STRINGS, type Language } from "../i18n/strings";
+import { docsPath } from "../data/docs";
+import { homePath, presenceIndex } from "../data/paths";
+
+interface Props {
+  language: Language;
+  title: string;
+  description: string;
+  paths: Record<Language, string>;
+  data?: object;
+  /** A script of this site for the page, by its path. */
+  script?: string;
+}
+
+const { language, title, description, paths, data, script } = Astro.props;
+const t = STRINGS[language];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const REPOSITORY = "https://github.com/manucabral/RichPresencePlus";
+const home = `${base}${homePath(language)}`;
+const other = LANGUAGES.find((code) => code !== language) ?? "en";
+const links = [
+  { href: `${home}#features`, text: t.nav.features },
+  { href: `${base}${presenceIndex(language)}`, text: t.nav.presences },
+  { href: `${base}${docsPath(language, "")}`, text: t.nav.docs },
+  { href: `${home}#create`, text: t.nav.create },
+  { href: `${home}#faq`, text: t.nav.faq },
+];
+---
+
+<Base language={language} title={title} description={description} paths={paths} data={data} script={script}>
+  <a class="skip" href="#main">{t.nav.skip}</a>
+  <header class="top">
+    <div class="wrap top-row">
+      <a class="brand" href={home}>
+        <img src={`${base}/favicon.svg`} alt="" width="28" height="28" />
+        <span>Rich Presence <b>+</b></span>
+      </a>
+      <nav class="top-links" aria-label={t.nav.label}>
+        {links.map((link) => <a href={link.href}>{link.text}</a>)}
+      </nav>
+      <div class="top-actions">
+        <a class="quiet" href={`${base}${paths[other]}`} lang={other} hreflang={other}>{t.nav.other}</a>
+        <a class="button ghost" href={REPOSITORY}>GitHub</a>
+        <a class="button primary" href={`${home}#download`}>{t.nav.download}</a>
+      </div>
+      <details class="top-menu">
+        <summary aria-label={t.nav.menu}><Icon name="menu" /></summary>
+        <nav aria-label={t.nav.label}>
+          {links.map((link) => <a href={link.href}>{link.text}</a>)}
+          <a href={REPOSITORY}>GitHub</a>
+          <a href={`${base}${paths[other]}`} lang={other} hreflang={other}>{t.nav.other}</a>
+        </nav>
+      </details>
+    </div>
+  </header>
+
+  <main id="main">
+    <slot />
+  </main>
+
+  <footer class="bottom">
+    <div class="wrap bottom-row">
+      <a class="brand" href={home}>
+        <img src={`${base}/favicon.svg`} alt="" width="24" height="24" loading="lazy" />
+        <span>Rich Presence <b>+</b></span>
+      </a>
+      <nav aria-label={t.footer.label}>
+        <a href={`${home}changelog/`}>{t.footer.changelog}</a>
+        <a href={REPOSITORY}>{t.footer.source}</a>
+        <a href={`${home}privacy/`}>{t.footer.privacy}</a>
+        <a href={`${home}terms/`}>{t.footer.terms}</a>
+        <a href={`${home}licenses/`}>{t.footer.licenses}</a>
+        <a href={`${REPOSITORY}/issues`}>{t.footer.issues}</a>
+        <a href={`${REPOSITORY}/discussions`}>{t.footer.discussions}</a>
+        <a href="https://discord.gg/NjXFRqWarc">{t.footer.community}</a>
+      </nav>
+    </div>
+    <p class="wrap disclaimer">{t.footer.disclaimer}</p>
+  </footer>
+</Base>

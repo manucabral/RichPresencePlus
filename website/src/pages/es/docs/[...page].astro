@@ -1,0 +1,12 @@
+---
+import Docs from "../../../components/Docs.astro";
+import { DOC_PAGES } from "../../../data/docs";
+
+export function getStaticPaths() {
+  return DOC_PAGES.map(({ slug }) => ({ params: { page: slug || undefined } }));
+}
+
+const { page = "" } = Astro.params;
+---
+
+<Docs language="es" slug={page} />

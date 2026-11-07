@@ -1,0 +1,9 @@
+# Rich Presence Plus
+
+> Windows application and browser extension that show what you watch, play or listen to as your Discord status. Each presence is a sandboxed script that declares what it can read. Free. Needs the Discord desktop app.
+
+- [Home](https://manucabral.github.io/RichPresencePlus/): what it does, how data flows, questions
+- [Presences](https://manucabral.github.io/RichPresencePlus/presences/): every presence, each with the list of what it can read
+- [Source code](https://github.com/manucabral/RichPresencePlus)
+- [Privacy](https://manucabral.github.io/RichPresencePlus/privacy/)
+- [Terms](https://manucabral.github.io/RichPresencePlus/terms/)

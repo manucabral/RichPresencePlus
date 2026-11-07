@@ -1,0 +1,16 @@
+---
+import { join } from "node:path";
+import PresencePage from "../../components/PresencePage.astro";
+import { loadPresences, type Listed } from "../../data/presences";
+
+export function getStaticPaths() {
+  return loadPresences(join(process.cwd(), "..", "presences")).map((presence) => ({
+    params: { folder: presence.folder },
+    props: { presence },
+  }));
+}
+
+const { presence } = Astro.props as { presence: Listed };
+---
+
+<PresencePage language="en" presence={presence} />

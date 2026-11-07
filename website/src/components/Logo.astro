@@ -1,0 +1,24 @@
+---
+import { inkOn } from "../data/presences";
+
+interface Props {
+  name: string;
+  color: string;
+  folder: string;
+  /** On the first screen: load it with the page. */
+  eager?: boolean;
+}
+
+const { name, color, folder, eager = false } = Astro.props;
+const logos = import.meta.glob<string>("../../../presences/*/icon.{webp,png}", {
+  eager: true,
+  query: "?url",
+  import: "default",
+});
+const logo = Object.entries(logos).find(([path]) => path.includes(`/presences/${folder}/icon.`))?.[1];
+---
+
+<!-- The color is for the letter alone: behind a picture it would fill its transparent parts. -->
+<span class="logo" style={logo ? undefined : `background:${color};color:${inkOn(color)}`} aria-hidden="true">
+  {logo ? <img src={logo} alt="" width="64" height="64" loading={eager ? "eager" : "lazy"} decoding="async" /> : name.slice(0, 1)}
+</span>

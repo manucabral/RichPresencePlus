@@ -1,0 +1,289 @@
+---
+import { join } from "node:path";
+import Icon from "./Icon.astro";
+import Logo from "./Logo.astro";
+import Shell from "./Shell.astro";
+import { STRINGS, type Language } from "../i18n/strings";
+import { docsPath } from "../data/docs";
+import { loadPresences, oneOfEach, type Listed } from "../data/presences";
+import { RELEASES, latestInstaller } from "../data/release";
+import { homePath, presenceIndex, presencePath } from "../data/paths";
+import showcase from "../data/showcase.json";
+
+interface Props {
+  language: Language;
+}
+
+const { language } = Astro.props;
+const t = STRINGS[language];
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// The build runs from `website/`; a path relative to this file would point
+// inside the bundle.
+const presences = loadPresences(join(process.cwd(), "..", "presences"));
+const installer = await latestInstaller();
+
+const find = (name: string): Listed => {
+  const found = presences.find((presence) => presence.name === name);
+  if (!found) throw new Error(`The site expects a presence named ${name}`);
+  return found;
+};
+const featured = oneOfEach(presences, ["YouTube", "YouTube Music", "Roblox"]);
+// Real videos, with their pictures kept in `public/showcase`, so the page asks
+// no other server. Every second one shows as YouTube Music.
+const samples = showcase.map((video, index) => {
+  const music = index % 2 === 1;
+  return {
+    ...video,
+    presence: find(music ? "YouTube Music" : "YouTube"),
+    action: music ? t.hero.samples.musicAction : t.hero.samples.videoAction,
+    at: ["12:04", "2:41", "31:17"][index],
+    length: ["28:36", "3:52", "59:03"][index],
+    done: [42, 69, 53][index],
+  };
+});
+const orbit = ["Netflix", "Roblox", "YouTube Music", "SA-MP"].map(find);
+const stats = [
+  [String(presences.length), t.stats.presences],
+  ["3", t.stats.browsers],
+  ["2", t.stats.languages],
+  ["12 MB", t.stats.memory],
+];
+
+const youtube = find("YouTube").reads.find((read) => read.kind === "page");
+const declared = youtube?.kind === "page" ? youtube.values.slice(0, 4) : [];
+
+const paths: Record<Language, string> = { en: homePath("en"), es: homePath("es") };
+const site = (path: string) => new URL(`${base}${path}`, Astro.site).href;
+const data = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      name: "Rich Presence Plus",
+      applicationCategory: "UtilitiesApplication",
+      operatingSystem: "Windows",
+      description: t.meta.description,
+      url: site(paths[language]),
+      image: site("/og.png"),
+      offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+      ...(installer ? { softwareVersion: installer.version, downloadUrl: installer.url } : {}),
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: t.faq.items.map(([question, answer]) => ({
+        "@type": "Question",
+        name: question,
+        acceptedAnswer: { "@type": "Answer", text: answer },
+      })),
+    },
+  ],
+};
+
+const download = installer?.url ?? RELEASES;
+const downloadLabel = installer ? t.download.ready : t.download.pending;
+const downloadNote = installer
+  ? t.download.readyNote.replace("{version}", installer.version).replace("{size}", String(installer.size))
+  : t.download.pendingNote;
+---
+
+<Shell language={language} title={t.meta.title} description={t.meta.description} paths={paths} data={data} script="/hero.js">
+  <section class="hero wrap">
+    <div>
+      <h1>{t.hero.title}</h1>
+      <p class="lead">{t.hero.lead}</p>
+      <div class="actions">
+        <a class="button primary large" href={download}>{downloadLabel}</a>
+        <a class="button ghost large" href={`${base}${presenceIndex(language)}`}>{t.hero.second}</a>
+      </div>
+      <ul class="badges">{t.hero.badges.map((badge) => <li>{badge}</li>)}</ul>
+    </div>
+    <div class="stage" aria-hidden="true">
+      {orbit.map((presence, index) => (
+        <span class="orbit" style={`--spot:${index}`}>
+          <Logo name={presence.name} color={presence.color} folder={presence.folder} eager />
+        </span>
+      ))}
+      {samples.map((sample, index) => (
+        <div class="activity" style={`--turn:${index}`}>
+          <p class="activity-title">{sample.presence.name}</p>
+          <div class="activity-body">
+            <span class="picture">
+              <img src={`${base}/showcase/${sample.id}.webp`} alt="" width="64" height="64" decoding="async" />
+              <Logo name={sample.presence.name} color={sample.presence.color} folder={sample.presence.folder} eager />
+            </span>
+            <div class="activity-text">
+              <p class="activity-line">{sample.title}</p>
+              <p class="activity-by">{sample.channel}</p>
+              <p class="timeline">
+                <span>{sample.at}</span>
+                <span class="bar"><span style={`width:${sample.done}%`}></span></span>
+                <span>{sample.length}</span>
+              </p>
+            </div>
+          </div>
+          <p class="activity-button">{sample.action}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <section class="wrap" aria-label={t.stats.label}>
+    <dl class="stats">
+      {stats.map(([number, label]) => (
+        <div>
+          <dt>{label}</dt>
+          <dd>{number}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <section class="block wrap reveal">
+    <h2>{t.shots.title}</h2>
+    <p class="intro">{t.shots.lead}</p>
+    <div class="shots">
+      <figure>
+        <picture>
+          <source media="(max-width: 40rem)" srcset={`${base}/shots/panel-${language}-640.webp`} />
+          <img src={`${base}/shots/panel-${language}-1280.webp`} alt={t.shots.alt} width="1280" height="842" loading="lazy" decoding="async" />
+        </picture>
+        <figcaption><strong>{t.shots.panel}</strong> {t.shots.panelText}</figcaption>
+      </figure>
+      <figure>
+        <picture>
+          <source media="(max-width: 40rem)" srcset={`${base}/shots/list-${language}-640.webp`} />
+          <img src={`${base}/shots/list-${language}-1280.webp`} alt={t.shots.altList} width="1280" height="842" loading="lazy" decoding="async" />
+        </picture>
+        <figcaption><strong>{t.shots.list}</strong> {t.shots.listText}</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="block wrap reveal" id="features">
+    <h2>{t.features.title}</h2>
+    <ul class="features">
+      {t.features.items.map(([icon, name, text]) => (
+        <li class="panel">
+          <span class="feature-icon"><Icon name={icon as "click"} /></span>
+          <h3>{name}</h3>
+          <p>{text}</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="block wrap reveal">
+    <h2>{t.flow.title}</h2>
+    <p class="intro">{t.flow.lead}</p>
+    <div class="flow">
+      <div class="panel">
+        <h3>{t.flow.page}</h3>
+        <ul class="tags">{t.flow.pageItems.map((item) => <li>{item}</li>)}</ul>
+        <p class="note">{t.flow.pageNote}</p>
+      </div>
+      <Icon name="arrow" />
+      <div class="panel">
+        <h3>{t.flow.reads}</h3>
+        <ul class="tags">{declared.map((item) => <li><code>{item}</code></li>)}</ul>
+        <p class="note">{t.flow.readsNote}</p>
+      </div>
+      <Icon name="arrow" />
+      <div class="panel on">
+        <h3>{t.flow.shows}</h3>
+        <ul class="tags">{t.flow.showsItems.map((item) => <li>{item}</li>)}</ul>
+        <p class="note">{t.flow.showsNote}</p>
+      </div>
+    </div>
+    <p class="flow-link"><Icon name="lock" /> {t.flow.link}</p>
+  </section>
+
+  <section class="block wrap reveal">
+    <h2>{t.memory.title}</h2>
+    <p class="intro">{t.memory.lead}</p>
+    <div class="base">
+      <figure class="meter panel">
+        <div class="meter-row">
+          <span>{t.memory.open}</span>
+          <span class="meter-track"><span class="meter-bar" style="--value:1"></span></span>
+          <strong>110 MB</strong>
+        </div>
+        <div class="meter-row on">
+          <span>{t.memory.tray}</span>
+          <span class="meter-track"><span class="meter-bar" style="--value:0.11"></span></span>
+          <strong>12 MB</strong>
+        </div>
+        <figcaption>{t.memory.note}</figcaption>
+      </figure>
+      <ul class="pillars">
+        {t.memory.items.map(([icon, name, text]) => (
+          <li class="panel">
+            <span class="feature-icon"><Icon name={icon as "lock"} /></span>
+            <div>
+              <h3>{name}</h3>
+              <p>{text}</p>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <section class="block wrap" id="presences">
+    <h2>{t.presences.title}</h2>
+    <p class="intro">{t.presences.lead}</p>
+    <ul class="picks">
+      {featured.map((presence) => (
+        <li>
+          <a class="panel pick" href={`${base}${presencePath(language, presence.folder)}`}>
+            <Logo name={presence.name} color={presence.color} folder={presence.folder} />
+            <span class="pick-text">
+              <span class="pick-name">{presence.name}</span>
+              <span class="chip">{t.categories[presence.category as keyof typeof t.categories]}</span>
+            </span>
+          </a>
+        </li>
+      ))}
+    </ul>
+    <p class="center">
+      <a class="button ghost" href={`${base}${presenceIndex(language)}`}>{t.presences.all.replace("{count}", String(presences.length))}</a>
+    </p>
+  </section>
+
+  <section class="block wrap" id="create">
+    <h2>{t.create.title}</h2>
+    <p class="intro">{t.create.lead}</p>
+    <p class="center"><a class="button ghost" href={`${base}${docsPath(language, "setup")}`}>{t.create.action}</a></p>
+  </section>
+
+  <section class="block wrap reveal">
+    <h2>{t.steps.title}</h2>
+    <ol class="steps">
+      {t.steps.items.map(([name, text]) => (
+        <li class="panel">
+          <h3>{name}</h3>
+          <p>{text}</p>
+        </li>
+      ))}
+    </ol>
+  </section>
+
+  <section class="block wrap" id="faq">
+    <h2>{t.faq.title}</h2>
+    <div class="faq accordion">
+      {t.faq.items.map(([question, answer]) => (
+        <details name="faq">
+          <summary>{question}</summary>
+          <p class="accordion-body">{answer}</p>
+        </details>
+      ))}
+    </div>
+  </section>
+
+  <section class="block wrap closing" id="download">
+    <h2>{t.download.title}</h2>
+    <a class="button primary large" href={download}>{downloadLabel}</a>
+    <p>{downloadNote}</p>
+    <p>{t.download.needs}</p>
+  </section>
+</Shell>

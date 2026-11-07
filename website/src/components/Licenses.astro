@@ -1,0 +1,33 @@
+---
+import Shell from "./Shell.astro";
+import { STRINGS, type Language } from "../i18n/strings";
+import groups from "../data/third-party.json";
+
+interface Props {
+  language: Language;
+}
+
+const { language } = Astro.props;
+const text = STRINGS[language].legal.licenses;
+const paths = { en: "/licenses/", es: "/es/licenses/" };
+const NOTICES = "https://github.com/manucabral/RichPresencePlus/blob/main/docs/legal/THIRD_PARTY_NOTICES.md";
+---
+
+<Shell language={language} title={`${text.title} - Rich Presence Plus`} description={text.meta} paths={paths}>
+  <article class="page wrap narrow legal">
+    <h1>{text.title}</h1>
+    <p class="lead">{text.lead}</p>
+    <p><a href={NOTICES}>{text.full}</a></p>
+    <div class="accordion">
+      {groups.map((group) => (
+        <details name="licenses">
+          <summary>
+            {group.license}
+            <span class="chip">{text.count.replace("{count}", String(group.names.length))}</span>
+          </summary>
+          <p class="accordion-body">{group.names.join(", ")}</p>
+        </details>
+      ))}
+    </div>
+  </article>
+</Shell>

@@ -1,0 +1,69 @@
+---
+import "@fontsource-variable/inter/wght.css";
+import "../../../design/tokens.css";
+import "../../../design/accordion.css";
+import "../styles/site.css";
+import type { Language } from "../i18n/strings";
+import headline from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+
+interface Props {
+  language: Language;
+  title: string;
+  description: string;
+  /** Path of the same page in each language, relative to the site's base. */
+  paths?: Record<Language, string>;
+  /** Structured data of the page. */
+  data?: object;
+  index?: boolean;
+  /** A script of this site for the page, by its path. */
+  script?: string;
+}
+
+const { language, title, description, paths, data, index = true, script } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const site = Astro.site;
+const absolute = (path: string) => new URL(`${base}${path}`, site).href;
+const canonical = paths ? absolute(paths[language]) : undefined;
+const image = absolute("/og.png");
+
+// Nothing on this site comes from another server. A page runs a script only
+// if it names one, and then only from this site.
+const scripts = script ? " script-src 'self';" : "";
+const policy = `default-src 'none';${scripts} style-src 'unsafe-inline'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none';`;
+---
+
+<!doctype html>
+<html lang={language}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="Content-Security-Policy" content={policy} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {!index && <meta name="robots" content="noindex" />}
+    {canonical && <link rel="canonical" href={canonical} />}
+    {paths && <link rel="alternate" hreflang="en" href={absolute(paths.en)} />}
+    {paths && <link rel="alternate" hreflang="es" href={absolute(paths.es)} />}
+    {paths && <link rel="alternate" hreflang="x-default" href={absolute(paths.en)} />}
+    <meta name="theme-color" content="#08090a" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href={`${base}/favicon.svg`} type="image/svg+xml" />
+    <link rel="apple-touch-icon" href={`${base}/apple-touch-icon.png`} />
+    <link rel="preload" href={headline} as="font" type="font/woff2" crossorigin />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Rich Presence Plus" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:image" content={image} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale" content={language === "es" ? "es_419" : "en_US"} />
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    {data && <script is:inline type="application/ld+json" set:html={JSON.stringify(data)} />}
+  </head>
+  <body>
+    <slot />
+    {script && <script is:inline src={`${base}${script}`} defer></script>}
+  </body>
+</html>
