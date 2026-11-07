@@ -1,0 +1,24 @@
+[package]
+name = "rpp-config"
+description = "Saved settings and the presences found on disk."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+rpp-bridge = { path = "../rpp-bridge" }
+rpp-core = { path = "../rpp-core" }
+rpp-discord = { path = "../rpp-discord" }
+rpp-plugins = { path = "../rpp-plugins" }
+rpp-service = { path = "../rpp-service" }
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile = "3"
+
+[lints]
+workspace = true
