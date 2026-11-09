@@ -3,7 +3,7 @@ resolver = "3"
 members = ["crates/rpp-core", "crates/rpp-discord", "crates/rpp-plugins", "crates/rpp-host", "crates/rpp-service", "crates/rpp-bridge", "crates/rpp-config", "crates/rpp-testkit", "crates/rpp-app", "crates/rpp-catalog", "src-tauri"]
 
 [workspace.package]
-version = "0.1.0-rc.1"
+version = "0.2.0"
 edition = "2024"
 license = "MIT"
 authors = ["Manuel Cabral"]

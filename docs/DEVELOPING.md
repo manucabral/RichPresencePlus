@@ -57,6 +57,7 @@ These go further, and they run real browsers:
 | `tools/thread-cpu.ps1` | What each thread costs, by name |
 | `tools/soak.ps1` | Hours of memory readings |
 | `tools/fuzz.mjs [seconds] [target...]` | Coverage-guided fuzzing of what comes from outside; see below |
+| `tools/version.mjs [--tag vX.Y.Z]` | Checks that `Cargo.toml` and `tauri.conf.json` give the same version, and that a release tag names it. A release changes both files |
 
 `crates/rpp-service/examples/discord_check.rs` holds an activity on the real Discord, and
 `two_activities.rs` holds two at once. `crates/rpp-bridge/examples/pages.rs` is the bridge that

@@ -31,6 +31,11 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
+      # The updater compares the program's own version with latest.json, which
+      # takes the tag's: if they differed, it would offer the same build forever.
+      - name: Check that the tag is the program's version
+        shell: bash
+        run: node tools/version.mjs --tag "$GITHUB_REF_NAME"
       - uses: pnpm/action-setup@a15d269cd4658e1107c09f1fabf4cbd7bd1f308a # v4.4.0
         with:
           version: 10
