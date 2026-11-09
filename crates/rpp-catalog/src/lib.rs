@@ -16,4 +16,4 @@ pub use error::Error;
 pub use index::{Channel, Entry, FileInfo, Index, Keys};
 pub use install::{Installed, Standing};
 pub use seal::Key;
-pub use source::{Github, Source};
+pub use source::{Fetched, Github, Source};

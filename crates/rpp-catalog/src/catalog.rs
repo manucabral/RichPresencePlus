@@ -15,6 +15,7 @@ use crate::history;
 use crate::index::{Channel, Entry, Index, Keys};
 use crate::install::{self, Installed, Standing};
 use crate::seal::Key;
+use crate::source::Fetched;
 use crate::source::Source;
 
 /// How long a verified index is reused before it is downloaded again.
@@ -59,6 +60,8 @@ pub struct Listing {
 struct Cached {
     at: Instant,
     index: Index,
+    /// What the server called this copy; asking with it skips an unchanged download.
+    tag: Option<String>,
 }
 
 /// The signed catalog of one channel, bound to a presences folder.
@@ -160,24 +163,42 @@ impl Catalog {
         {
             return Ok(cached.index.clone());
         }
+        // Only a copy with a tag can be confirmed by the server instead of downloaded.
+        let kept = self
+            .cached
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .as_ref()
+            .and_then(|cached| {
+                let tag = cached.tag.clone()?;
+                Some((cached.index.clone(), tag))
+            });
+        let known = kept.as_ref().map(|(_, tag)| tag.as_str());
         // The download runs without the lock, so a slow network never blocks other callers.
-        let index = match self.source.index(self.channel) {
-            Ok(bytes) => {
+        let answer = self.source.index_if_changed(self.channel, known);
+        let (index, tag) = match (answer, kept) {
+            // The copy in memory was verified when it came; the server says it is current.
+            (Ok(Fetched::Unchanged), Some((index, tag))) => (index, Some(tag)),
+            (Ok(Fetched::Unchanged), None) => {
+                return Err(Error::Network("an unchanged answer to no copy".into()));
+            }
+            (Ok(Fetched::New { bytes, tag }), _) => {
                 let index = Index::verify(&bytes, &self.keys, self.channel)?;
                 self.seen.accept(self.channel, index.generated_at)?;
                 self.save(&bytes);
-                index
+                (index, tag)
             }
             // Without GitHub, the last verified copy still lists the catalog.
             // It is checked again as if it had just been downloaded.
-            Err(error @ (Error::Network(_) | Error::RateLimited)) => {
-                self.saved_index().ok_or(error)?
+            (Err(error @ (Error::Network(_) | Error::RateLimited)), _) => {
+                (self.saved_index().ok_or(error)?, None)
             }
-            Err(error) => return Err(error),
+            (Err(error), _) => return Err(error),
         };
         *self.cached.lock().unwrap_or_else(|e| e.into_inner()) = Some(Cached {
             at: Instant::now(),
             index: index.clone(),
+            tag,
         });
         Ok(index)
     }

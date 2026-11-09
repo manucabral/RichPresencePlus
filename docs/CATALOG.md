@@ -9,10 +9,13 @@ application lists them in its Catalog page and installs them from GitHub.
    `catalog-publication` environment, it builds an index of every file of every
    presence (path, size, SHA-256) at one commit and signs it with an Ed25519 key.
    The signed `catalog.json` goes to the `catalog` branch (`catalog-experimental`
-   for pre-releases).
+   for pre-releases). The branch holds one commit, the newest index; each
+   publish replaces it.
 2. The application downloads that file and checks the signature against the
    public key built into it. It refuses an index that is unsigned, signed by
-   another key, for another channel, or older than one it accepted before.
+   another key, for another channel, or older than one it accepted before. It
+   keeps the verified copy for five minutes, then asks again with the tag
+   GitHub gave it; an index that did not change is not downloaded again.
 3. Each presence version is also uploaded as one bundle file to a GitHub
    release, and the index names it. GitHub holds at most 1000 files per
    release, so bundles are spread over 16 releases per channel

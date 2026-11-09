@@ -2,11 +2,12 @@
 
 use std::collections::HashMap;
 use std::sync::Mutex;
-use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
 
 use super::*;
 use crate::index::tests::{COMMIT, entry_for, keys, payload, sign};
 use crate::index::{Channel, Index};
+use crate::source::Fetched;
 
 /// The key the tests seal with.
 pub(crate) fn key() -> Key {
@@ -21,6 +22,10 @@ pub(crate) struct Memory {
     /// What `catalog.json` serves; nothing means a network failure.
     pub index_bytes: Mutex<Option<Vec<u8>>>,
     pub index_calls: AtomicUsize,
+    /// Answers with a tag, and with "unchanged" to the tag of what it serves.
+    pub tagged: AtomicBool,
+    /// Index requests answered with "unchanged".
+    pub unchanged: AtomicUsize,
     /// Release bundles by name.
     pub bundles: Mutex<HashMap<String, Vec<u8>>>,
 }
@@ -44,6 +49,23 @@ impl Source for Memory {
             .ok_or_else(|| Error::Network("offline".into()))
     }
 
+    fn index_if_changed(&self, channel: Channel, known: Option<&str>) -> Result<Fetched, Error> {
+        if !self.tagged.load(Ordering::SeqCst) {
+            let bytes = self.index(channel)?;
+            return Ok(Fetched::New { bytes, tag: None });
+        }
+        let current = self.index_bytes.lock().unwrap().clone();
+        let tag = current
+            .as_ref()
+            .map(|bytes| format!("\"{}\"", tag_of(bytes)));
+        if known.is_some() && known == tag.as_deref() {
+            self.unchanged.fetch_add(1, Ordering::SeqCst);
+            return Ok(Fetched::Unchanged);
+        }
+        let bytes = self.index(channel)?;
+        Ok(Fetched::New { bytes, tag })
+    }
+
     fn file(&self, commit: &str, folder: &str, path: &str, _: u64) -> Result<Vec<u8>, Error> {
         let key = format!("{commit}/{folder}/{path}");
         self.asked.lock().unwrap().push(key.clone());
@@ -63,6 +85,14 @@ impl Source for Memory {
             .cloned()
             .ok_or_else(|| Error::Network(format!("404 {name}")))
     }
+}
+
+/// A stand-in for a server's entity tag: changes with the bytes.
+fn tag_of(bytes: &[u8]) -> u64 {
+    use std::hash::{Hash, Hasher};
+    let mut hasher = std::collections::hash_map::DefaultHasher::new();
+    bytes.hash(&mut hasher);
+    hasher.finish()
 }
 
 fn manifest(name: &str, version: &str) -> Vec<u8> {

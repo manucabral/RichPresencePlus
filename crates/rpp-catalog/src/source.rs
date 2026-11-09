@@ -8,6 +8,23 @@ use crate::index::{Channel, MAX_INDEX};
 /// Time allowed for one download.
 const TIMEOUT: Duration = Duration::from_secs(30);
 
+/// Longest entity tag kept; GitHub's are 66 characters.
+const MAX_TAG: usize = 128;
+
+/// What asking for the index again gave.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Fetched {
+    /// A copy of the index, and the tag that names it when the server gave one.
+    New {
+        /// The signed file, still to be verified.
+        bytes: Vec<u8>,
+        /// Sent back next time, so an index that did not change is not downloaded again.
+        tag: Option<String>,
+    },
+    /// The index is still the copy the tag named.
+    Unchanged,
+}
+
 /// Something that serves the index and the files of a commit.
 pub trait Source: Send + Sync {
     /// Downloads the signed `catalog.json` of a channel, at most [`MAX_INDEX`]
@@ -16,6 +33,17 @@ pub trait Source: Send + Sync {
     /// Raises:
     ///     Error: The download fails or the file is larger than the limit.
     fn index(&self, channel: Channel) -> Result<Vec<u8>, Error>;
+
+    /// Downloads the index unless it is still the copy named by `known`, a tag
+    /// from an earlier [`Fetched::New`].
+    ///
+    /// Raises:
+    ///     Error: As [`Source::index`].
+    fn index_if_changed(&self, channel: Channel, known: Option<&str>) -> Result<Fetched, Error> {
+        let _ = known;
+        self.index(channel)
+            .map(|bytes| Fetched::New { bytes, tag: None })
+    }
 
     /// Downloads one file of a presence at an exact commit.
     ///
@@ -91,10 +119,19 @@ impl Github {
         })
     }
 
+    fn index_url(&self, channel: Channel) -> String {
+        format!(
+            "https://raw.githubusercontent.com/{}/{}/{}/catalog.json",
+            self.owner,
+            self.repo,
+            channel.branch()
+        )
+    }
+
     fn get(&self, url: &str, limit: u64) -> Result<Vec<u8>, Error> {
         // Redirects are refused: raw.githubusercontent.com answers directly,
         // and a redirect would send a signed download somewhere unvetted.
-        let response = call(url)?;
+        let response = call(url, None)?;
         let status = response.status().as_u16();
         if status != 200 {
             return Err(refused(status, url));
@@ -112,17 +149,27 @@ fn refused(status: u16, url: &str) -> Error {
     }
 }
 
-fn call(url: &str) -> Result<ureq::http::Response<ureq::Body>, Error> {
+/// A tag worth sending back: short, quoted visible ASCII, as HTTP writes it.
+fn usable_tag(tag: &str) -> bool {
+    tag.len() <= MAX_TAG
+        && tag.len() >= 2
+        && tag.bytes().all(|b| b.is_ascii_graphic())
+        && tag.trim_start_matches("W/").starts_with('"')
+        && tag.ends_with('"')
+}
+
+fn call(url: &str, known: Option<&str>) -> Result<ureq::http::Response<ureq::Body>, Error> {
     let agent: ureq::Agent = ureq::Agent::config_builder()
         .timeout_global(Some(TIMEOUT))
         .max_redirects(0)
         .http_status_as_error(false)
         .build()
         .into();
-    agent
-        .get(url)
-        .call()
-        .map_err(|e| Error::Network(e.to_string()))
+    let mut request = agent.get(url);
+    if let Some(tag) = known.filter(|tag| usable_tag(tag)) {
+        request = request.header("If-None-Match", tag);
+    }
+    request.call().map_err(|e| Error::Network(e.to_string()))
 }
 
 fn read(mut response: ureq::http::Response<ureq::Body>, limit: u64) -> Result<Vec<u8>, Error> {
@@ -136,13 +183,30 @@ fn read(mut response: ureq::http::Response<ureq::Body>, limit: u64) -> Result<Ve
 
 impl Source for Github {
     fn index(&self, channel: Channel) -> Result<Vec<u8>, Error> {
-        let url = format!(
-            "https://raw.githubusercontent.com/{}/{}/{}/catalog.json",
-            self.owner,
-            self.repo,
-            channel.branch()
-        );
-        self.get(&url, MAX_INDEX)
+        self.get(&self.index_url(channel), MAX_INDEX)
+    }
+
+    fn index_if_changed(&self, channel: Channel, known: Option<&str>) -> Result<Fetched, Error> {
+        let url = self.index_url(channel);
+        let response = call(&url, known)?;
+        let status = response.status().as_u16();
+        // A 304 only counts as an answer to a tag that was sent.
+        if status == 304 && known.is_some_and(usable_tag) {
+            return Ok(Fetched::Unchanged);
+        }
+        if status != 200 {
+            return Err(refused(status, &url));
+        }
+        let tag = response
+            .headers()
+            .get("etag")
+            .and_then(|value| value.to_str().ok())
+            .filter(|tag| usable_tag(tag))
+            .map(str::to_owned);
+        Ok(Fetched::New {
+            bytes: read(response, MAX_INDEX)?,
+            tag,
+        })
     }
 
     fn file(&self, commit: &str, folder: &str, path: &str, size: u64) -> Result<Vec<u8>, Error> {
@@ -163,7 +227,7 @@ impl Source for Github {
             "https://github.com/{}/{}/releases/download/{tag}/{name}",
             self.owner, self.repo
         );
-        let first = call(&url)?;
+        let first = call(&url, None)?;
         let status = first.status().as_u16();
         if status == 200 {
             return read(first, limit);
@@ -178,7 +242,7 @@ impl Source for Github {
             .filter(|location| release_host(location))
             .ok_or_else(|| Error::Network(format!("{url} redirected outside GitHub")))?
             .to_owned();
-        let second = call(&location)?;
+        let second = call(&location, None)?;
         let status = second.status().as_u16();
         if status != 200 {
             return Err(refused(status, "a release file"));
@@ -208,6 +272,25 @@ mod tests {
         ] {
             assert!(Github::new(bad, "repo").is_err(), "{bad:?}");
             assert!(Github::new("owner", bad).is_err(), "{bad:?}");
+        }
+    }
+
+    #[test]
+    fn only_a_short_quoted_tag_is_sent_back() {
+        assert!(usable_tag(
+            "\"acca9652162dbecb151fc9853567cc23e329a4ec12c31b9ddb1231af4a266009\""
+        ));
+        assert!(usable_tag("W/\"abc\""));
+        for bad in [
+            "",
+            "\"",
+            "abc",
+            "\"a b\"",
+            "\"a\r\nX-Evil: 1\"",
+            "\"é\"",
+            &format!("\"{}\"", "a".repeat(MAX_TAG)),
+        ] {
+            assert!(!usable_tag(bad), "{bad:?}");
         }
     }
 

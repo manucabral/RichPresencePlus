@@ -15,6 +15,10 @@ impl Source for Shared {
         self.0.index(channel)
     }
 
+    fn index_if_changed(&self, channel: Channel, known: Option<&str>) -> Result<Fetched, Error> {
+        self.0.index_if_changed(channel, known)
+    }
+
     fn file(&self, commit: &str, folder: &str, path: &str, size: u64) -> Result<Vec<u8>, Error> {
         self.0.file(commit, folder, path, size)
     }
@@ -188,6 +192,24 @@ fn the_index_is_reused_for_a_while_and_refreshed_on_request() {
     f.catalog.install("alpha", &[]).unwrap();
     assert_eq!(f.memory.index_calls.load(Ordering::SeqCst), 1);
     f.catalog.listing(true).unwrap();
+    assert_eq!(f.memory.index_calls.load(Ordering::SeqCst), 2);
+}
+
+#[test]
+fn an_index_the_server_says_did_not_change_is_not_downloaded_again() {
+    let f = fixture();
+    f.memory.tagged.store(true, Ordering::SeqCst);
+    publish(&f.memory, 100, &[("Alpha", "alpha", "1.0.0")]);
+    f.catalog.listing(true).unwrap();
+    let listed = f.catalog.listing(true).unwrap();
+    assert_eq!(listed.len(), 1);
+    assert_eq!(f.memory.index_calls.load(Ordering::SeqCst), 1);
+    assert_eq!(f.memory.unchanged.load(Ordering::SeqCst), 1);
+
+    // A new index has a new tag and is downloaded and verified.
+    publish(&f.memory, 200, &[("Alpha", "alpha", "1.1.0")]);
+    let listed = f.catalog.listing(true).unwrap();
+    assert_eq!(listed[0].entry.version.to_string(), "1.1.0");
     assert_eq!(f.memory.index_calls.load(Ordering::SeqCst), 2);
 }
 
