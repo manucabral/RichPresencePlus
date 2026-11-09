@@ -13,7 +13,8 @@ import {
   readPageSize,
 } from "../src/shared/browse.ts";
 import { catalogPath, inSection, presencePath } from "../src/shared/navigation.ts";
-import { catalogError, sizeText, stateKey } from "../src/features/catalog/catalog.ts";
+import { catalogError, sizeText, stateKey, toAdd } from "../src/features/catalog/catalog.ts";
+import type { CatalogItem } from "../src/shared/types.ts";
 
 const item = (name: string, kind: string | null, tags: string[] = []) => ({
   name,
@@ -100,6 +101,20 @@ test("a detail page lights its section in the sidebar", () => {
   assert.ok(!inSection("/presencesX", "/presences"));
   assert.ok(inSection("/", "/"));
   assert.ok(!inSection("/presences", "/"));
+  // Adding presences is a tab of Presences, so the sidebar keeps it lit.
+  assert.ok(inSection("/catalog", "/presences"));
+  assert.ok(inSection("/catalog/YouTube", "/presences"));
+  assert.ok(!inSection("/catalogX", "/presences"));
+  assert.ok(!inSection("/catalog", "/privacy"));
+});
+
+test("the Add tab lists what is not installed and what needs a step", () => {
+  const entry = (name: string, state: CatalogItem["state"]) => ({ name, state }) as CatalogItem;
+  const items = [entry("A", "available"), entry("B", "installed"), entry("C", "update"), entry("D", "modified")];
+  assert.deepEqual(
+    toAdd(items).map((item) => item.name),
+    ["A", "C", "D"],
+  );
 });
 
 test("catalog sizes and states read plainly", () => {

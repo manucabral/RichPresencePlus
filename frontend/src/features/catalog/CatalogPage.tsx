@@ -13,7 +13,8 @@ import { useLoaded } from "../../shared/hooks";
 import { useT } from "../../shared/i18n";
 import type { CatalogItem } from "../../shared/types";
 import { catalogPath } from "../../shared/navigation";
-import { catalogError, stateKey } from "./catalog";
+import PresenceTabs from "../presences/PresenceTabs";
+import { catalogError, stateKey, toAdd } from "./catalog";
 
 /** One line per item; installing and versions are on its own page. */
 interface RowProps {
@@ -54,11 +55,19 @@ export default function CatalogPage() {
   const [filter, setFilter] = useState<Filter>(NO_FILTER);
   const paging = usePaging();
   const data = catalog.data;
-  const items = data?.items ?? [];
+  // What is installed lives in the first tab; here is what is left to add or update.
+  const items = useMemo(() => toAdd(data?.items ?? []), [data]);
   const found = useMemo(() => browse(items, filter, favorites), [items, filter, favorites]);
   const counts = useMemo(() => countByCategory(items), [items]);
 
-  if (!data) return <p className="text-sm text-neutral-500">{catalog.error ? catalogError(catalog.error, t) : t("app.loading")}</p>;
+  if (!data)
+    return (
+      <div className={pageWidth}>
+        <PageTitle title={t("presences.title")} subtitle={t("catalog.subtitle")} />
+        <PresenceTabs current="add" />
+        <p className="text-sm text-neutral-500">{catalog.error ? catalogError(catalog.error, t) : t("app.loading")}</p>
+      </div>
+    );
 
   const shown = paginate(found, paging.page, paging.size);
   const change = (next: Filter) => {
@@ -68,7 +77,8 @@ export default function CatalogPage() {
 
   return (
     <div className={pageWidth}>
-      <PageTitle title={t("catalog.title")} subtitle={t("catalog.subtitle")} />
+      <PageTitle title={t("presences.title")} subtitle={t("catalog.subtitle")} />
+      <PresenceTabs current="add" />
       {!data.available ? (
         <InfoCard text={t("catalog.unavailable")} />
       ) : (
@@ -80,7 +90,7 @@ export default function CatalogPage() {
             onChange={change}
           />
           {shown.items.length === 0 ? (
-            <p className="text-sm text-neutral-500">{t("catalog.none")}</p>
+            <p className="text-sm text-neutral-500">{items.length === 0 ? t("catalog.allAdded") : t("catalog.none")}</p>
           ) : (
             <ul className="divide-y divide-neutral-800/70 overflow-hidden rounded-lg border border-neutral-800 bg-neutral-900/40">
               {shown.items.map((item) => (

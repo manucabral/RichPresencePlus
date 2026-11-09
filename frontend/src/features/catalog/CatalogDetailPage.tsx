@@ -25,7 +25,7 @@ export default function CatalogDetailPage() {
   const [version, setVersion] = useState("");
   const [asked, setAsked] = useState<{ access: Access; grants: Grant[] } | null>(null);
 
-  const back = <BackLink to="/catalog" label={t("catalog.title")} />;
+  const back = <BackLink to="/catalog" label={t("presences.tabAdd")} />;
   if (!catalog.data) return <p className="text-sm text-neutral-500">{catalog.error ? catalogError(catalog.error, t) : t("app.loading")}</p>;
   const item = catalog.data.items.find((entry) => entry.name === name);
   if (!item) {

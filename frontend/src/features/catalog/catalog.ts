@@ -1,5 +1,10 @@
 import { errorMessage } from "../../shared/errors.ts";
-import type { CatalogState } from "../../shared/types";
+import type { CatalogItem, CatalogState } from "../../shared/types";
+
+/** What the Add tab lists: presences not installed yet, and installed ones that need a step. */
+export function toAdd(items: CatalogItem[]): CatalogItem[] {
+  return items.filter((item) => item.state !== "installed");
+}
 
 /** Size in the unit a person reads: "12 KB" or "1.4 MB". */
 export function sizeText(bytes: number): string {

@@ -13,5 +13,8 @@ export function catalogPath(name: string): string {
 
 /** Whether a page belongs to a sidebar section: `/presences/YouTube` is under Presences. */
 export function inSection(pathname: string, path: string): boolean {
-  return path === "/" ? pathname === "/" : pathname === path || pathname.startsWith(`${path}/`);
+  if (path === "/") return pathname === "/";
+  const under = (base: string) => pathname === base || pathname.startsWith(`${base}/`);
+  // Adding presences is the second tab of Presences.
+  return under(path) || (path === "/presences" && under("/catalog"));
 }

@@ -14,6 +14,7 @@ import { errorMessage } from "../../shared/errors";
 import { useFavorites } from "../../shared/favorites";
 import { usePaging } from "../../shared/paging";
 import ProgramCard from "./ProgramCard";
+import PresenceTabs from "./PresenceTabs";
 import { useLoaded } from "../../shared/hooks";
 import { useT } from "../../shared/i18n";
 import { presencePath } from "../../shared/navigation";
@@ -97,10 +98,20 @@ export default function PresencesPage() {
   return (
     <div className={pageWidth}>
       <PageTitle title={t("presences.title")} subtitle={t("presences.subtitle")} />
+      <PresenceTabs current="mine" />
       {!presences.data ? (
         <p className="text-sm text-neutral-500">{presences.error ?? t("app.loading")}</p>
       ) : all.length === 0 ? (
-        <p className="text-sm text-neutral-500">{t("presences.none")}</p>
+        <div className="rounded-lg border border-neutral-800 bg-neutral-900/40 px-4 py-6 text-center">
+          <p className="text-[13px] text-neutral-200">{t("presences.none")}</p>
+          <p className="mt-1 text-xs text-neutral-500">{t("presences.noneHint")}</p>
+          <Link
+            to="/catalog"
+            className="mt-4 inline-block rounded-md bg-accent px-3 py-1.5 text-xs font-medium text-accent-ink hover:opacity-90"
+          >
+            {t("presences.addFirst")}
+          </Link>
+        </div>
       ) : (
         <>
           <ProgramCard onCreated={presences.reload} />
