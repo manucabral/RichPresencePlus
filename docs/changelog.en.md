@@ -1,6 +1,6 @@
 # What's new
 
-## 0.2.0 (coming soon)
+## 0.2.0 (November 9, 2026)
 
 Rich Presence Plus was rewritten from scratch.
 
@@ -25,5 +25,12 @@ Rich Presence Plus was rewritten from scratch.
 - Developer follows four steps: create, code, test and publish. It opens your presence in Visual Studio Code and gets it ready to propose for the catalog.
 - Tags are chosen from a list.
 - A site you allowed does not ask again.
-- Uses 12 MB and under 0.1% of a core with the window closed.
+- Add the address of a site you run yourself, such as a media server at home, to a presence that allows it.
+- Presences can read the information a site loads in the background, not only what the page shows.
+- An option can depend on the value of another, and each option can explain itself in one line.
+- Search finds a presence by its other names, and descriptions come in your language.
+- YouTube and YouTube Music say when an ad plays instead of showing it as the video or the song.
+- The window uses less memory while minimized, and stops refreshing until you open it again.
+- The catalog is not downloaded again when nothing changed.
+- With the window closed: about 7 MB of memory and under 0.1% of a core.
 - Spanish and English.

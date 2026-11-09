@@ -1,6 +1,6 @@
 # Novedades
 
-## 0.2.0 (próximamente)
+## 0.2.0 (9 de noviembre de 2026)
 
 Rich Presence Plus se reescribió desde cero.
 
@@ -25,5 +25,12 @@ Rich Presence Plus se reescribió desde cero.
 - Desarrollo sigue cuatro pasos: crear, programar, probar y publicar. Abre tu presencia en Visual Studio Code y la deja lista para proponerla al catálogo.
 - Las etiquetas se eligen de una lista.
 - Un sitio permitido no vuelve a pedir permiso.
-- Usa 12 MB y menos de 0,1% de un núcleo con la ventana cerrada.
+- Agregá la dirección de un sitio propio, como un servidor multimedia en tu casa, a una presencia que lo permita.
+- Las presencias pueden leer la información que un sitio carga por detrás, no solo lo que muestra la página.
+- Una opción puede depender del valor de otra, y cada opción puede explicarse en una línea.
+- La búsqueda encuentra una presencia por sus otros nombres, y las descripciones vienen en tu idioma.
+- YouTube y YouTube Music avisan cuando pasa un anuncio, en vez de mostrarlo como el video o la canción.
+- La ventana usa menos memoria minimizada y deja de actualizarse hasta que la abrís.
+- El catálogo no se vuelve a descargar si no cambió.
+- Con la ventana cerrada: unos 7 MB de memoria y menos de 0,1% de un núcleo.
 - Español e inglés.
