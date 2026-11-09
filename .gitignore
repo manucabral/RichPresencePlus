@@ -6,3 +6,8 @@
 /src-tauri/gen/schemas
 .env
 /dist
+# What fuzzing builds, learns and finds; fuzz/seeds holds the starting inputs.
+/fuzz/target
+/fuzz/corpus
+/fuzz/artifacts
+/fuzz/coverage

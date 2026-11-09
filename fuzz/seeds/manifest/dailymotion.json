@@ -1,0 +1,41 @@
+{
+  "name": "Dailymotion",
+  "version": "1.0.0",
+  "description": "Shows the Dailymotion video you are watching.",
+  "client_id": "1567580382377803786",
+  "kind": "video",
+  "interval": 5,
+  "entry": "main.js",
+  "domains": ["dailymotion.com"],
+  "page": {
+    "matches": ["*://www.dailymotion.com/*"],
+    "extract": {
+      "title": {
+        "from": "text",
+        "selector": "h1"
+      },
+      "channel": {
+        "from": "text",
+        "selector": "[data-testid='channel-line'] a"
+      },
+      "channel_url": {
+        "from": "attr",
+        "selector": "[data-testid='channel-line'] a",
+        "name": "href"
+      }
+    },
+    "frames": {
+      "matches": ["*://geo.dailymotion.com/player/*"],
+      "extract": {
+        "player": {
+          "from": "media",
+          "selector": ".video_view > video"
+        }
+      }
+    }
+  },
+  "author": "manucabral",
+  "color": "#0D0D0D",
+  "tags": ["video", "streaming"],
+  "icon": "icon.webp"
+}

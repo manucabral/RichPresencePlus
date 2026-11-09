@@ -1,0 +1,16 @@
+{
+  "name": "Desktop Media",
+  "version": "1.0.0",
+  "description": "Shows what plays in any desktop player that reports to Windows.",
+  "client_id": "1567580382377803786",
+  "kind": "music",
+  "interval": 5,
+  "entry": "main.js",
+  "permissions": {
+    "media": true
+  },
+  "author": "manucabral",
+  "color": "#19C283",
+  "tags": ["music"],
+  "icon": "icon.webp"
+}

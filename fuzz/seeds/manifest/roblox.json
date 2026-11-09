@@ -1,0 +1,26 @@
+{
+  "name": "Roblox",
+  "version": "2.1.0",
+  "description": "Shows the Roblox game you are playing.",
+  "client_id": "1301032321801130134",
+  "kind": "game",
+  "interval": 10,
+  "entry": "main.js",
+  "permissions": {
+    "http": ["games.roblox.com", "thumbnails.roblox.com"],
+    "process": true,
+    "window": true,
+    "files": ["%LOCALAPPDATA%/Roblox/logs"]
+  },
+  "options": [
+    {
+      "type": "boolean",
+      "key": "show_players",
+      "default": true
+    }
+  ],
+  "author": "manucabral",
+  "color": "#6441A4",
+  "tags": ["game", "multiplayer"],
+  "icon": "icon.webp"
+}

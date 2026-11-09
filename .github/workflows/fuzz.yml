@@ -1,0 +1,46 @@
+name: fuzz
+
+# Coverage-guided fuzzing of what reaches the application from outside: manifests,
+# the catalog index, the extension, the native host, Discord's pipe and command lines.
+# Once a week, and by hand. An input that breaks a target is kept as an artifact.
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: Seconds per target
+        default: "300"
+
+permissions:
+  contents: read
+
+jobs:
+  fuzz:
+    # rpp-host calls Win32 and WinRT, so the targets build on Windows too.
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
+        with:
+          toolchain: nightly
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
+        with:
+          workspaces: fuzz
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 24
+      - run: cargo install cargo-fuzz --locked
+      # Through the environment, so the typed value is never part of the command.
+      - run: node tools/fuzz.mjs "$env:SECONDS"
+        env:
+          SECONDS: ${{ inputs.seconds || '300' }}
+      - if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: fuzz-artifacts
+          path: fuzz/artifacts

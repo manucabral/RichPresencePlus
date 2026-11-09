@@ -1,0 +1,65 @@
+[package]
+name = "rpp-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2024"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+base64 = "0.23"
+ed25519-dalek = { version = "3", default-features = false, features = ["alloc", "zeroize"] }
+libfuzzer-sys = "0.4"
+rpp-bridge = { path = "../crates/rpp-bridge" }
+rpp-catalog = { path = "../crates/rpp-catalog" }
+rpp-discord = { path = "../crates/rpp-discord" }
+rpp-host = { path = "../crates/rpp-host" }
+rpp-plugins = { path = "../crates/rpp-plugins" }
+serde_json = "1"
+tokio = { version = "1", features = ["rt"] }
+
+# Kept out of the workspace: it builds only with a nightly toolchain and cargo-fuzz.
+[workspace]
+
+[[bin]]
+name = "manifest"
+path = "fuzz_targets/manifest.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "catalog_index"
+path = "fuzz_targets/catalog_index.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "extension_message"
+path = "fuzz_targets/extension_message.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "native_host"
+path = "fuzz_targets/native_host.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "discord_frame"
+path = "fuzz_targets/discord_frame.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "command_line"
+path = "fuzz_targets/command_line.rs"
+test = false
+doc = false
+bench = false

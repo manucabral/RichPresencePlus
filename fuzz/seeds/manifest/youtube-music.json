@@ -1,0 +1,32 @@
+{
+  "name": "YouTube Music",
+  "version": "2.0.0",
+  "description": "Shows the song you are listening to on YouTube Music.",
+  "client_id": "828083725790609459",
+  "kind": "music",
+  "interval": 5,
+  "entry": "main.js",
+  "domains": ["music.youtube.com"],
+  "page": {
+    "matches": ["*://music.youtube.com/*"],
+    "extract": {
+      "session": {
+        "from": "session"
+      },
+      "player": {
+        "from": "media"
+      }
+    }
+  },
+  "options": [
+    {
+      "type": "boolean",
+      "key": "show_album",
+      "default": true
+    }
+  ],
+  "author": "manucabral",
+  "color": "#A56786",
+  "tags": ["music", "streaming"],
+  "icon": "icon.webp"
+}

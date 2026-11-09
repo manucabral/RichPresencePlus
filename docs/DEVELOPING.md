@@ -56,12 +56,23 @@ These go further, and they run real browsers:
 | `tools/try-memory.mjs` | Memory of the release build through idle, moves and the tray |
 | `tools/thread-cpu.ps1` | What each thread costs, by name |
 | `tools/soak.ps1` | Hours of memory readings |
+| `tools/fuzz.mjs [seconds] [target...]` | Coverage-guided fuzzing of what comes from outside; see below |
 
 `crates/rpp-service/examples/discord_check.rs` holds an activity on the real Discord, and
 `two_activities.rs` holds two at once. `crates/rpp-bridge/examples/pages.rs` is the bridge that
 `try-extension` and `try-firefox` talk to: a new extractor to try goes in its `framed` rule, and a
 check in both scripts. Firefox starts the script in the page's world later than Chrome, so a
 reader that needs both worlds has to wait for the second one.
+
+`fuzz/` holds the fuzz targets: the manifest, the catalog index (signed inside the target, so
+the search reaches what is checked after the signature), extension messages, the native host,
+Discord's pipe and command lines. It is its own crate, outside the workspace, because it needs
+a nightly toolchain and `cargo-fuzz`; the stable build never sees it. The targets build with
+AddressSanitizer, whose Windows runtime comes with the C++ build tools of Visual Studio;
+`tools/fuzz.mjs` finds it. `fuzz/seeds` holds the starting inputs, `fuzz/corpus` what the runs
+learn, and `fuzz/artifacts` an input that broke a target, which is replayed with
+`cargo +nightly fuzz run <target> <file>`. The `fuzz` workflow runs every target for five
+minutes once a week. A new kind of outside input gets a target here and a seed.
 
 ## Reaching the real application
 

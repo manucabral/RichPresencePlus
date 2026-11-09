@@ -1,0 +1,40 @@
+{
+  "name": "Nepu",
+  "version": "1.0.0",
+  "description": "Shows the movie or episode you are watching on Nepu.",
+  "client_id": "1467328049774203023",
+  "kind": "video",
+  "interval": 5,
+  "entry": "main.js",
+  "domains": ["nepu.to"],
+  "page": {
+    "matches": ["*://nepu.to/*", "*://*.nepu.to/*"],
+    "extract": {
+      "title": {
+        "from": "text",
+        "selector": ".caption-content h1"
+      },
+      "heading": {
+        "from": "text",
+        "selector": ".caption-content h2"
+      },
+      "episode": {
+        "from": "text",
+        "selector": ".caption-content h3"
+      },
+      "episode_nav": {
+        "from": "text",
+        "selector": ".episode-nav .episode"
+      },
+      "cover": {
+        "from": "attr",
+        "selector": ".media-cover",
+        "name": "style"
+      }
+    }
+  },
+  "author": "manucabral",
+  "color": "#0A0A0A",
+  "tags": ["video", "streaming", "movie", "series"],
+  "icon": "icon.webp"
+}

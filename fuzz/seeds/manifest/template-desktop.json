@@ -1,0 +1,16 @@
+{
+  "format": 1,
+  "name": "__NAME__",
+  "version": "1.0.0",
+  "description": "Shows that a program is open.",
+  "client_id": "1567580382377803786",
+  "kind": "other",
+  "interval": 10,
+  "entry": "main.js",
+  "permissions": {
+    "process": true
+  },
+  "options": [
+    { "type": "boolean", "key": "show_state", "default": true }
+  ]
+}

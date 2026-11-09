@@ -1,0 +1,20 @@
+{
+  "format": 1,
+  "name": "__NAME__",
+  "version": "1.0.0",
+  "description": "Shows the page you are on.",
+  "client_id": "1567580382377803786",
+  "kind": "other",
+  "interval": 5,
+  "entry": "main.js",
+  "domains": ["example.com"],
+  "page": {
+    "matches": ["*://www.example.com/*"],
+    "extract": {
+      "title": { "from": "text", "selector": "h1" }
+    }
+  },
+  "options": [
+    { "type": "boolean", "key": "include_page_title", "default": true }
+  ]
+}

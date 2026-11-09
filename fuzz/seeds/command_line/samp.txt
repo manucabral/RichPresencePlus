@@ -1,0 +1,1 @@
+"C:\Games\samp.exe" -c -h 127.0.0.1 -p 7777 -n "Player Name"

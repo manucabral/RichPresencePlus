@@ -1,0 +1,34 @@
+{
+  "name": "Netflix",
+  "version": "1.0.0",
+  "description": "Shows what you are watching on Netflix.",
+  "client_id": "1470878282420453497",
+  "kind": "video",
+  "interval": 5,
+  "entry": "main.js",
+  "domains": ["netflix.com"],
+  "page": {
+    "matches": ["*://www.netflix.com/*"],
+    "extract": {
+      "title": {
+        "from": "text",
+        "selector": "[data-uia='video-title'] h4, [data-uia='video-title']"
+      },
+      "episode": {
+        "from": "text",
+        "selector": "[data-uia='video-title'] span:nth-of-type(1)"
+      },
+      "episode_title": {
+        "from": "text",
+        "selector": "[data-uia='video-title'] span:nth-of-type(2)"
+      },
+      "player": {
+        "from": "media"
+      }
+    }
+  },
+  "author": "manucabral",
+  "color": "#E50914",
+  "tags": ["video", "streaming", "movie", "series"],
+  "icon": "icon.webp"
+}
