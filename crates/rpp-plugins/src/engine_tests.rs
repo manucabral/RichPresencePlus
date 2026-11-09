@@ -400,6 +400,103 @@ fn cut_shortens_long_texts_and_passes_nothing_through() {
 }
 
 #[test]
+fn rotate_takes_the_next_item_every_few_seconds_and_skips_empty_ones() {
+    let source = r#"
+        function read() { return {}; }
+        function activity() {
+            const items = ["a", "b", "c"];
+            return {
+                details: [
+                    rotate(items, 10, 0), rotate(items, 10, 15), rotate(items, 10, 25), rotate(items, 10, 35),
+                    rotate(["a", null, "", undefined, "b"], 10, 10),
+                    String(rotate([], 10, 0)), String(rotate(null, 10, 0)), String(rotate([null, ""], 10, 0)),
+                    rotate(["a", "b"], 0, 30),
+                ].join("|"),
+            };
+        }
+    "#;
+    let shown = shown_by(source, json!({}));
+    assert_eq!(shown["details"], "a|b|c|a|b|null|null|null|b");
+}
+
+#[test]
+fn format_fills_a_text_the_person_wrote_and_drops_what_is_missing() {
+    let source = r##"
+        function read() { return {}; }
+        function activity() {
+            return {
+                details: [
+                    format("{title} - {channel}", { title: "T", channel: "C" }),
+                    format("{title} - {channel}", { title: "T", channel: null }),
+                    format("{title} - {channel} - {year}", { title: "T", channel: "", year: 2020 }),
+                    format("{channel} | {title}", { title: "T" , channel: undefined }),
+                    format("{tittle}", { title: "T" }),
+                    String(format("{a}", { a: null })),
+                    String(format(5, {})),
+                ].join("#"),
+                state: format("{url} - {name}", { url: "https://a.io/x", name: "" }),
+            };
+        }
+    "##;
+    let shown = shown_by(source, json!({}));
+    assert_eq!(shown["details"], "T - C#T#T - 2020#T#{tittle}#null#null");
+    assert_eq!(shown["state"], "https://a.io/x");
+}
+
+#[test]
+fn icon_gives_the_address_of_a_shared_picture() {
+    let source = r#"
+        function read() { return {}; }
+        function activity() {
+            return { large_image: icon("play"), small_image: icon("repeat-one"), details: String(icon("nope")) };
+        }
+    "#;
+    let shown = shown_by(source, json!({}));
+    assert_eq!(
+        shown["large_image"],
+        "https://manucabral.github.io/RichPresencePlus/icons/play.png"
+    );
+    assert_eq!(
+        shown["small_image"],
+        "https://manucabral.github.io/RichPresencePlus/icons/repeat-one.png"
+    );
+    assert_eq!(shown["details"], "null");
+}
+
+#[test]
+fn a_script_that_takes_the_name_of_a_helper_is_told_which_one() {
+    for name in ["format", "icon", "cut"] {
+        let source = format!(
+            "function {name}(x) {{ return x; }} function read() {{ return {{}}; }} function activity() {{ return null; }}"
+        );
+        let error = Plugin::load(manifest("{}"), &source, Rc::new(Recorder::default()))
+            .err()
+            .unwrap()
+            .to_string();
+        assert!(
+            error.contains(&format!("{name} is a helper of the application")),
+            "{error}"
+        );
+    }
+}
+
+/// Every name the prelude defines is in [`RESERVED`], so the message above covers it.
+#[test]
+fn reserved_lists_every_helper_of_the_prelude() {
+    let prelude = include_str!("prelude.js");
+    let mut defined: Vec<&str> = prelude
+        .split("define(\"")
+        .skip(1)
+        .map(|rest| &rest[..rest.find('"').unwrap()])
+        .collect();
+    defined.extend(["host", "console", "t"]);
+    defined.sort_unstable();
+    let mut reserved = RESERVED.to_vec();
+    reserved.sort_unstable();
+    assert_eq!(defined, reserved);
+}
+
+#[test]
 fn parse_url_splits_host_path_and_decoded_query() {
     let source = r#"
         function read() { return {}; }

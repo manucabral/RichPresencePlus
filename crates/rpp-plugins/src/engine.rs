@@ -124,6 +124,36 @@ impl std::fmt::Debug for Plugin {
 
 /// JavaScript that builds the frozen `host` object from the granted permissions
 /// and removes the raw bridge from the global scope.
+/// Names the prelude takes before the script runs. A script cannot declare its own
+/// function or variable with one of them.
+pub const RESERVED: [&str; 12] = [
+    "host",
+    "console",
+    "t",
+    "cut",
+    "parseUrl",
+    "bestPage",
+    "parseTime",
+    "progress",
+    "rotate",
+    "format",
+    "icon",
+    "playback",
+];
+
+/// The engine says only "cannot define variable", which reads like a bug of the
+/// script; this names the helper and what to do.
+fn explain_load(message: String) -> String {
+    RESERVED
+        .iter()
+        .find(|name| message.contains(&format!("cannot define variable '{name}'")))
+        .map_or(message, |name| {
+            format!(
+                "{name} is a helper of the application; give your function or variable another name"
+            )
+        })
+}
+
 fn prelude(permissions: &Permissions) -> String {
     let mut members: Vec<String> = Vec::new();
     if !permissions.http.is_empty() {
@@ -308,7 +338,7 @@ impl Plugin {
         let timed_out = plugin.disarm();
         match loaded {
             _ if timed_out => Err(PluginError::Timeout),
-            Err(message) => Err(PluginError::Load(message)),
+            Err(message) => Err(PluginError::Load(explain_load(message))),
             Ok(()) => Ok(plugin),
         }
     }

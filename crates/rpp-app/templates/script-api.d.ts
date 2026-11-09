@@ -143,6 +143,27 @@ declare function parseTime(text: unknown): number | null;
  */
 declare function progress(current: number, duration: number, now: number): { start: number; end: number };
 
+/**
+ * One of the items, the next one every `seconds` seconds. Empty items are skipped.
+ * @param seconds How long each one stays; 30 when it is less than 1.
+ * @param now `context.now`.
+ * @example rotate([video.title, video.channel], 30, context.now)
+ */
+declare function rotate<T>(items: (T | null | undefined)[], seconds: number, now: number): T | null;
+
+/**
+ * Fills a text the person wrote, such as an option, with `{name}` placeholders. A
+ * missing value leaves nothing, and a separator left at either end goes with it.
+ * @example format("{title} - {channel}", { title: "A walk", channel: null }) // "A walk"
+ */
+declare function format(template: unknown, values: Record<string, unknown>): string | null;
+
+/**
+ * The address of a small picture every presence can use, for `small_image`.
+ * @example small_image: icon(video.playing ? "play" : "pause")
+ */
+declare function icon(name: "play" | "pause" | "stop" | "live" | "repeat" | "repeat-one" | "shuffle"): string;
+
 /** `host.window`, with the `window` permission. */
 interface HostWindow {
   /** The window in front. Its title often holds a file or project name. */

@@ -141,6 +141,49 @@
     return { start, end: start + Math.round(duration) };
   });
 
+  // `rotate(items, seconds, now)`: one of the items, the next one every `seconds`
+  // seconds of `now`. Empty items are skipped, so optional values can be passed as
+  // they are. The change shows on the next read, so `seconds` below the manifest's
+  // `interval` gains nothing.
+  define("rotate", function rotate(items, seconds, now) {
+    const list = (Array.isArray(items) ? items : []).filter(
+      (item) => item !== null && item !== undefined && item !== "",
+    );
+    if (list.length === 0) return null;
+    const step = typeof seconds === "number" && seconds >= 1 ? seconds : 30;
+    const turn = Math.floor((typeof now === "number" ? now : 0) / step);
+    return list[((turn % list.length) + list.length) % list.length];
+  });
+
+  // `format(template, values)`: a text the person wrote, such as "{title} - {channel}",
+  // with each `{name}` filled from `values`. A missing value leaves nothing, and a
+  // separator left at either end goes with it. A name that is not in `values` stays
+  // as written, so a typo shows.
+  define("format", function format(template, values) {
+    if (typeof template !== "string") return null;
+    const given = values && typeof values === "object" ? values : {};
+    const filled = template.replace(/\{([A-Za-z0-9_]+)\}/g, (whole, name) => {
+      if (!Object.prototype.hasOwnProperty.call(given, name)) return whole;
+      const value = given[name];
+      return value === null || value === undefined ? "" : String(value);
+    });
+    // "a - - b" keeps one separator; "/" and ":" only go at the ends, since an
+    // address in a value has them in its middle.
+    const text = filled
+      .replace(/\s+/g, " ")
+      .replace(/(\s*[-–|•,]\s*)(?:[-–|•,]\s*)+/g, "$1")
+      .replace(/^[\s\-–|•:,/]+|[\s\-–|•:,/]+$/g, "");
+    return text === "" ? null : text;
+  });
+
+  // `icon(name)`: the address of a small picture every presence can use, or null
+  // for a name not in the list. They live on the project's site, so they work with
+  // any Discord application.
+  const ICONS = ["play", "pause", "stop", "live", "repeat", "repeat-one", "shuffle"];
+  define("icon", function icon(name) {
+    return ICONS.includes(name) ? `https://manucabral.github.io/RichPresencePlus/icons/${name}.png` : null;
+  });
+
   define("playback", function playback(player, receivedAt) {
     const idle = { playing: false, start: null, end: null };
     if (!player || player.paused) return idle;

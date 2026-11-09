@@ -5,7 +5,9 @@ description: Las funciones que puede llamar cualquier script de presencia sin im
 
 # Ayudantes
 
-Cualquier script puede llamar a estas funciones, sin importar ni pedir nada.
+Cualquier script puede llamar a estas funciones, sin importar ni pedir nada. Sus nombres están
+tomados: un script que declara su propia función o variable `format`, `icon` o cualquier otra de
+ellas no carga, y el error nombra el ayudante.
 
 | Ayudante | Da |
 | --- | --- |
@@ -16,6 +18,9 @@ Cualquier script puede llamar a estas funciones, sin importar ni pedir nada.
 | `playback(player, receivedAt)` | Si un video suena y su barra de progreso. |
 | `parseTime(text)` | Un texto de reloj en segundos. |
 | `progress(current, duration, now)` | La barra de progreso para una posición y una duración. |
+| `rotate(items, seconds, now)` | Una de varias cosas, por turnos. |
+| `format(template, values)` | Un texto que escribió la persona, completado. |
+| `icon(name)` | Una imagen chica para reproducir, pausa y similares. |
 | `console.log(...)` | Una línea en el bloque Consola de la página Desarrollo. |
 
 ## t(key, values)
@@ -92,6 +97,58 @@ El `{ start, end }` que dibuja una barra en `current` segundos de `duration`, pa
 ```js
 const bar = progress(parseTime("4:05"), parseTime("10:00"), context.now);
 ```
+
+## rotate(items, seconds, now)
+
+Da uno de `items`, y el siguiente cada `seconds` segundos de `now`. Los vacíos (`null`,
+`undefined`, `""`) se saltean, así que los valores que pueden faltar entran como están.
+
+```js
+state: rotate([video.channel, t("views", { count: video.views })], 30, context.now),
+```
+
+El cambio se ve cuando la presencia vuelve a leer, así que un `seconds` menor que `interval` del
+manifiesto no cambia nada. Menos de 1 cuenta como 30.
+
+**Devuelve** `null` cuando ningún elemento tiene valor.
+
+## format(template, values)
+
+Completa un texto que la persona escribió en una opción, como `{title} - {channel}`, con
+`values`. Un valor `null` o que falta no deja nada, y un separador (`-`, `|`, `,`, `:`, `/`) que
+queda al principio o al final se va con él. Un nombre que no está en `values` queda como está
+escrito, así se nota un error de tipeo.
+
+```js
+const line = format(context.options.line, { title: video.title, channel: video.channel });
+format("{title} - {channel}", { title: "Un paseo", channel: null });   // "Un paseo"
+```
+
+Usá [`t`](#tkey-values) para los textos que escribís vos, y `format` para los que escribe la persona.
+
+**Devuelve** `null` cuando no queda nada, o cuando `template` no es un texto.
+
+## icon(name)
+
+La dirección de una imagen chica que puede usar cualquier presencia, sea cual sea su aplicación
+de Discord. Discord muestra `small_image` como un círculo en la esquina de la imagen grande.
+
+| `name` | Muestra |
+| --- | --- |
+| `play` | Un triángulo |
+| `pause` | Dos barras |
+| `stop` | Un cuadrado |
+| `live` | Un punto rojo |
+| `repeat` | Dos flechas en círculo |
+| `repeat-one` | El círculo con un 1 |
+| `shuffle` | Dos flechas cruzadas |
+
+```js
+small_image: icon(video.playing ? "play" : "pause"),
+small_text: video.playing ? t("playing") : t("paused"),
+```
+
+**Devuelve** `null` para un nombre que no está en la tabla.
 
 ## console.log(...)
 

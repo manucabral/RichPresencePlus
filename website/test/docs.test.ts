@@ -120,3 +120,20 @@ test("the site has every page in both languages, and each link lands on a headin
     }
   }
 });
+
+test("every picture icon() names is a 256 pixel PNG of the site", () => {
+  const prelude = readFileSync(new URL("../../crates/rpp-plugins/src/prelude.js", import.meta.url), "utf8");
+  const listed = /const ICONS = \[([^\]]+)\]/.exec(prelude);
+  assert.ok(listed, "ICONS in prelude.js");
+  const names = [...listed[1].matchAll(/"([a-z-]+)"/g)].map((found) => found[1]);
+  assert.ok(names.length > 0);
+  const address = /icons\/\$\{name\}\.png/.test(prelude) && /https:\/\/manucabral\.github\.io\/RichPresencePlus\//.test(prelude);
+  assert.ok(address, "icon() points at the icons folder of this site");
+  for (const name of names) {
+    const file = new URL(`../public/icons/${name}.png`, import.meta.url);
+    assert.ok(existsSync(file), `${name}.png`);
+    const png = readFileSync(file);
+    assert.equal(png.subarray(1, 4).toString(), "PNG", name);
+    assert.deepEqual([png.readUInt32BE(16), png.readUInt32BE(20)], [256, 256], name);
+  }
+});
