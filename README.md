@@ -1,66 +1,66 @@
 <p align="center">
-<img src="frontend/public/logo.svg" width="250" title="RichPresencePlusLogo">
+<img src="frontend/public/logo.svg" width="200" alt="Rich Presence Plus logo">
 </p>
-
 
 <h1 align="center">Rich Presence Plus</h1>
 
 <div align="center">
-    <img src="https://img.shields.io/badge/version-0.1.0--rc.1-blue" />
-    <img src="https://img.shields.io/github/downloads/manucabral/RichPresencePlus/total" />
-    <img src="https://img.shields.io/badge/code%20style-rustfmt-000000.svg" />
-    <img src="https://img.shields.io/github/contributors/manucabral/RichPresencePlus" />
-    <img src="https://img.shields.io/github/license/manucabral/RichPresencePlus" />
-    <img src="https://img.shields.io/github/commit-activity/m/manucabral/RichPresencePlus" />
+    <a href="https://github.com/manucabral/RichPresencePlus/releases/latest"><img src="https://img.shields.io/github/v/release/manucabral/RichPresencePlus?label=version" alt="Latest version"></a>
+    <a href="https://github.com/manucabral/RichPresencePlus/releases"><img src="https://img.shields.io/github/downloads/manucabral/RichPresencePlus/total" alt="Downloads"></a>
+    <a href="LICENSE"><img src="https://img.shields.io/github/license/manucabral/RichPresencePlus" alt="License"></a>
+    <a href="https://discord.gg/NjXFRqWarc"><img src="https://img.shields.io/discord/1118321148007022632?label=discord" alt="Discord"></a>
 </div>
 
-
 <p align="center">
-A simple Discord Rich Presence (Discord RPC) application manager for custom desktop or web services statuses.
+Shows on your Discord profile what you watch, listen to and play: the video, the song, the game.<br>
+Free and open source, for Windows.
 </p>
 
 <p align="center">
-Shows what you're doing on the <b>web</b> or <b>desktop</b> in Discord.
+<a href="https://github.com/manucabral/RichPresencePlus/releases/latest"><b>Download</b></a> |
+<a href="https://manucabral.github.io/RichPresencePlus/">Website</a> |
+<a href="https://manucabral.github.io/RichPresencePlus/presences/">Presences</a> |
+<a href="https://discord.gg/NjXFRqWarc">Discord</a>
 </p>
 
-![Rich Presence Plus](website/public/shots/panel-en-1280.webp)
+![The Rich Presence Plus panel](website/public/shots/panel-en-1280.webp)
 
-> [!IMPORTANT]  
-> Rich Presence Plus is moving from Python to Rust. This branch holds the new version, written from scratch with Rust and Tauri, and it has not had its first release yet. The Python version lives in the [`old-rpp`](https://github.com/manucabral/RichPresencePlus/tree/old-rpp) branch.
+## Getting started
 
-> Only compatible with Microsoft Windows systems.
+1. Download the installer from the [latest release](https://github.com/manucabral/RichPresencePlus/releases/latest) and run it. Windows may warn that the publisher is unknown while the installer is not signed yet: choose **More info** and then **Run anyway**.
+2. Open Discord for desktop.
+3. In the app, go to **Presences, Add more** and install the ones you want. Each starts on when you add it, and you can turn it off at any time.
+4. For websites such as YouTube or Netflix, add the browser extension. It is in review in the Chrome, Edge and Firefox stores; the links will be here and on the app's **Browser** page once it is approved.
 
-# Download
-The new version has no release yet. The installers of the Python version are [here](https://github.com/manucabral/RichPresencePlus/releases).
+The app updates itself: when a new version comes out, the Panel offers it.
 
-# Features
-- Easy to use.
-- Support for multiple presences.
-- Compatibility with web and desktop presences.
-- Users can create custom presences.
-- Custom statuses, and profiles to switch between sets of rules.
-- Download and use presences from a reviewed catalog.
-- Privacy rules: hide sites, programs, titles or buttons, and pause everything at once.
-- English and Spanish.
+## What it does
 
-# Supported browsers
-- Chromium browsers (Chrome, Edge, Brave, Opera and others).
-- Mozilla Firefox.
+- **Presences you choose.** The app comes empty. You install presences from a reviewed catalog, and nothing runs until you pick it.
+- **Websites and programs.** Videos, music and series in the browser; games, editors and media players on the desktop. Web Media covers any site you allow.
+- **Clear about what it reads.** Each presence lists what it reads before you install it, and an update that asks for more waits for your yes.
+- **Privacy rules.** Hide titles, buttons, links or timers, leave out sites and programs, and hide everything while OBS, Zoom or another program runs, or at certain hours.
+- **Your own statuses.** Write custom statuses, save sets of rules as profiles, and choose what wins when several things play.
+- **Light.** About 7 MB of memory and under 0.1% of a core with the window closed.
+- **English and Spanish.**
 
-If you want support for another browser or find a bug, create an [issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
+Everything stays on your computer: the app talks to Discord through Discord's own local connection, and the extension sends what it reads only to the app. The [privacy policy](https://manucabral.github.io/RichPresencePlus/privacy/) has the details.
 
-## Request a Presence
-If you'd like to propose a new web or desktop presence to be added to the list, please [create an issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose).
+## Browsers
 
-You can check the development status of each one by going [here](https://github.com/users/manucabral/projects/4).
+The extension works in Chrome, Edge and Firefox, and finds the app by itself. Other Chromium browsers that install extensions from the Chrome Web Store can connect with the pairing code from the app's **Browser** page.
 
-## Presence Development
-Presences are written in JavaScript. Read the [developer documentation](docs/developers/en/01-home.md) ([en español](docs/developers/es/01-home.md)) to start coding your custom presence, and [docs/CATALOG.md](docs/CATALOG.md) to see how one gets into the catalog.
+## Ask for a presence
 
-All presences are accepted as long as they follow the correct policies.
+Missing a site, game or program? Ask for it in the [Discord server](https://discord.gg/NjXFRqWarc) (#presence-requests) or open an [issue](https://github.com/manucabral/RichPresencePlus/issues/new/choose). The [project board](https://github.com/users/manucabral/projects/4) shows what is being worked on.
+
+## Write a presence
+
+Presences are small JavaScript files with a manifest that says what they read. The [developer guide](docs/developers/en/01-home.md) ([en español](docs/developers/es/01-home.md)) goes from the first file to publishing, and [docs/CATALOG.md](docs/CATALOG.md) explains how a presence is reviewed and signed into the catalog. The app's **Developer** page creates, tests and prepares a presence for you.
 
 ## Build from source
-The application is written in Rust with Tauri, and the window in Preact. You need Rust (stable), Node.js with pnpm, and the Tauri CLI (`cargo install tauri-cli`).
+
+The app is written in Rust with Tauri, its window in Preact, and the extension in plain JavaScript. You need Rust (stable), Node.js with pnpm, and the Tauri CLI (`cargo install tauri-cli`).
 
 ```
 pnpm --dir frontend install
@@ -75,27 +75,25 @@ cargo tauri build
 
 Before sending a change, `cargo fmt --check`, `cargo clippy --all-targets` and `cargo test` must pass. [docs/DEVELOPING.md](docs/DEVELOPING.md) has the details and [CONTRIBUTING.md](CONTRIBUTING.md) explains how changes are reviewed.
 
-## Discussions
-If you have questions, feature suggestions, or feedback to share, the Discussions area is the best place to engage with the community.
+## Community
 
-Feel free to start a new discussion [here](https://github.com/manucabral/RichPresencePlus/discussions).
+- [Discord server](https://discord.gg/NjXFRqWarc): help, news and presence requests.
+- [Discussions](https://github.com/manucabral/RichPresencePlus/discussions): questions and ideas.
+- [Issues](https://github.com/manucabral/RichPresencePlus/issues/new/choose): bugs.
 
-## Discord
-Join our community on Discord to connect with other users, get support, and share your ideas. Stay updated with the latest news, participate in discussions, and collaborate with fellow developers.
+## Roadmap
 
-[Join our Discord server](https://discord.gg/NjXFRqWarc)
-
-## RoadMap
-- Finish the move to Rust and publish the first release, with a signed installer and in-app updates.
+- A signed installer.
 - The browser extension in the Chrome, Edge and Firefox stores.
 - More presences in the catalog.
 - More languages, starting with Portuguese and Russian.
 
-## Contributors
-People who maintain or help with the application.
+The first version, written in Python, is in the [`old-rpp`](https://github.com/manucabral/RichPresencePlus/tree/old-rpp) branch and the [v0.1.1-rc](https://github.com/manucabral/RichPresencePlus/releases/tag/v0.1.1-rc) release.
 
-<a href="https://github.com/manucabral/richpresenceplus/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=manucabral/richpresenceplus" />
+## Contributors
+
+<a href="https://github.com/manucabral/RichPresencePlus/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=manucabral/RichPresencePlus" alt="Contributors">
 </a>
 
-Made with [contrib.rocks](https://contrib.rocks).
+Made with [contrib.rocks](https://contrib.rocks). Licensed under the [MIT License](LICENSE).
