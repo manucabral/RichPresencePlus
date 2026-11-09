@@ -1,5 +1,9 @@
 # What's new
 
+## 0.2.1 (November 9, 2026)
+
+- Presences you install from the catalog now come from one place, which keeps the download page tidy. Nothing changes in how the app works.
+
 ## 0.2.0 (November 9, 2026)
 
 Rich Presence Plus was rewritten from scratch.

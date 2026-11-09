@@ -1,5 +1,9 @@
 # Novedades
 
+## 0.2.1 (9 de noviembre de 2026)
+
+- Las presencias que instalás desde el catálogo ahora se descargan de un solo lugar, y la página de descargas queda ordenada. No cambia nada en cómo funciona la app.
+
 ## 0.2.0 (9 de noviembre de 2026)
 
 Rich Presence Plus se reescribió desde cero.

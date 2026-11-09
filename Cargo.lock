@@ -3282,7 +3282,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-app"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "base64 0.23.1",
  "rpp-bridge",
@@ -3305,7 +3305,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-bridge"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "aes-gcm",
  "base64 0.23.1",
@@ -3329,7 +3329,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-catalog"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "base64 0.23.1",
  "ed25519-dalek",
@@ -3348,7 +3348,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-config"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "rpp-bridge",
  "rpp-core",
@@ -3363,7 +3363,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-core"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proptest",
  "serde",
@@ -3374,7 +3374,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-desktop"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "rpp-app",
  "rpp-bridge",
@@ -3399,7 +3399,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-discord"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proptest",
  "rpp-core",
@@ -3412,7 +3412,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-host"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proptest",
  "rpp-plugins",
@@ -3430,7 +3430,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-plugins"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "proptest",
  "rpp-core",
@@ -3443,7 +3443,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-service"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "rpp-bridge",
  "rpp-core",
@@ -3459,7 +3459,7 @@ dependencies = [
 
 [[package]]
 name = "rpp-testkit"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "base64 0.23.1",
  "ed25519-dalek",
