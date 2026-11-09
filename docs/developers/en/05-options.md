@@ -102,7 +102,7 @@ code speaks every language the folder has.
 t("by", { name: "Manu" });   // "By Manu"
 ```
 
-`description` is also the description of the presence in that language.
+`description` is also the description of the presence in that language, in the application and in the catalog.
 
 ## Add a language
 

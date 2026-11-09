@@ -23,6 +23,8 @@ export interface Listed {
   color: string;
   /** Description by language; English is always there. */
   description: Record<string, string>;
+  /** Other names it is searched by. */
+  otherNames: string[];
   reads: Read[];
 }
 
@@ -32,6 +34,7 @@ interface Manifest {
   color?: string;
   description?: string;
   tags?: string[];
+  other_names?: string[];
   page?: { matches?: string[]; extract?: Record<string, unknown>; frames?: { matches?: string[]; extract?: Record<string, unknown> } };
   permissions?: {
     http?: string[];
@@ -101,6 +104,7 @@ export function loadPresences(root: string): Listed[] {
       category: categoryOf({ kind: manifest.kind ?? null, tags: manifest.tags ?? [] }),
       color: manifest.color ?? "#34363b",
       description,
+      otherNames: manifest.other_names ?? [],
       reads: readsOf(manifest),
     });
   }

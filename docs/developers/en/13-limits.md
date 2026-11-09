@@ -34,6 +34,8 @@ goes over a limit stops for that round and the Test tab shows the error.
 | `args` | 16 programs, 1 to 16 options each |
 | `files.tail` | 500 lines |
 | `tags` | 8 |
+| `other_names` | 8, of up to 64 characters |
+| `description`, in each language | 300 characters |
 
 ## Limits of the card
 

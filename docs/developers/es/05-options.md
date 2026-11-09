@@ -105,7 +105,7 @@ código habla todos los idiomas que tenga la carpeta.
 t("by", { name: "Manu" });   // "De Manu"
 ```
 
-`description` también es la descripción de la presencia en ese idioma.
+`description` también es la descripción de la presencia en ese idioma, en la aplicación y en el catálogo.
 
 ## Agregar un idioma
 

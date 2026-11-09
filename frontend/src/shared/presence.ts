@@ -9,6 +9,7 @@ export interface Described {
   kind: string | null;
   author: string | null;
   tags: string[];
+  other_names?: string[];
 }
 
 /** Groups the kind filter offers; anything else is "other". */
@@ -37,7 +38,9 @@ export function matches(item: Described, text: string, kind: string): boolean {
   }
   const query = text.trim().toLowerCase();
   if (query === "") return true;
-  const haystack = [item.name, item.description ?? "", item.author ?? "", ...item.tags].join("\n").toLowerCase();
+  const haystack = [item.name, ...(item.other_names ?? []), item.description ?? "", item.author ?? "", ...item.tags]
+    .join("\n")
+    .toLowerCase();
   return query.split(/\s+/).every((word) => haystack.includes(word));
 }
 

@@ -46,13 +46,14 @@ escritas para un formato anterior siguen andando en las aplicaciones nuevas.
 | `format` | número | no | `1` | El formato para el que está escrita la presencia. Ver [Formato](#formato). |
 | `name` | texto | sí | | El nombre que ve la gente. Letras, números, espacios, `_`, `-` y `.`. Tiene que ser único. |
 | `version` | texto | sí | | Hasta 32 caracteres, como `1.2.0`. Subila cada vez que publicás un cambio. |
-| `description` | texto | no | | Una línea para la tarjeta. `description` en un archivo de idioma la reemplaza en ese idioma. |
+| `description` | texto | no | | Una línea para la tarjeta, de hasta 300 caracteres. `description` en un archivo de idioma la reemplaza en ese idioma, en la aplicación y en el catálogo. |
 | `client_id` | texto | sí | | La aplicación de Discord, de 17 a 20 dígitos. `1567580382377803786` la comparten todas las presencias. |
 | `author` | texto | no | | Quién la escribió, hasta 64 caracteres. |
 | `contributors` | lista de textos | no | `[]` | Hasta 10 personas, de 64 caracteres cada una. |
 | `color` | texto | no | | Color de la tarjeta, como `#RRGGBB`. |
 | `icon` | texto | no | | Un archivo `.png` o `.webp` de la carpeta, o una dirección `https://`, de hasta 512 caracteres. |
 | `tags` | lista de textos | no | `[]` | Hasta 8 palabras de la lista de abajo. Las que la aplicación no conoce se ignoran. |
+| `other_names` | lista de textos | no | `[]` | Hasta 8 nombres más con los que se la busca, como una forma corta o un nombre viejo, de hasta 64 caracteres cada uno y distintos de `name`. |
 
 Etiquetas: `video`, `streaming`, `movie`, `series`, `anime`, `live`, `sport`, `music`, `radio`,
 `podcast`, `game`, `multiplayer`, `reading`, `manga`, `news`, `wiki`, `blog`, `code`, `design`,

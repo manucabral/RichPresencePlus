@@ -34,6 +34,8 @@ Un script que pasa un límite se detiene en esa vuelta y la pestaña Probar mues
 | `args` | 16 programas, de 1 a 16 opciones cada uno |
 | `files.tail` | 500 líneas |
 | `tags` | 8 |
+| `other_names` | 8, de hasta 64 caracteres |
+| `description`, en cada idioma | 300 caracteres |
 
 ## Límites de la tarjeta
 

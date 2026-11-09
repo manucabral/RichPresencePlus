@@ -64,6 +64,34 @@ test("the index carries who wrote a presence, its color, tags and web logo", () 
   assert.equal(JSON.parse(buildPayload({ root, commit: COMMIT })).presences[0].icon, null);
 });
 
+test("the index carries the description of each language and the other names", () => {
+  const root = presences({
+    alpha: {
+      files: {
+        "locales/en.json": JSON.stringify({ description: "Shows the film." }),
+        "locales/es.json": JSON.stringify({ description: "Muestra la película.", watching: "Viendo" }),
+        "locales/pt-BR.json": JSON.stringify({ watching: "Assistindo" }),
+      },
+    },
+    beta: {},
+  });
+  const manifestPath = join(root, "alpha", "manifest.json");
+  const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+  manifest.other_names = ["AL", "Old Alpha"];
+  writeFileSync(manifestPath, JSON.stringify(manifest));
+  const [alpha, beta] = JSON.parse(buildPayload({ root, commit: COMMIT })).presences;
+  assert.equal(alpha.description, "Shows the film.");
+  assert.deepEqual(alpha.descriptions, { es: "Muestra la película." });
+  assert.deepEqual(alpha.other_names, ["AL", "Old Alpha"]);
+  assert.equal(beta.description, "Shows things.");
+  assert.deepEqual([beta.descriptions, beta.other_names], [{}, []]);
+
+  writeFileSync(join(root, "beta", "main.js"), "function read(){return null}");
+  mkdirSync(join(root, "beta", "locales"), { recursive: true });
+  writeFileSync(join(root, "beta", "locales", "es.json"), "{ not json");
+  assert.throws(() => buildPayload({ root, commit: COMMIT }), /beta.locales.es\.json/);
+});
+
 test("a signature verifies, and fails after any edit or with another key", () => {
   const pem = key();
   const text = envelope(buildPayload({ root: presences({ alpha: {} }), commit: COMMIT }), pem, "main");

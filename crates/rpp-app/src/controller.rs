@@ -372,6 +372,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
                         .icon
                         .clone()
                         .filter(|icon| icon.starts_with("https://")),
+                    other_names: manifest.other_names.clone(),
                 }
             })
             .collect()

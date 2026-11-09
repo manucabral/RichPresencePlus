@@ -494,6 +494,17 @@
     "icon": {
       "type": "string",
       "description": "A square .png or .webp of the folder, or an https address."
+    },
+    "other_names": {
+      "type": "array",
+      "description": "Other names people search it by, such as a short form or an old name.",
+      "maxItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 64
+      }
     }
   }
 }

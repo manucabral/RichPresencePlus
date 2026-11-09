@@ -32,6 +32,13 @@ test("the search looks at name, description, author and tags", () => {
   assert.ok(!matches(item, "spotify", ""));
 });
 
+test("the search also finds a presence by its other names", () => {
+  const named = { ...item, other_names: ["YT", "Old Tube"] };
+  assert.ok(matches(named, "yt", ""));
+  assert.ok(matches(named, "old tube", ""));
+  assert.ok(!matches(item, "yt", ""));
+});
+
 test("the kind filter treats unknown kinds as other", () => {
   assert.ok(matches(item, "", "video"));
   assert.ok(!matches(item, "", "game"));

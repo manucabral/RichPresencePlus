@@ -36,7 +36,7 @@ const paths = { en: presenceIndex("en"), es: presenceIndex("es") };
         <h2 class="label">{t.categories[category as keyof typeof t.categories]}</h2>
         <ul class="panel list">
           {presences.map((presence) => (
-            <li data-name={presence.name.toLowerCase()} data-category={category}>
+            <li data-name={[presence.name, ...presence.otherNames].join("\n").toLowerCase()} data-category={category}>
               <a href={`${base}${presencePath(language, presence.folder)}`}>
                 <Logo name={presence.name} color={presence.color} folder={presence.folder} />
                 <span class="row-name">{presence.name}</span>

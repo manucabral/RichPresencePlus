@@ -56,6 +56,8 @@ export interface PresenceView {
   color: string | null;
   tags: string[];
   icon: string | null;
+  /** Other names it is searched by. */
+  other_names: string[];
 }
 
 export interface Row {
@@ -192,6 +194,8 @@ export interface CatalogItem {
   color: string | null;
   tags: string[];
   icon: string | null;
+  /** Other names it is searched by. */
+  other_names: string[];
   /** The catalog version needs a newer application, so it cannot be installed. */
   too_new: boolean;
 }

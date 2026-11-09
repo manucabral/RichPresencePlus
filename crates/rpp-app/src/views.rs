@@ -105,6 +105,8 @@ pub struct PresenceView {
     /// Its logo when it is an `https://` address; a logo kept as a file comes
     /// from [`Controller::icons`](crate::Controller::icons) instead.
     pub icon: Option<String>,
+    /// Other names it is searched by.
+    pub other_names: Vec<String>,
 }
 
 /// The author written into new presences.
@@ -207,8 +209,10 @@ pub struct CatalogItem {
     pub name: String,
     /// Version in the catalog.
     pub version: String,
-    /// What it shows, in English.
+    /// What it shows, in the language in use when the catalog has it, else in English.
     pub description: Option<String>,
+    /// Other names it is searched by.
+    pub other_names: Vec<String>,
     /// Group: `game`, `video`, `music` and so on.
     pub kind: Option<String>,
     /// Download size of all its files, in bytes.
@@ -231,8 +235,9 @@ pub struct CatalogItem {
     pub too_new: bool,
 }
 
-impl From<rpp_catalog::Listing> for CatalogItem {
-    fn from(listing: rpp_catalog::Listing) -> Self {
+impl CatalogItem {
+    /// The item for one listing, with its description in `language` when there is one.
+    pub fn of(listing: rpp_catalog::Listing, language: &str) -> Self {
         use rpp_catalog::State;
         let (state, installed_version) = match listing.state {
             State::Available => (CatalogState::Available, None),
@@ -240,13 +245,20 @@ impl From<rpp_catalog::Listing> for CatalogItem {
             State::Update { installed } => (CatalogState::Update, Some(installed.to_string())),
             State::Modified { installed } => (CatalogState::Modified, Some(installed.to_string())),
         };
-        let entry = listing.entry;
+        let mut entry = listing.entry;
+        let mut tags: Vec<String> = entry.descriptions.keys().cloned().collect();
+        tags.push(rpp_core::locale::BASE.to_owned());
+        let too_new = entry.too_new();
+        let description = rpp_core::locale::pick(language, &tags)
+            .and_then(|tag| entry.descriptions.remove(&tag))
+            .or(entry.description);
         Self {
-            too_new: entry.too_new(),
+            too_new,
             size: entry.files.values().map(|file| file.size).sum(),
             name: entry.name,
             version: entry.version.to_string(),
-            description: entry.description,
+            description,
+            other_names: entry.other_names,
             kind: entry.kind,
             state,
             installed_version,
@@ -429,4 +441,49 @@ pub struct DevStatus {
     pub last_reload: Option<u64>,
     /// Why the last edit did not load, if it did not.
     pub error: Option<String>,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn listing(descriptions: &[(&str, &str)]) -> rpp_catalog::Listing {
+        let entry = rpp_catalog::Entry {
+            name: "Demo".into(),
+            folder: "demo".into(),
+            version: "1.0.0".parse().unwrap(),
+            description: Some("Shows the demo.".into()),
+            descriptions: descriptions
+                .iter()
+                .map(|(tag, text)| ((*tag).to_owned(), (*text).to_owned()))
+                .collect(),
+            other_names: vec!["DM".into()],
+            kind: None,
+            files: std::collections::BTreeMap::new(),
+            author: None,
+            color: None,
+            tags: Vec::new(),
+            icon: None,
+            bundle: None,
+            format: 1,
+        };
+        rpp_catalog::Listing {
+            entry,
+            state: rpp_catalog::State::Available,
+            history: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn a_catalog_item_shows_the_description_of_the_language_in_use() {
+        let both = [("es", "Muestra la demo."), ("pt-BR", "Mostra a demo.")];
+        let of = |language: &str| CatalogItem::of(listing(&both), language).description;
+        assert_eq!(of("es-AR").as_deref(), Some("Muestra la demo."));
+        assert_eq!(of("pt").as_deref(), Some("Mostra a demo."));
+        assert_eq!(of("en").as_deref(), Some("Shows the demo."));
+        assert_eq!(of("fr").as_deref(), Some("Shows the demo."));
+        let item = CatalogItem::of(listing(&[]), "es");
+        assert_eq!(item.description.as_deref(), Some("Shows the demo."));
+        assert_eq!(item.other_names, ["DM"]);
+    }
 }

@@ -272,6 +272,35 @@ fn what_is_shown_next_to_a_presence_is_cleaned_not_refused() {
 }
 
 #[test]
+fn descriptions_and_other_names_keep_only_what_can_be_shown() {
+    let mut entry = entry_for("Demo", "demo", "1.0.0", &[("manifest.json", MANIFEST)]);
+    entry["descriptions"] = json!({
+        "es": "Muestra la demo.",
+        "pt-BR": "Mostra a demo.",
+        "Bad": "Wrong tag.",
+        "fr": "",
+        "de": "line\nbreak",
+        "it": "x".repeat(301),
+    });
+    entry["other_names"] = json!(["DM", "", "a\u{7}b", "y".repeat(65), "Old Demo"]);
+    let text = payload("stable", vec![entry]);
+    let index = Index::verify(&sign(&text, 1, "main"), &keys(), Channel::Stable).unwrap();
+    let shown = &index.presences[0];
+    assert_eq!(
+        shown.descriptions.keys().collect::<Vec<_>>(),
+        ["es", "pt-BR"]
+    );
+    assert_eq!(shown.other_names, ["DM", "Old Demo"]);
+
+    // An index from before the fields still reads.
+    let plain = entry_for("Demo", "demo", "1.0.0", &[("manifest.json", MANIFEST)]);
+    let text = payload("stable", vec![plain]);
+    let index = Index::verify(&sign(&text, 1, "main"), &keys(), Channel::Stable).unwrap();
+    assert!(index.presences[0].descriptions.is_empty());
+    assert!(index.presences[0].other_names.is_empty());
+}
+
+#[test]
 fn bundles_are_spread_over_sixteen_releases_per_channel() {
     // The same values tools/catalog.mjs computes (first hex digit of SHA-256).
     assert_eq!(Channel::Stable.release("youtube"), "catalog-files-2");

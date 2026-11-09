@@ -46,13 +46,14 @@ working in newer applications.
 | `format` | number | no | `1` | The format the presence is written for. See [Format](#format). |
 | `name` | text | yes | | The name people see. Letters, digits, spaces, `_`, `-` and `.`. It must be unique. |
 | `version` | text | yes | | Up to 32 characters, such as `1.2.0`. Raise it each time you publish a change. |
-| `description` | text | no | | One line for the card. `description` in a locale file replaces it in that language. |
+| `description` | text | no | | One line for the card, up to 300 characters. `description` in a locale file replaces it in that language, in the application and in the catalog. |
 | `client_id` | text | yes | | The Discord application, 17 to 20 digits. `1567580382377803786` is shared by every presence. |
 | `author` | text | no | | Who wrote it, up to 64 characters. |
 | `contributors` | list of texts | no | `[]` | Up to 10 people, 64 characters each. |
 | `color` | text | no | | Color of the card, as `#RRGGBB`. |
 | `icon` | text | no | | A `.png` or `.webp` file of the folder, or an `https://` address, up to 512 characters. |
 | `tags` | list of texts | no | `[]` | Up to 8 words from the list below. Words the application does not know are left out. |
+| `other_names` | list of texts | no | `[]` | Up to 8 more names people search it by, such as a short form or an old name, each up to 64 characters and different from `name`. |
 
 Tags: `video`, `streaming`, `movie`, `series`, `anime`, `live`, `sport`, `music`, `radio`,
 `podcast`, `game`, `multiplayer`, `reading`, `manga`, `news`, `wiki`, `blog`, `code`, `design`,

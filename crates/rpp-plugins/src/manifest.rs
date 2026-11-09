@@ -22,6 +22,9 @@ use crate::tags::is_known_tag;
 /// formats before it.
 pub const FORMAT: u32 = 1;
 
+/// The longest description, in characters; the catalog holds the same limit for each language.
+pub const MAX_DESCRIPTION: usize = 300;
+
 /// Why a manifest was refused.
 #[derive(Debug, thiserror::Error)]
 pub enum ManifestError {
@@ -115,6 +118,9 @@ pub struct Manifest {
     /// Logo: an `https://` address, or a `.png` or `.webp` file in the folder.
     #[serde(default)]
     pub icon: Option<String>,
+    /// Other names people search it by, such as a short form or an old name.
+    #[serde(default)]
+    pub other_names: Vec<String>,
 }
 
 /// An `https://` address, or a relative `.png` or `.webp` path inside the folder.
@@ -243,6 +249,11 @@ impl Manifest {
     }
 
     fn validate_about(&self) -> Result<(), ManifestError> {
+        if let Some(text) = &self.description
+            && (text.chars().count() > MAX_DESCRIPTION || text.chars().any(char::is_control))
+        {
+            return Err(reject("description", "one line of up to 300 characters"));
+        }
         let person = |text: &String| valid_person(text);
         if !self.author.iter().all(person) || !self.contributors.iter().all(person) {
             return Err(reject("author", "names have up to 64 characters"));
@@ -276,7 +287,24 @@ impl Manifest {
                 "expected an https address or a .png or .webp file in the folder",
             ));
         }
-        Ok(())
+        self.validate_other_names()
+    }
+
+    fn validate_other_names(&self) -> Result<(), ManifestError> {
+        let mut seen = BTreeSet::from([self.name.to_lowercase()]);
+        let fine = self.other_names.len() <= 8
+            && self
+                .other_names
+                .iter()
+                .all(|other| valid_person(other) && seen.insert(other.to_lowercase()));
+        if fine {
+            Ok(())
+        } else {
+            Err(reject(
+                "other_names",
+                "up to 8 names of up to 64 characters, each different from the name and the others",
+            ))
+        }
     }
 
     /// Programs are plain executable names; options look like `-h`, `--port`
@@ -722,6 +750,7 @@ mod tests {
             (r#""icon": "has space.png""#, "icon"),
             // A line break written as a JSON escape: valid JSON, refused as a name.
             ("\"author\": \"line\\nbreak\"", "author"),
+            ("\"description\": \"line\\nbreak\"", "description"),
         ];
         for (extra, field) in bad {
             let error = with(extra).unwrap_err();
@@ -732,5 +761,44 @@ mod tests {
         }
         let many: Vec<String> = (0..11).map(|n| format!("\"p{n}\"")).collect();
         assert!(with(&format!("\"contributors\": [{}]", many.join(","))).is_err());
+        let long = |n: usize| format!("\"description\": \"{}\"", "é".repeat(n));
+        assert!(with(&long(MAX_DESCRIPTION)).is_ok());
+        assert!(with(&long(MAX_DESCRIPTION + 1)).is_err());
+    }
+
+    #[test]
+    fn other_names_are_short_and_different_from_each_other() {
+        let with = |names: &str| {
+            Manifest::parse(&GOOD.replace(
+                "\"kind\": \"video\"",
+                &format!("\"kind\": \"video\", \"other_names\": {names}"),
+            ))
+        };
+        let good = with(r#"["VS", "Old Video"]"#).unwrap();
+        assert_eq!(good.other_names, ["VS", "Old Video"]);
+        assert!(Manifest::parse(GOOD).unwrap().other_names.is_empty());
+        let long = format!("[\"{}\"]", "x".repeat(65));
+        let nine: Vec<String> = (0..9).map(|n| format!("\"n{n}\"")).collect();
+        for bad in [
+            r#"[""]"#.to_owned(),
+            r#"["  "]"#.to_owned(),
+            r#"["video site"]"#.to_owned(),
+            r#"["VS", "vs"]"#.to_owned(),
+            "[\"line\\nbreak\"]".to_owned(),
+            long,
+            format!("[{}]", nine.join(",")),
+        ] {
+            let error = with(&bad).unwrap_err();
+            assert!(
+                matches!(
+                    error,
+                    ManifestError::Field {
+                        field: "other_names",
+                        ..
+                    }
+                ),
+                "{bad}"
+            );
+        }
     }
 }

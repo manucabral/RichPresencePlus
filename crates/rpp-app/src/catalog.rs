@@ -3,7 +3,8 @@
 use rpp_catalog::{Catalog, Error};
 use rpp_plugins::{Grant, Host};
 
-use crate::controller::Controller;
+use crate::controller::{Controller, lock};
+use crate::library::effective_language;
 use crate::views::{Access, CatalogItem, CatalogView, InstallOutcome};
 
 impl<H: Host + Clone + Send + 'static> Controller<H> {
@@ -18,11 +19,12 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
                 items: Vec::new(),
             });
         };
+        let language = effective_language(&lock(&self.settings), &self.system_language);
         let items = catalog
             .listing(refresh)
             .map_err(|e| e.to_string())?
             .into_iter()
-            .map(CatalogItem::from)
+            .map(|listing| CatalogItem::of(listing, &language))
             .collect();
         Ok(CatalogView {
             available: true,

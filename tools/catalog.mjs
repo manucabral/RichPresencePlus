@@ -30,6 +30,8 @@ const MAX_TOTAL = 8 * 1024 * 1024;
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?(\+[0-9A-Za-z.-]+)?$/;
 const FOLDER = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+const LANGUAGE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
+const MAX_DESCRIPTION = 300;
 
 // The closed list of tags and the newest format, from the file the application and the editor read.
 const SCHEMA = new URL("../crates/rpp-app/templates/manifest.schema.json", import.meta.url);
@@ -54,6 +56,33 @@ function filesIn(folder) {
     }
   };
   walk(folder);
+  return found;
+}
+
+/**
+ * The `description` of each language file of a folder, by language tag.
+ *
+ * The application shows the one in the language in use, as it does for an
+ * installed presence.
+ *
+ * @param {string} where The presence folder.
+ * @returns {Record<string, string>}
+ */
+function descriptionsOf(where) {
+  const folder = join(where, "locales");
+  const found = {};
+  if (!existsSync(folder)) return found;
+  for (const name of readdirSync(folder).sort()) {
+    const tag = name.endsWith(".json") ? name.slice(0, -5) : null;
+    if (tag === null || !LANGUAGE.test(tag)) continue;
+    let table;
+    try {
+      table = JSON.parse(readFileSync(join(folder, name), "utf8"));
+    } catch (error) {
+      throw new Error(`${where}/locales/${name}: ${error.message}`);
+    }
+    if (typeof table?.description === "string" && table.description.trim() !== "") found[tag] = table.description;
+  }
   return found;
 }
 
@@ -90,11 +119,20 @@ export function describe(root, folder) {
   }
   if (total > MAX_TOTAL) throw new Error(`${folder}: larger than ${MAX_TOTAL} bytes`);
   if (!files[manifest.entry]) throw new Error(`${folder}: the script ${manifest.entry} is not in the folder`);
+  const { en, ...descriptions } = descriptionsOf(where);
+  for (const text of [manifest.description, en, ...Object.values(descriptions)])
+    if (typeof text === "string" && [...text].length > MAX_DESCRIPTION)
+      throw new Error(`${folder}: a description is longer than ${MAX_DESCRIPTION} characters`);
   return {
     name: manifest.name,
     folder,
     version: manifest.version,
-    description: typeof manifest.description === "string" ? manifest.description : null,
+    // The English language file wins over the manifest, as in the application.
+    description: en ?? (typeof manifest.description === "string" ? manifest.description : null),
+    descriptions,
+    other_names: Array.isArray(manifest.other_names)
+      ? manifest.other_names.filter((name) => typeof name === "string")
+      : [],
     kind: typeof manifest.kind === "string" ? manifest.kind : null,
     author: typeof manifest.author === "string" ? manifest.author : null,
     color: typeof manifest.color === "string" ? manifest.color : null,

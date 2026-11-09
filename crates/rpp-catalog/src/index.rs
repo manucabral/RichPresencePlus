@@ -77,6 +77,10 @@ pub struct Entry {
     pub version: Version,
     /// What it shows, in English.
     pub description: Option<String>,
+    /// What it shows in other languages, by language tag.
+    pub descriptions: BTreeMap<String, String>,
+    /// Other names it is searched by.
+    pub other_names: Vec<String>,
     /// Group: `game`, `video`, `music` and so on.
     pub kind: Option<String>,
     /// Every file of the presence, by path inside its folder.
@@ -141,6 +145,10 @@ struct RawEntry {
     icon: Option<String>,
     #[serde(default)]
     bundle: Option<String>,
+    #[serde(default)]
+    descriptions: BTreeMap<String, String>,
+    #[serde(default)]
+    other_names: Vec<String>,
     // Indexes from before the field list presences of format 1.
     #[serde(default = "first_format")]
     format: u32,
@@ -228,6 +236,19 @@ struct About {
     color: Option<String>,
     tags: Vec<String>,
     icon: Option<String>,
+    descriptions: BTreeMap<String, String>,
+    other_names: Vec<String>,
+}
+
+/// A language tag such as `es` or `pt-BR`.
+fn language_tag(tag: &str) -> bool {
+    let mut parts = tag.split('-');
+    let first = parts.next().unwrap_or_default();
+    (2..=3).contains(&first.len())
+        && first.bytes().all(|b| b.is_ascii_lowercase())
+        && parts.all(|part| {
+            (2..=8).contains(&part.len()) && part.bytes().all(|b| b.is_ascii_alphanumeric())
+        })
 }
 
 fn about(raw: &RawEntry) -> About {
@@ -252,11 +273,32 @@ fn about(raw: &RawEntry) -> About {
                 .is_some_and(|rest| !rest.is_empty())
             && !i.chars().any(|c| c.is_control() || c == ' ')
     });
+    let plain = |text: &String, most: usize| {
+        !text.trim().is_empty()
+            && text.chars().count() <= most
+            && !text.chars().any(char::is_control)
+    };
+    let descriptions = raw
+        .descriptions
+        .iter()
+        .filter(|(tag, text)| language_tag(tag) && plain(text, 300))
+        .take(16)
+        .map(|(tag, text)| (tag.clone(), text.clone()))
+        .collect();
+    let other_names = raw
+        .other_names
+        .iter()
+        .filter(|name| plain(name, 64))
+        .take(8)
+        .cloned()
+        .collect();
     About {
         author,
         color,
         tags,
         icon,
+        descriptions,
+        other_names,
     }
 }
 
@@ -299,6 +341,8 @@ fn entry(raw: RawEntry, channel: Channel) -> Result<Entry, Error> {
         color,
         tags,
         icon,
+        descriptions,
+        other_names,
     } = about(&raw);
     // A bundle name that is not the expected one is ignored: the files are
     // then fetched one by one, which installs the same verified presence.
@@ -310,6 +354,8 @@ fn entry(raw: RawEntry, channel: Channel) -> Result<Entry, Error> {
         folder: raw.folder,
         version,
         description: raw.description,
+        descriptions,
+        other_names,
         kind: raw.kind,
         files: raw.files,
         author,

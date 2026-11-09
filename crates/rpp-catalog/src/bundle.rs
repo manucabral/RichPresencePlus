@@ -109,6 +109,8 @@ mod tests {
             folder: "demo".into(),
             version: Version::new(1, 2, 0),
             description: None,
+            descriptions: BTreeMap::new(),
+            other_names: Vec::new(),
             kind: None,
             files: files
                 .iter()
