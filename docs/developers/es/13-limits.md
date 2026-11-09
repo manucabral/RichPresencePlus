@@ -76,3 +76,7 @@ La primera columna muestra un campo; el mismo mensaje nombra el campo que haya r
 Un error del manifiesto nombra el campo y lo que espera, como `interval: expected 1 to 300
 seconds` o `color: expected #RRGGBB`. Todos los campos y sus límites están en
 [Manifiesto](08-manifest.md).
+
+`needs a newer version of the application` quiere decir que la presencia declara un
+[`format`](08-manifest.md#formato) mayor que el que lee esta aplicación. Se arregla actualizando
+la aplicación.

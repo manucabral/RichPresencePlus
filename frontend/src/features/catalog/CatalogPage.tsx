@@ -35,6 +35,7 @@ function CatalogRow({ item, icon, favorite, onFavorite }: RowProps) {
           <span className="block truncate text-[13px] font-medium text-neutral-100">{item.name}</span>
           {item.description && <span className="block truncate text-xs text-neutral-500">{item.description}</span>}
         </span>
+        {item.too_new && item.state === "available" && <Chip>{t("catalog.needsAppChip")}</Chip>}
         {state && (
           <Chip tone={item.state === "installed" ? "neutral" : "accent"}>{t(state)}</Chip>
         )}

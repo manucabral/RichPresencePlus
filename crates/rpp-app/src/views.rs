@@ -225,6 +225,8 @@ pub struct CatalogItem {
     pub tags: Vec<String>,
     /// Its logo, as an `https://` address.
     pub icon: Option<String>,
+    /// The catalog version needs a newer application, so it cannot be installed.
+    pub too_new: bool,
 }
 
 impl From<rpp_catalog::Listing> for CatalogItem {
@@ -238,6 +240,7 @@ impl From<rpp_catalog::Listing> for CatalogItem {
         };
         let entry = listing.entry;
         Self {
+            too_new: entry.too_new(),
             size: entry.files.values().map(|file| file.size).sum(),
             name: entry.name,
             version: entry.version.to_string(),

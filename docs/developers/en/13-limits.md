@@ -75,3 +75,6 @@ The first column shows one field; the same message names whichever field broke t
 
 A manifest error names the field and what it expects, such as `interval: expected 1 to 300
 seconds` or `color: expected #RRGGBB`. Every field and its limits are in [Manifest](08-manifest.md).
+
+`needs a newer version of the application` means the presence declares a higher
+[`format`](08-manifest.md#format) than this application reads. Updating the application fixes it.

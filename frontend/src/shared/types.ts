@@ -190,6 +190,8 @@ export interface CatalogItem {
   color: string | null;
   tags: string[];
   icon: string | null;
+  /** The catalog version needs a newer application, so it cannot be installed. */
+  too_new: boolean;
 }
 
 /** The catalog page: whether it can be used, and what it lists. */

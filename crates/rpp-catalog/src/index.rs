@@ -92,6 +92,15 @@ pub struct Entry {
     /// Name of the release file with all its files (see [`crate::bundle`]),
     /// when the catalog published one.
     pub bundle: Option<String>,
+    /// Manifest format it is written for; see [`rpp_plugins::FORMAT`].
+    pub format: u32,
+}
+
+impl Entry {
+    /// Tells whether it needs a newer application than this one.
+    pub fn too_new(&self) -> bool {
+        self.format > rpp_plugins::FORMAT
+    }
 }
 
 /// A verified index.
@@ -132,6 +141,13 @@ struct RawEntry {
     icon: Option<String>,
     #[serde(default)]
     bundle: Option<String>,
+    // Indexes from before the field list presences of format 1.
+    #[serde(default = "first_format")]
+    format: u32,
+}
+
+fn first_format() -> u32 {
+    1
 }
 
 #[derive(Deserialize)]
@@ -256,6 +272,9 @@ fn entry(raw: RawEntry, channel: Channel) -> Result<Entry, Error> {
     if channel == Channel::Stable && !version.pre.is_empty() {
         return Err(bad("the stable channel cannot list a pre-release"));
     }
+    if raw.format == 0 {
+        return Err(bad("the format is 0"));
+    }
     if raw.files.is_empty() || raw.files.len() > MAX_FILES {
         return Err(bad("it lists too few or too many files"));
     }
@@ -298,6 +317,7 @@ fn entry(raw: RawEntry, channel: Channel) -> Result<Entry, Error> {
         tags,
         icon,
         bundle,
+        format: raw.format,
     })
 }
 

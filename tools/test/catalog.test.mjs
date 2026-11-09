@@ -75,6 +75,24 @@ test("a signature verifies, and fails after any edit or with another key", () =>
   assert.equal(Buffer.from(publicKeyOf(pem), "base64").length, 32);
 });
 
+test("the index carries the format, and refuses one the application cannot read yet", () => {
+  const root = presences({ alpha: {} });
+  const file = join(root, "alpha", "manifest.json");
+  const manifest = JSON.parse(readFileSync(file, "utf8"));
+  const format = (value) => {
+    writeFileSync(file, JSON.stringify({ ...manifest, format: value }));
+    return JSON.parse(buildPayload({ root, commit: COMMIT })).presences[0].format;
+  };
+  assert.equal(JSON.parse(buildPayload({ root, commit: COMMIT })).presences[0].format, 1, "missing is format 1");
+  assert.equal(format(1), 1);
+  const newest = JSON.parse(
+    readFileSync(new URL("../../crates/rpp-app/templates/manifest.schema.json", import.meta.url)),
+  ).properties.format.maximum;
+  for (const wrong of [0, newest + 1, 1.5, "1"]) {
+    assert.throws(() => format(wrong), /format/, String(wrong));
+  }
+});
+
 test("pre-releases stay out of the stable channel only", () => {
   const root = presences({ alpha: {}, beta: { version: "2.0.0-rc.1" } });
   const names = (channel) => JSON.parse(buildPayload({ root, commit: COMMIT, channel })).presences.map((p) => p.folder);

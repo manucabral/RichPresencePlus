@@ -31,9 +31,11 @@ const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?(\+[0
 const FOLDER = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const SEGMENT = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
-// The closed list of tags, from the file the application and the editor read.
+// The closed list of tags and the newest format, from the file the application and the editor read.
 const SCHEMA = new URL("../crates/rpp-app/templates/manifest.schema.json", import.meta.url);
-const TAGS = new Set(JSON.parse(readFileSync(SCHEMA, "utf8")).properties.tags.items.enum);
+const SCHEMA_PROPERTIES = JSON.parse(readFileSync(SCHEMA, "utf8")).properties;
+const TAGS = new Set(SCHEMA_PROPERTIES.tags.items.enum);
+const FORMAT = SCHEMA_PROPERTIES.format.maximum;
 
 // The first 12 bytes of an Ed25519 public key in DER, before the 32 raw bytes.
 const SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
@@ -69,6 +71,9 @@ export function describe(root, folder) {
   if (typeof manifest.name !== "string" || manifest.name.trim() === "")
     throw new Error(`${folder}: the manifest has no name`);
   if (!SEMVER.test(manifest.version)) throw new Error(`${folder}: version ${manifest.version} is not semver (1.2.3)`);
+  const format = manifest.format ?? 1;
+  if (!Number.isInteger(format) || format < 1 || format > FORMAT)
+    throw new Error(`${folder}: format ${JSON.stringify(manifest.format)} is not a whole number from 1 to ${FORMAT}`);
   const unknown = (Array.isArray(manifest.tags) ? manifest.tags : []).filter((tag) => !TAGS.has(tag));
   if (unknown.length > 0) throw new Error(`${folder}: tags not on the list: ${unknown.join(", ")}`);
   const paths = filesIn(where);
@@ -96,6 +101,8 @@ export function describe(root, folder) {
     tags: Array.isArray(manifest.tags) ? manifest.tags : [],
     // A logo kept as a file is already among the presence's files; only an address is listed.
     icon: typeof manifest.icon === "string" && manifest.icon.startsWith("https://") ? manifest.icon : null,
+    // The application refuses an entry it is too old for before downloading it.
+    format,
     files,
   };
 }

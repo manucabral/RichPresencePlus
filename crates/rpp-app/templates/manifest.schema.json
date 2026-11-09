@@ -252,6 +252,13 @@
     }
   },
   "properties": {
+    "format": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 1,
+      "default": 1,
+      "description": "The format this presence is written for. Keep the number a new presence starts with."
+    },
     "name": {
       "type": "string",
       "description": "The name people see. It must be unique."

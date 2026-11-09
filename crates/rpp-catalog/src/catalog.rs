@@ -251,6 +251,10 @@ impl Catalog {
             .find(name)
             .ok_or_else(|| Error::Unknown(name.to_owned()))?
             .clone();
+        // Refused before downloading: its manifest would be refused after it.
+        if entry.too_new() {
+            return Err(Error::Newer(entry.name));
+        }
         install::install(
             &self.root,
             &self.history,
@@ -321,7 +325,7 @@ fn state_of(record: &Installed, entry: &Entry) -> State {
         State::Modified {
             installed: record.version.clone(),
         }
-    } else if entry.version > record.version {
+    } else if entry.version > record.version && !entry.too_new() {
         State::Update {
             installed: record.version.clone(),
         }

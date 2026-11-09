@@ -11,6 +11,7 @@ Un campo que no conoce es un error.
 
 ```json
 {
+  "format": 1,
   "name": "Mi Video",
   "version": "1.0.0",
   "description": "Shows the video you are watching.",
@@ -27,10 +28,22 @@ Un campo que no conoce es un error.
 }
 ```
 
+## Formato
+
+`format` dice para qué versión de este archivo y de las funciones del script está escrita la
+presencia. Una aplicación que lee un formato anterior rechaza la presencia con `needs a newer
+version of the application`, en vez de fallar en un campo o una ayuda que no tiene. Una presencia
+sin `format` es de formato 1.
+
+Dejá el número con el que empieza una presencia nueva. Cuando una página de esta documentación
+dice que un campo o una ayuda necesita un formato mayor, subilo a ese número. Las presencias
+escritas para un formato anterior siguen andando en las aplicaciones nuevas.
+
 ## Identidad
 
 | Campo | Tipo | Obligatorio | Por defecto | Qué hace |
 | --- | --- | --- | --- | --- |
+| `format` | número | no | `1` | El formato para el que está escrita la presencia. Ver [Formato](#formato). |
 | `name` | texto | sí | | El nombre que ve la gente. Letras, números, espacios, `_`, `-` y `.`. Tiene que ser único. |
 | `version` | texto | sí | | Hasta 32 caracteres, como `1.2.0`. Subila cada vez que publicás un cambio. |
 | `description` | texto | no | | Una línea para la tarjeta. `description` en un archivo de idioma la reemplaza en ese idioma. |

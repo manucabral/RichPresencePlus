@@ -25,6 +25,9 @@ pub enum Error {
     /// The index is older than one already accepted for this channel.
     #[error("the catalog is older than one already accepted")]
     Stale,
+    /// The presence is written for a newer format than this application reads.
+    #[error("{0} needs a newer version of the application")]
+    Newer(String),
     /// The name is not in the signed index.
     #[error("{0} is not in the catalog")]
     Unknown(String),

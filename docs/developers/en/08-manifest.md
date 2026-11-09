@@ -11,6 +11,7 @@ know is an error.
 
 ```json
 {
+  "format": 1,
   "name": "My Video",
   "version": "1.0.0",
   "description": "Shows the video you are watching.",
@@ -27,10 +28,22 @@ know is an error.
 }
 ```
 
+## Format
+
+`format` says which version of this file and of the script functions the presence is written
+for. An application that reads an older format refuses the presence with `needs a newer version
+of the application`, instead of failing on a field or a helper it does not have. A presence
+without `format` is format 1.
+
+Keep the number a new presence starts with. When a page of this documentation says a field or a
+helper needs a higher format, raise it to that number. Presences written for an older format keep
+working in newer applications.
+
 ## Identity
 
 | Field | Type | Required | Default | What it does |
 | --- | --- | --- | --- | --- |
+| `format` | number | no | `1` | The format the presence is written for. See [Format](#format). |
 | `name` | text | yes | | The name people see. Letters, digits, spaces, `_`, `-` and `.`. It must be unique. |
 | `version` | text | yes | | Up to 32 characters, such as `1.2.0`. Raise it each time you publish a change. |
 | `description` | text | no | | One line for the card. `description` in a locale file replaces it in that language. |

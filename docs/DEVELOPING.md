@@ -92,6 +92,15 @@ to start in the tray, with no window.
 
 ## Adding something
 
+**The format** (`FORMAT` in `crates/rpp-plugins/src/manifest.rs`) goes up by one, once per
+release, when that release lets a presence ask for something an older application lacks: a
+manifest field, an extractor, a helper, a permission. The same change raises `maximum` of
+`format` in the schema and `format` in both templates (a test checks it), and says on the
+documentation page of each new thing which format it needs. A change that would break presences
+already written also needs a translation of the older formats in `Manifest::parse`.
+`crates/rpp-config/tests/bundled.rs` loads every presence of `presences/` and starts its script
+on each change, so one that stops loading fails CI before a release.
+
 **A new extractor** touches `crates/rpp-plugins/src/page.rs` (with its limits),
 `extension/extract.js`, `crates/rpp-app/templates/manifest.schema.json`, `value_type` in
 `crates/rpp-app/src/editor.rs`, both `09-extractors.md`, and a check in `tools/try-extension.mjs`.

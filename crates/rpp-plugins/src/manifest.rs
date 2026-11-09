@@ -11,12 +11,27 @@ use crate::permissions::{Grant, MAX_ARG_FLAGS, MAX_ARG_PROGRAMS, Permissions, QU
 use crate::setting::{MAX_SETTINGS, Setting};
 use crate::tags::is_known_tag;
 
+/// The newest manifest and script format this application reads.
+///
+/// Raise it when a presence can ask for something an older application does not
+/// have: a field, an extractor, a helper, a permission. A presence that uses it
+/// declares the new number, so an older application refuses it with
+/// [`ManifestError::Newer`] instead of failing halfway. A change that would break
+/// presences already written needs a translation in [`Manifest::parse`] for the
+/// formats before it.
+pub const FORMAT: u32 = 1;
+
 /// Why a manifest was refused.
 #[derive(Debug, thiserror::Error)]
 pub enum ManifestError {
     /// The document is not valid JSON or has an unknown or mistyped field.
     #[error("manifest is not valid: {0}")]
     Format(#[from] serde_json::Error),
+    /// The presence is written for a newer format than [`FORMAT`].
+    #[error(
+        "needs a newer version of the application: it uses format {0}, this one reads up to {FORMAT}"
+    )]
+    Newer(u32),
     /// A field has a value the application cannot use.
     #[error("{field}: {reason}")]
     Field {
@@ -25,6 +40,10 @@ pub enum ManifestError {
         /// What is wrong with it.
         reason: &'static str,
     },
+}
+
+fn default_format() -> u32 {
+    1
 }
 
 fn default_hide_when_paused() -> bool {
@@ -43,6 +62,9 @@ fn default_entry() -> String {
 #[derive(Debug, Clone, PartialEq, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Manifest {
+    /// Format the presence is written for, from 1 to [`FORMAT`]; 1 when missing.
+    #[serde(default = "default_format")]
+    pub format: u32,
     /// Name shown to the user; also the folder name when installed.
     pub name: String,
     /// Version of the presence, such as `1.2.0`.
@@ -111,6 +133,18 @@ fn icon_is_valid(icon: &str) -> bool {
             .all(|part| !part.is_empty() && part != "." && part != "..")
 }
 
+/// The `format` of a manifest, read before the rest: a newer format may carry
+/// fields this application would call unknown, and the person must hear that the
+/// application is old, not that the presence is broken.
+fn format_of(json: &str) -> Result<u32, ManifestError> {
+    #[derive(Deserialize)]
+    struct Head {
+        #[serde(default = "default_format")]
+        format: u32,
+    }
+    Ok(serde_json::from_str::<Head>(json)?.format)
+}
+
 fn reject(field: &'static str, reason: &'static str) -> ManifestError {
     ManifestError::Field { field, reason }
 }
@@ -129,9 +163,14 @@ impl Manifest {
     /// Parses and validates the contents of `manifest.json`.
     ///
     /// Raises:
-    ///     ManifestError: The document is not valid JSON, has an unknown field
-    ///         or a field holds a value the application cannot use.
+    ///     ManifestError: `Newer` for a format after [`FORMAT`]; otherwise the
+    ///         document is not valid JSON, has an unknown field or a field holds
+    ///         a value the application cannot use.
     pub fn parse(json: &str) -> Result<Self, ManifestError> {
+        let format = format_of(json)?;
+        if format > FORMAT {
+            return Err(ManifestError::Newer(format));
+        }
         let mut manifest: Self = serde_json::from_str(json)?;
         manifest.validate()?;
         // A newer application may know more tags. A word this one does not know is
@@ -141,6 +180,9 @@ impl Manifest {
     }
 
     fn validate(&self) -> Result<(), ManifestError> {
+        if self.format == 0 {
+            return Err(reject("format", "expected a whole number from 1"));
+        }
         if !valid_name(&self.name) {
             return Err(reject("name", "use letters, digits, spaces, _ - and ."));
         }
@@ -339,6 +381,65 @@ mod tests {
                 .unwrap();
         assert_eq!(manifest.interval, 15);
         assert!(manifest.permissions.http.is_empty());
+    }
+
+    #[test]
+    fn a_manifest_without_format_is_format_1() {
+        assert_eq!(Manifest::parse(GOOD).unwrap().format, 1);
+        let declared = GOOD.replace("\"name\"", "\"format\": 1, \"name\"");
+        assert_eq!(Manifest::parse(&declared).unwrap().format, 1);
+    }
+
+    #[test]
+    fn a_newer_format_says_the_application_is_old_even_with_fields_it_does_not_know() {
+        let newer = GOOD.replace(
+            "\"name\"",
+            &format!(
+                "\"format\": {}, \"from_the_future\": true, \"name\"",
+                FORMAT + 1
+            ),
+        );
+        let error = Manifest::parse(&newer).unwrap_err();
+        assert!(matches!(error, ManifestError::Newer(f) if f == FORMAT + 1));
+        assert!(
+            error
+                .to_string()
+                .contains("needs a newer version of the application")
+        );
+    }
+
+    /// Raising [`FORMAT`] without the schema and the templates would let the editor
+    /// refuse the new number and new presences start on the old one.
+    #[test]
+    fn the_schema_and_the_templates_know_this_format() {
+        let read = |text: &str| serde_json::from_str::<serde_json::Value>(text).unwrap();
+        let schema = read(include_str!("../../rpp-app/templates/manifest.schema.json"));
+        assert_eq!(schema["properties"]["format"]["maximum"], FORMAT);
+        for template in [
+            include_str!("../../rpp-app/templates/web/manifest.json"),
+            include_str!("../../rpp-app/templates/desktop/manifest.json"),
+        ] {
+            assert_eq!(read(template)["format"], FORMAT);
+        }
+    }
+
+    #[test]
+    fn format_0_or_not_a_number_is_refused() {
+        let zero = GOOD.replace("\"name\"", "\"format\": 0, \"name\"");
+        assert!(matches!(
+            Manifest::parse(&zero),
+            Err(ManifestError::Field {
+                field: "format",
+                ..
+            })
+        ));
+        for wrong in ["\"1\"", "1.5", "-1"] {
+            let json = GOOD.replace("\"name\"", &format!("\"format\": {wrong}, \"name\""));
+            assert!(
+                matches!(Manifest::parse(&json), Err(ManifestError::Format(_))),
+                "{wrong}"
+            );
+        }
     }
 
     #[test]

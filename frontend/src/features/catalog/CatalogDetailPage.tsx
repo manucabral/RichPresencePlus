@@ -76,7 +76,7 @@ export default function CatalogDetailPage() {
         </div>
         <div className="flex shrink-0 items-center gap-2">
           <FavoriteButton name={item.name} on={favorites.has(item.name)} onToggle={() => toggle(item.name)} />
-          {item.state !== "installed" && (
+          {item.state !== "installed" && !item.too_new && (
             <Button
               variant="primary"
               loading={busy}
@@ -96,6 +96,12 @@ export default function CatalogDetailPage() {
           )}
         </div>
       </header>
+
+      {item.too_new && (
+        <p className="-mt-4 mb-8 text-[13px] text-neutral-400">
+          {t(installed ? "catalog.needsAppUpdate" : "catalog.needsApp")}
+        </p>
+      )}
 
       {asked && (
         <Section title={t("catalog.asksTitle")} hint={t("catalog.asksHint")}>

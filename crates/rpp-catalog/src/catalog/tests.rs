@@ -22,20 +22,32 @@ impl Source for Shared {
 
 const SCRIPT: &[u8] = b"function read(){return null} function activity(){return null}";
 
-fn manifest(name: &str, version: &str) -> Vec<u8> {
+fn manifest(name: &str, version: &str, format: u32) -> Vec<u8> {
     format!(
-        r#"{{"name":"{name}","version":"{version}","client_id":"12345678901234567","entry":"main.js"}}"#
+        r#"{{"format":{format},"name":"{name}","version":"{version}","client_id":"12345678901234567","entry":"main.js"}}"#
     )
     .into_bytes()
 }
 
 /// Publishes presences to the in-memory source and signs the index.
 fn publish(memory: &Memory, generated_at: u64, presences: &[(&str, &str, &str)]) {
+    publish_format(memory, generated_at, presences, 1);
+}
+
+/// Publishes presences written for `format`.
+fn publish_format(
+    memory: &Memory,
+    generated_at: u64,
+    presences: &[(&str, &str, &str)],
+    format: u32,
+) {
     let mut listed = Vec::new();
     for (name, folder, version) in presences {
-        let manifest = manifest(name, version);
+        let manifest = manifest(name, version, format);
         let files: [(&str, &[u8]); 2] = [("manifest.json", &manifest), ("main.js", SCRIPT)];
-        listed.push(entry_for(name, folder, version, &files));
+        let mut entry = entry_for(name, folder, version, &files);
+        entry["format"] = format.into();
+        listed.push(entry);
         for (path, bytes) in files {
             memory.put(folder, path, bytes);
         }
@@ -110,6 +122,41 @@ fn listing_shows_what_is_installed_and_what_can_be_updated() {
         State::Installed {
             version: Version::new(1, 1, 0)
         }
+    );
+}
+
+#[test]
+fn a_presence_for_a_newer_application_is_not_installed_nor_offered_as_an_update() {
+    let f = fixture();
+    publish(&f.memory, 100, &[("Alpha", "alpha", "1.0.0")]);
+    f.catalog.install("alpha", &[]).unwrap();
+    let asked = f.memory.asked.lock().unwrap().len();
+    let newer = rpp_plugins::FORMAT + 1;
+    publish_format(
+        &f.memory,
+        200,
+        &[("Alpha", "alpha", "1.1.0"), ("Beta", "beta", "1.0.0")],
+        newer,
+    );
+    let listing = f.catalog.listing(true).unwrap();
+    assert_eq!(
+        listing[0].state,
+        State::Installed {
+            version: Version::new(1, 0, 0)
+        },
+        "the copy that works stays, with no update to break it"
+    );
+    assert!(listing[0].entry.too_new() && listing[1].entry.too_new());
+    assert!(matches!(f.catalog.install("Beta", &[]), Err(Error::Newer(name)) if name == "Beta"));
+    assert!(matches!(
+        f.catalog.install("Alpha", &[]),
+        Err(Error::Newer(_))
+    ));
+    assert!(!f.presences.path().join("beta").exists());
+    assert_eq!(
+        f.memory.asked.lock().unwrap().len(),
+        asked,
+        "refused before any download"
     );
 }
 

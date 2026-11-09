@@ -125,6 +125,7 @@ mod tests {
             tags: Vec::new(),
             icon: None,
             bundle: None,
+            format: 1,
         }
     }
 

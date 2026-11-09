@@ -18,7 +18,7 @@ pub mod setting;
 pub mod tags;
 
 pub use engine::{Meta, Plugin, PluginError, Tick};
-pub use manifest::{Manifest, ManifestError};
+pub use manifest::{FORMAT, Manifest, ManifestError};
 pub use names::{MAX_NAME, identity, reserved_device, valid_name, valid_person};
 pub use page::{Extractor, FrameSpec, PageSpec, StorageArea};
 pub use permissions::{Denied, Grant, Host, Permissions, Request};
