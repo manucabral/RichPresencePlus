@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { test } from "node:test";
 import { byCategory, hostOf, inkOn, loadPresences, oneOfEach, readsOf } from "../src/data/presences.ts";
 import { installerOf, latestInstaller } from "../src/data/release.ts";
+import { installsOf, installsText, loadInstalls } from "../src/data/stats.ts";
 
 const ROOT = fileURLToPath(new URL("../../presences", import.meta.url));
 
@@ -93,4 +94,33 @@ test("a failed request does not stop the build", async () => {
   assert.equal(await latestInstaller(refused), null);
   const missing = (async () => new Response("", { status: 404 })) as typeof fetch;
   assert.equal(await latestInstaller(missing), null);
+});
+
+test("install counts keep only the stable channel's well-formed numbers", () => {
+  const stats = {
+    stable: [
+      { folder: "youtube", installs: 12 },
+      { folder: "netflix", installs: 0 },
+      { folder: "bad", installs: "7" },
+      { folder: 3, installs: 2 },
+      null,
+    ],
+    experimental: [{ folder: "beta", installs: 5 }],
+  };
+  assert.deepEqual([...installsOf(stats)], [["youtube", 12]]);
+  assert.equal(installsOf(null).size, 0);
+  assert.equal(installsOf({ stable: "x" }).size, 0);
+});
+
+test("install counts read in each language", () => {
+  assert.equal(installsText(1, "1 install", "{count} installs", "en-US"), "1 install");
+  assert.equal(installsText(1234, "1 install", "{count} installs", "en-US"), "1,234 installs");
+  assert.equal(installsText(1234, "1 instalación", "{count} instalaciones", "es-AR"), "1.234 instalaciones");
+});
+
+test("without the numbers the site still builds", async () => {
+  const failing = () => Promise.reject(new Error("offline"));
+  // The first call in a build is kept; a fresh module would be needed to ask again.
+  const installs = await loadInstalls(failing as unknown as typeof fetch);
+  assert.ok(installs instanceof Map);
 });

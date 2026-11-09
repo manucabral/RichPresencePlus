@@ -5,6 +5,7 @@ import Shell from "./Shell.astro";
 import { STRINGS, type Language } from "../i18n/strings";
 import { byCategory, loadPresences } from "../data/presences";
 import { presenceIndex, presencePath } from "../data/paths";
+import { installsText, loadInstalls } from "../data/stats";
 
 interface Props {
   language: Language;
@@ -15,6 +16,8 @@ const t = STRINGS[language];
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const groups = byCategory(loadPresences(join(process.cwd(), "..", "presences")));
 const paths = { en: presenceIndex("en"), es: presenceIndex("es") };
+const installs = await loadInstalls();
+const locale = language === "es" ? "es-AR" : "en-US";
 ---
 
 <Shell language={language} title={`${t.presence.index} - Rich Presence Plus`} description={t.presence.indexMeta} paths={paths} script="/search.js">
@@ -41,6 +44,9 @@ const paths = { en: presenceIndex("en"), es: presenceIndex("es") };
                 <Logo name={presence.name} color={presence.color} folder={presence.folder} />
                 <span class="row-name">{presence.name}</span>
                 <span class="row-text">{presence.description[language] ?? presence.description.en}</span>
+                {installs.has(presence.folder) && (
+                  <span class="row-count">{installsText(installs.get(presence.folder)!, t.presence.installsOne, t.presence.installs, locale)}</span>
+                )}
               </a>
             </li>
           ))}

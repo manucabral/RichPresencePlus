@@ -885,6 +885,15 @@ h3 {
   white-space: nowrap;
 }
 
+.row-count {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
 /* Legal texts */
 
 .legal h2 {

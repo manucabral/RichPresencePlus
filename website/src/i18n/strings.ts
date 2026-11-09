@@ -138,7 +138,7 @@ const en = {
     items: [
       ["Install the app", "It runs in the background and needs no administrator rights."],
       ["Add the extension", "It finds the app by itself, for presences on the web."],
-      ["Choose your presences", "Turn on the ones you want and open the site or the game."],
+      ["Choose your presences", "Install the ones you want from Presences, Add more, and open the site or the game."],
     ],
   },
   faq: {
@@ -186,6 +186,8 @@ const en = {
     index: "All presences",
     indexMeta: "Presences for Rich Presence Plus: Discord status for websites and Windows apps, each with the list of what it can read.",
     indexLead: "Each one has a page that says what it can read.",
+    installsOne: "1 install",
+    installs: "{count} installs",
   },
   legal: {
     updated: "Last updated",
@@ -337,7 +339,7 @@ const es: typeof en = {
     items: [
       ["Instalá la app", "Queda en segundo plano y no pide permisos de administrador."],
       ["Agregá la extensión", "Encuentra la app sola, para las presencias web."],
-      ["Elegí tus presencias", "Activá las que quieras y abrí el sitio o el juego."],
+      ["Elegí tus presencias", "Instalá las que quieras desde Presencias, Agregar más, y abrí el sitio o el juego."],
     ],
   },
   faq: {
@@ -385,6 +387,8 @@ const es: typeof en = {
     index: "Todas las presencias",
     indexMeta: "Presencias de Rich Presence Plus: estado de Discord para sitios web y apps de Windows, cada una con la lista de lo que puede leer.",
     indexLead: "Cada una tiene una página que dice qué puede leer.",
+    installsOne: "1 instalación",
+    installs: "{count} instalaciones",
   },
   legal: {
     updated: "Última actualización",

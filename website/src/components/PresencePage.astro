@@ -5,6 +5,7 @@ import Shell from "./Shell.astro";
 import { STRINGS, type Language } from "../i18n/strings";
 import { homePath, presenceIndex, presencePath } from "../data/paths";
 import type { Listed } from "../data/presences";
+import { installsText, loadInstalls } from "../data/stats";
 
 interface Props {
   language: Language;
@@ -16,6 +17,8 @@ const t = STRINGS[language];
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const title = t.presence.title.replace("{name}", presence.name);
 const description = presence.description[language] ?? presence.description.en;
+const installed = (await loadInstalls()).get(presence.folder);
+const locale = language === "es" ? "es-AR" : "en-US";
 const paths = { en: presencePath("en", presence.folder), es: presencePath("es", presence.folder) };
 const crumbs = {
   "@context": "https://schema.org",
@@ -41,6 +44,7 @@ const crumbs = {
       <div>
         <h1>{title}</h1>
         <span class="chip">{t.categories[presence.category as keyof typeof t.categories]}</span>
+        {installed && <span class="chip">{installsText(installed, t.presence.installsOne, t.presence.installs, locale)}</span>}
       </div>
     </div>
     <p class="lead">{description}</p>

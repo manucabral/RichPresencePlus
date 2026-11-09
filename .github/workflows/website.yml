@@ -20,6 +20,9 @@ on:
       - ".github/workflows/website.yml"
   release:
     types: [published]
+  # Once a day, after the catalog-stats workflow, so install counts stay current.
+  schedule:
+    - cron: "47 6 * * *"
   workflow_dispatch:
 
 permissions:
