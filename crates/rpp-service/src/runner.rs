@@ -879,9 +879,15 @@ mod tests {
         );
         assert!(asked.elapsed() < Duration::from_secs(5));
         std::thread::sleep(Duration::from_millis(300));
+        // A wake that lands during the read asks for one more, so a slow
+        // machine may see two reads; three wakes never make three.
+        if let Ok(again) = received.try_recv() {
+            assert_eq!(details(again).as_deref(), Some("for Bo"));
+            std::thread::sleep(Duration::from_millis(300));
+        }
         assert!(
             received.try_recv().is_err(),
-            "the wakes were merged into one read"
+            "the wakes were merged into at most two reads"
         );
         drop(runner);
     }
