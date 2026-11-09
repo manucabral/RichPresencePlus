@@ -9,6 +9,10 @@
 
   const { extractValues, sameState, rulesForPage, variablePaths } = globalThis.RPPExtract;
   const POLL_MS = 2000;
+  // How long a report waits for the page's world to answer: 20 tries of 50 ms.
+  const WAIT_MS = 50;
+  const MAX_WAITS = 20;
+  let waits = 0;
 
   let rules = [];
   const sent = new Map(); // presence -> { url, title, values, at }
@@ -53,11 +57,22 @@
       return;
     }
     const address = location.href;
-    for (const rule of rulesForPage(rules, address)) {
+    const matching = rulesForPage(rules, address);
+    const variables = matching.map((rule) => readVariables(rule.extract));
+    // The script in the page's world can start after this one; Firefox does it even
+    // when it was registered first. Without a wait, the first report leaves without
+    // the variables and they come one poll later.
+    const unanswered = matching.some((rule, index) => variables[index] === null && variablePaths(rule.extract).length);
+    if (unanswered && waits < MAX_WAITS) {
+      waits += 1;
+      setTimeout(report, WAIT_MS);
+      return;
+    }
+    for (const [index, rule] of matching.entries()) {
       const state = {
         url: address,
         title: document.title,
-        values: extractValues(document, rule.extract, readVariables(rule.extract)),
+        values: extractValues(document, rule.extract, variables[index]),
         at: Date.now(),
       };
       const previous = sent.get(rule.presence);
