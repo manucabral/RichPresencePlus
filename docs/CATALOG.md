@@ -22,9 +22,9 @@ application lists them under Presences, Add more, and installs them from GitHub.
    per release, so one release holds about 500 presences with two versions
    each; before the catalog grows near that, it moves to a repository of its
    own. Version 0.2.0 of the application looked for bundles in 16 releases per
-   channel (`catalog-files-0` to `-f`); those stay until most copies have
-   updated, and 0.2.0 downloads each file by itself when a bundle is not
-   there. Each presence keeps its current bundle and the one before. The application downloads the bundle and checks every file
+   channel (`catalog-files-0` to `-f`); they were deleted on 2026-11-09, their
+   download counts kept in the ledger, and 0.2.0 now downloads each file by
+   itself. Each presence keeps its current bundle and the one before. The application downloads the bundle and checks every file
    in it against the size and SHA-256 the index gives; a bundle with any other
    file, a missing one or a changed one is refused. When the index names no
    bundle, or the bundle cannot be used, each file is downloaded from the exact

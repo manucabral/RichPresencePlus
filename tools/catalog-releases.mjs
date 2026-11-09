@@ -21,10 +21,6 @@ import { BUNDLE_NAME } from "./catalog.mjs";
 /** Bundles kept per presence: the current one and the one before. */
 export const KEEP = 2;
 const CHANNELS = ["stable", "experimental"];
-// Until version 0.2.1 the bundles were spread over 16 releases per channel.
-// Version 0.2.0 still looks there and falls back to single files when a bundle
-// is missing; their download counts are still read until they are deleted.
-const RETIRED_SHARDS = [..."0123456789abcdef"];
 /** A presence folder name, as tools/catalog.mjs allows it. */
 const FOLDER = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
@@ -33,10 +29,9 @@ export function releaseFor(channel) {
   return channel === "experimental" ? "catalog-files-experimental" : "catalog-files";
 }
 
-/** Every release tag of a channel: the current one, then the retired ones. */
+/** Every release tag of a channel. The 16 of version 0.2.0 were deleted; their counts are in the ledger. */
 export function releasesOf(channel) {
-  const base = releaseFor(channel);
-  return [base, ...RETIRED_SHARDS.map((shard) => `${base}-${shard}`)];
+  return [releaseFor(channel)];
 }
 
 /** The folder a bundle file belongs to, or null for any other file. */

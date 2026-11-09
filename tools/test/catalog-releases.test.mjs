@@ -8,11 +8,8 @@ test("each channel keeps its bundles in one release, as the application asks", (
   // Same tags as Channel::release in crates/rpp-catalog.
   assert.equal(releaseFor("stable"), "catalog-files");
   assert.equal(releaseFor("experimental"), "catalog-files-experimental");
-  // The 16 releases of 0.2.0 are still read for counts and cleaned until deleted.
-  assert.equal(releasesOf("stable")[0], "catalog-files");
-  assert.equal(releasesOf("stable").length, 17);
-  assert.ok(releasesOf("stable").includes("catalog-files-2"));
-  assert.ok(!releasesOf("stable").includes("catalog-files-experimental"));
+  assert.deepEqual(releasesOf("stable"), ["catalog-files"]);
+  assert.deepEqual(releasesOf("experimental"), ["catalog-files-experimental"]);
 });
 
 test("each presence keeps the bundle in use and the one before", () => {
