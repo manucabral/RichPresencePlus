@@ -17,12 +17,14 @@ application lists them under Presences, Add more, and installs them from GitHub.
    keeps the verified copy for five minutes, then asks again with the tag
    GitHub gave it; an index that did not change is not downloaded again.
 3. Each presence version is also uploaded as one bundle file to a GitHub
-   release, and the index names it. GitHub holds at most 1000 files per
-   release, so bundles are spread over 16 releases per channel
-   (`catalog-files-0` to `-f`, `catalog-files-experimental-0` to `-f`) by the
-   first hex digit of the SHA-256 of the folder name; the application works
-   out the same release. Each presence keeps its current bundle and the one
-   before. The application downloads the bundle and checks every file
+   release, and the index names it: `catalog-files` for the stable channel and
+   `catalog-files-experimental` for the other. GitHub holds at most 1000 files
+   per release, so one release holds about 500 presences with two versions
+   each; before the catalog grows near that, it moves to a repository of its
+   own. Version 0.2.0 of the application looked for bundles in 16 releases per
+   channel (`catalog-files-0` to `-f`); those stay until most copies have
+   updated, and 0.2.0 downloads each file by itself when a bundle is not
+   there. Each presence keeps its current bundle and the one before. The application downloads the bundle and checks every file
    in it against the size and SHA-256 the index gives; a bundle with any other
    file, a missing one or a changed one is refused. When the index names no
    bundle, or the bundle cannot be used, each file is downloaded from the exact

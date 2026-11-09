@@ -8,7 +8,6 @@ use ed25519_dalek::{Signature, VerifyingKey};
 use rpp_plugins::reserved_device;
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use sha2::{Digest, Sha256};
 
 use crate::error::Error;
 
@@ -46,14 +45,13 @@ impl Channel {
         }
     }
 
-    /// Tag of the GitHub release that holds a presence's bundles.
-    pub fn release(self, folder: &str) -> String {
-        let base = match self {
+    /// Tag of the GitHub release that holds the channel's bundles. One release
+    /// holds 1000 files, about 500 presences with two versions each.
+    pub fn release(self) -> &'static str {
+        match self {
             Channel::Stable => "catalog-files",
             Channel::Experimental => "catalog-files-experimental",
-        };
-        let first = Sha256::digest(folder.as_bytes())[0] >> 4;
-        format!("{base}-{first:x}")
+        }
     }
 }
 

@@ -13,7 +13,6 @@
 // deleted. GitHub forgets a deleted file's download count, so `prune` first
 // writes that count to a ledger kept on the catalog-stats branch, and `stats`
 // adds the ledger to the live counts. The token comes from GITHUB_TOKEN.
-import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -22,20 +21,22 @@ import { BUNDLE_NAME } from "./catalog.mjs";
 /** Bundles kept per presence: the current one and the one before. */
 export const KEEP = 2;
 const CHANNELS = ["stable", "experimental"];
-const SHARDS = [..."0123456789abcdef"];
+// Until version 0.2.1 the bundles were spread over 16 releases per channel.
+// Version 0.2.0 still looks there and falls back to single files when a bundle
+// is missing; their download counts are still read until they are deleted.
+const RETIRED_SHARDS = [..."0123456789abcdef"];
 /** A presence folder name, as tools/catalog.mjs allows it. */
 const FOLDER = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
-/** Release tag that holds a presence's bundles on a channel. */
-export function releaseFor(channel, folder) {
-  const base = channel === "experimental" ? "catalog-files-experimental" : "catalog-files";
-  return `${base}-${createHash("sha256").update(folder).digest("hex")[0]}`;
+/** Release tag that holds a channel's bundles; the application asks for the same one. */
+export function releaseFor(channel) {
+  return channel === "experimental" ? "catalog-files-experimental" : "catalog-files";
 }
 
-/** Every release tag of a channel. */
+/** Every release tag of a channel: the current one, then the retired ones. */
 export function releasesOf(channel) {
-  const base = channel === "experimental" ? "catalog-files-experimental" : "catalog-files";
-  return SHARDS.map((shard) => `${base}-${shard}`);
+  const base = releaseFor(channel);
+  return [base, ...RETIRED_SHARDS.map((shard) => `${base}-${shard}`)];
 }
 
 /** The folder a bundle file belongs to, or null for any other file. */
@@ -165,7 +166,7 @@ function bundlesByRelease(dir, channel) {
   for (const name of readdirSync(dir).sort()) {
     const folder = folderOf(name);
     if (!folder) continue;
-    const tag = releaseFor(channel, folder);
+    const tag = releaseFor(channel);
     groups.set(tag, [...(groups.get(tag) ?? []), name]);
   }
   return groups;

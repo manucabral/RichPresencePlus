@@ -215,11 +215,7 @@ fn download(
 ) -> Result<BTreeMap<String, Vec<u8>>, Error> {
     if let Some(name) = &entry.bundle {
         let opened = source
-            .bundle(
-                &index.channel.release(&entry.folder),
-                name,
-                bundle::limit(entry),
-            )
+            .bundle(index.channel.release(), name, bundle::limit(entry))
             .and_then(|bytes| bundle::unpack(&bytes, entry));
         if let Ok(files) = opened {
             return Ok(files);

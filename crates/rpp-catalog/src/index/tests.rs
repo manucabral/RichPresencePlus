@@ -301,18 +301,13 @@ fn descriptions_and_other_names_keep_only_what_can_be_shown() {
 }
 
 #[test]
-fn bundles_are_spread_over_sixteen_releases_per_channel() {
-    // The same values tools/catalog.mjs computes (first hex digit of SHA-256).
-    assert_eq!(Channel::Stable.release("youtube"), "catalog-files-2");
-    assert_eq!(Channel::Stable.release("netflix"), "catalog-files-1");
+fn each_channel_keeps_its_bundles_in_one_release() {
+    // The same tags tools/catalog-releases.mjs uploads to.
+    assert_eq!(Channel::Stable.release(), "catalog-files");
     assert_eq!(
-        Channel::Experimental.release("sa-mp"),
-        "catalog-files-experimental-2"
+        Channel::Experimental.release(),
+        "catalog-files-experimental"
     );
-    let tags: std::collections::BTreeSet<String> = (0..2000)
-        .map(|n| Channel::Stable.release(&format!("p{n}")))
-        .collect();
-    assert_eq!(tags.len(), 16);
 }
 
 mod random_input {

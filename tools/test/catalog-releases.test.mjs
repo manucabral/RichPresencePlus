@@ -4,13 +4,15 @@ import { KEEP, prunePlan, releaseFor, releasesOf, tally } from "../catalog-relea
 
 const asset = (id, name, created, count = 0) => ({ id, name, created_at: created, download_count: count });
 
-test("the release of a presence matches the application's", () => {
-  // Same values as Channel::release in crates/rpp-catalog (first hex digit of SHA-256).
-  assert.equal(releaseFor("stable", "youtube"), "catalog-files-2");
-  assert.equal(releaseFor("stable", "netflix"), "catalog-files-1");
-  assert.equal(releaseFor("experimental", "sa-mp"), "catalog-files-experimental-2");
-  assert.equal(releasesOf("stable").length, 16);
-  assert.ok(releasesOf("stable").includes(releaseFor("stable", "anything")));
+test("each channel keeps its bundles in one release, as the application asks", () => {
+  // Same tags as Channel::release in crates/rpp-catalog.
+  assert.equal(releaseFor("stable"), "catalog-files");
+  assert.equal(releaseFor("experimental"), "catalog-files-experimental");
+  // The 16 releases of 0.2.0 are still read for counts and cleaned until deleted.
+  assert.equal(releasesOf("stable")[0], "catalog-files");
+  assert.equal(releasesOf("stable").length, 17);
+  assert.ok(releasesOf("stable").includes("catalog-files-2"));
+  assert.ok(!releasesOf("stable").includes("catalog-files-experimental"));
 });
 
 test("each presence keeps the bundle in use and the one before", () => {
@@ -73,7 +75,7 @@ test("the cleanup loads from a copy of the tools without the schema", async () =
       filter: (path) => !path.includes("node_modules"),
     });
     const copy = await import(pathToFileURL(join(home, "tools", "catalog-releases.mjs")).href);
-    assert.equal(copy.releaseFor("stable", "youtube"), "catalog-files-2");
+    assert.equal(copy.releaseFor("stable"), "catalog-files");
   } finally {
     rmSync(home, { recursive: true, force: true });
   }
