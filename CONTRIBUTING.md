@@ -39,7 +39,8 @@ pnpm --dir website test
 ```
 
 Changes to the extension's rules also have `node tools/try-extension.mjs`, which
-runs them in Chrome. Add `--show` to watch it.
+runs them in Chrome, and `node tools/try-firefox.mjs`, which runs them in Firefox.
+Add `--show` to watch them.
 
 Changes to the window, the interface or anything that runs all day also have
 `node tools/try-memory.mjs`. It starts the release build, so close the
