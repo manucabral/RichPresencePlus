@@ -82,17 +82,15 @@ jobs:
           [ "$CHANNEL" = "experimental" ] && branch=catalog-experimental
           git config user.name "github-actions"
           git config user.email "actions@users.noreply.github.com"
-          git fetch origin "$branch" || true
-          if git rev-parse --verify "origin/$branch" >/dev/null 2>&1; then
-            git switch --detach "origin/$branch"
-          else
-            git switch --orphan "$branch"
-            git rm -rf --quiet . || true
-          fi
+          # Only the newest index is kept: each publish is a single commit with no
+          # history, so old catalogs do not pile up. The application reads the
+          # branch's file and refuses an index older than one it accepted.
+          git switch --orphan "publish-$branch"
+          git rm -rf --quiet . || true
           cp "$RUNNER_TEMP/catalog.json" catalog.json
           git add catalog.json
           git commit -m "chore: publish the $CHANNEL catalog for ${GITHUB_SHA::8}"
-          git push origin "HEAD:refs/heads/$branch"
+          git push --force origin "HEAD:refs/heads/$branch"
       # Old bundles go once the new index is live, and their download counts
       # reach the ledger on catalog-stats before any delete.
       - name: Record and delete old bundles
