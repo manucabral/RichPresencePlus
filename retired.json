@@ -1,0 +1,70 @@
+{
+  "assets": {
+    "727737079": {
+      "channel": "stable",
+      "folder": "creator-tools",
+      "name": "creator-tools_1.0.0_593f09713a9a.json",
+      "count": 1
+    },
+    "727737169": {
+      "channel": "stable",
+      "folder": "dailymotion",
+      "name": "dailymotion_1.0.0_db377185fd86.json",
+      "count": 1
+    },
+    "727737287": {
+      "channel": "stable",
+      "folder": "desktop-media",
+      "name": "desktop-media_1.0.0_5203db59e20a.json",
+      "count": 1
+    },
+    "727737436": {
+      "channel": "stable",
+      "folder": "nepu",
+      "name": "nepu_1.0.0_69ccee084a37.json",
+      "count": 1
+    },
+    "727737554": {
+      "channel": "stable",
+      "folder": "netflix",
+      "name": "netflix_1.0.0_3328cb26e820.json",
+      "count": 1
+    },
+    "727737693": {
+      "channel": "stable",
+      "folder": "ready-or-not",
+      "name": "ready-or-not_2.0.0_18d57ed31514.json",
+      "count": 2
+    },
+    "727737819": {
+      "channel": "stable",
+      "folder": "roblox",
+      "name": "roblox_2.1.0_1300cd22c85c.json",
+      "count": 1
+    },
+    "727737960": {
+      "channel": "stable",
+      "folder": "sa-mp",
+      "name": "sa-mp_1.0.0_367496a97478.json",
+      "count": 2
+    },
+    "727738005": {
+      "channel": "stable",
+      "folder": "youtube",
+      "name": "youtube_2.1.0_d2a065ca6aa0.json",
+      "count": 2
+    },
+    "727738119": {
+      "channel": "stable",
+      "folder": "web-media",
+      "name": "web-media_1.0.0_d55ac6bd7ea0.json",
+      "count": 1
+    },
+    "727738260": {
+      "channel": "stable",
+      "folder": "youtube-music",
+      "name": "youtube-music_2.1.0_d7cbba89115e.json",
+      "count": 1
+    }
+  }
+}
