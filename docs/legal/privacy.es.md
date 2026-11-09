@@ -12,7 +12,7 @@ La aplicación lee solo lo que cada presencia que activás declara en su manifie
 
 | Fuente | Qué lee | Quién lo usa |
 | --- | --- | --- |
-| Páginas del navegador | La dirección, el título y los valores que la presencia declara, como el título de un video o la posición de reproducción | Presencias web |
+| Páginas del navegador | La dirección, el título y los valores que la presencia declara, como el título de un video o la posición de reproducción. Algunas presencias toman uno de esos valores de lo que la página carga de su sitio, como el nombre de una canción; el resto de lo que la página carga no se guarda | Presencias web |
 | Programas abiertos | Sus nombres | Presencias que lo declaran |
 | Ventana activa | Su programa y título | Presencias que lo declaran |
 | Sesión multimedia | El título, el artista y el estado que informa Windows | Presencias que lo declaran |

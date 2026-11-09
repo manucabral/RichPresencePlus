@@ -20,6 +20,45 @@ The icons in `extension/icons` are the app logo scaled to 16, 32, 48 and
 screenshot of the popup: `store/popup.png` is 1280x800, made with
 `node tools/try-extension.mjs --store docs/store`.
 
+## Listing
+
+Name: Rich Presence Plus
+
+Summary (132 characters at most):
+
+- en: Show on your Discord profile what you watch or listen to on the web, through the Rich Presence Plus app.
+- es: Mostrá en tu perfil de Discord lo que mirás o escuchás en la web, con la aplicación Rich Presence Plus.
+
+Description, en:
+
+> Rich Presence Plus shows on your Discord profile what you are watching or
+> listening to: the video, the song, the series. The extension reads the
+> sites you allow and passes what it reads to the Rich Presence Plus app on
+> your computer, which shows it on Discord.
+>
+> - Works on the sites you choose, one at a time.
+> - Nothing from private windows, and nothing while you pause it.
+> - Sends nothing to any server: only to the app on your computer.
+> - Needs the free Rich Presence Plus app for Windows and Discord for desktop.
+>
+> Free and open source: https://github.com/manucabral/RichPresencePlus
+
+Description, es:
+
+> Rich Presence Plus muestra en tu perfil de Discord lo que estás mirando o
+> escuchando: el video, la canción, la serie. La extensión lee los sitios que
+> permitís y le pasa lo que lee a la aplicación Rich Presence Plus de tu
+> computadora, que lo muestra en Discord.
+>
+> - Funciona en los sitios que elegís, de a uno.
+> - No lee ventanas privadas, ni nada mientras la pausás.
+> - No envía nada a ningún servidor: solo a la aplicación de tu computadora.
+> - Necesita la aplicación gratuita Rich Presence Plus para Windows y Discord de escritorio.
+>
+> Gratis y de código abierto: https://github.com/manucabral/RichPresencePlus
+
+Category: Chrome and Edge "Social & Communication"; Firefox "Social & Communication".
+
 ## Single purpose
 
 Shows on Discord what the user watches or listens to on sites they choose,
@@ -30,7 +69,7 @@ through the Rich Presence Plus desktop app.
 | Permission | Why |
 | --- | --- |
 | `storage` | Keeps the pairing with the desktop app, the pause switch and the rules the app sent. |
-| `scripting` | Registers the page scripts for the sites of the presences the user turned on, including a fixed script that reads the values the presence names from the page's own variables. |
+| `scripting` | Registers the page scripts for the sites of the presences the user turned on, including fixed scripts that read the values the presence names from the page's own variables and, for a presence that asks for it, from the answers the page fetches from addresses the presence declares. That script runs in the page from the start of the load, only on those sites, keeps the one value at the declared path, and never reads addresses about signing in. |
 | `alarms` | Tries to reach the desktop app again every 30 seconds while it is closed. |
 | `nativeMessaging` | Asks the desktop app, which registers itself as a native host, for its local port and key, so the user does not copy a code. |
 | `activeTab` | Shows in the popup whether a presence reads the page it was opened on. |

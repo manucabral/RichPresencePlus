@@ -12,7 +12,7 @@ The application reads only what each presence you turn on declares in its manife
 
 | Source | What it reads | Who uses it |
 | --- | --- | --- |
-| Pages in your browser | The address, the title and the values the presence declares, such as a video title or the playback position | Web presences |
+| Pages in your browser | The address, the title and the values the presence declares, such as a video title or the playback position. Some presences take one of those values from what the page loads from its site, such as the name of a song; the rest of what the page loads is not kept | Web presences |
 | Running programs | Their names | Presences that declare it |
 | Active window | Its program and title | Presences that declare it |
 | Media session | The title, artist and state that Windows reports | Presences that declare it |
