@@ -1,9 +1,9 @@
 ---
-title: Publishing
+title: Publish your presence
 description: Propose your presence to the Rich Presence Plus catalog with a pull request, so everyone with the app can install it.
 ---
 
-# Publishing
+# Publish your presence
 
 A presence you write runs on your computer. To let everyone install it, propose it to the
 catalog. People read it first, and once it is approved anyone with the application can

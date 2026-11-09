@@ -13,9 +13,13 @@ interface Props {
   data?: object;
   /** A script of this site for the page, by its path. */
   script?: string;
+  /** What else the page may load from this site; see `Base`. */
+  allow?: ("media" | "connect")[];
+  /** False keeps search engines away from the page. */
+  index?: boolean;
 }
 
-const { language, title, description, paths, data, script } = Astro.props;
+const { language, title, description, paths, data, script, allow, index } = Astro.props;
 const t = STRINGS[language];
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const REPOSITORY = "https://github.com/manucabral/RichPresencePlus";
@@ -30,7 +34,7 @@ const links = [
 ];
 ---
 
-<Base language={language} title={title} description={description} paths={paths} data={data} script={script}>
+<Base language={language} title={title} description={description} paths={paths} data={data} script={script} allow={allow} index={index}>
   <a class="skip" href="#main">{t.nav.skip}</a>
   <header class="top">
     <div class="wrap top-row">

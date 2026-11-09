@@ -1,15 +1,15 @@
 ---
-title: Presencias de escritorio
-description: Armá paso a paso una presencia para un programa o juego de Windows, con permisos para leer procesos, ventanas, archivos de log y APIs web.
+title: Mostrar un programa de Windows
+description: Armá paso a paso una presencia para un programa o juego de Windows, con permisos para leer procesos, ventanas y archivos de log.
 ---
 
-# Presencias de escritorio
+# Mostrar un programa de Windows
 
-Una presencia de escritorio muestra lo que hacés en un programa de Windows. Lee la computadora
-con el objeto `host`, que arranca vacío. Cada permiso del manifiesto le agrega una función, y la
-gente ve esa lista antes de activar la presencia.
-
-Esta página arma una presencia para un juego, de a una parte.
+Una presencia de escritorio lee la computadora con el objeto `host`, que arranca vacío. Cada
+permiso del manifiesto le agrega funciones, y la gente ve esa lista antes de activar la
+presencia. Esta guía arma una presencia para un juego, de a una parte. Creala con la plantilla
+"Programa de escritorio" de la página Desarrollo y dejá la pestaña Probar vigilándola mientras
+avanzás.
 
 ## 1. Pedir lo que necesitás
 
@@ -127,20 +127,12 @@ Después mostralo con `state: game.level || t("playing")` en `activity`.
 Leé el final del archivo y no todo, y guardá la ruta del log durante un minuto en vez de buscarla
 en cada llamada: una carpeta puede tener cientos de archivos.
 
-## Todos los permisos
+## Otros permisos
 
-| Permiso | Qué agrega |
-| --- | --- |
-| `"process": true` | `host.process.list()`: nombres de los programas en ejecución. |
-| `"args": {"game.exe": ["-h", "-p"]}` | `host.process.args(name)`: solo esas opciones de su línea de comandos, o `null` si está cerrado. |
-| `"window": true` | `host.window.foreground()`: `{ process, title }` de la ventana con foco. |
-| `"media": true` | `host.media.current()`: lo que Windows dice que se está reproduciendo. |
-| `"query": ["samp"]` | `host.query(protocol, address, port)`: lo que un servidor de juego dice de sí mismo, o `null`. |
-| `"http": ["api.example.com"]` | `host.http.get(url)`: solo HTTPS, a esos hosts exactos, sin redirecciones. |
-| `"files": ["%LOCALAPPDATA%/Game/logs"]` | `host.files.latest(dir, suffix)` y `host.files.tail(path, lines)` dentro de esas carpetas. |
-
-Pedí solo lo que usa el script. Una actualización que agrega un permiso espera a que la persona
-lo acepte, y mientras tanto la versión instalada sigue funcionando.
+Los programas también se pueden leer por su línea de comandos, por lo que Windows está
+reproduciendo, por APIs web y por servidores de juegos. [Host](11-host.md) lista cada permiso y
+lo que agrega. Pedí solo lo que usa el script: una actualización que suma un permiso espera a
+que la persona lo acepte.
 
 ## Un caso real
 

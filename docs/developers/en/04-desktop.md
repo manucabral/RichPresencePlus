@@ -1,15 +1,14 @@
 ---
-title: Desktop Presences
-description: Build a presence for a Windows program or game step by step, using permissions to read running programs, windows, log files and web APIs.
+title: Show a Windows program
+description: Build a presence for a Windows program or game step by step, using permissions to read running programs, windows and log files.
 ---
 
-# Desktop Presences
+# Show a Windows program
 
-A desktop presence shows what you do in a Windows program. It reads the computer through the
-`host` object, which starts empty. Each permission in the manifest adds a function to it, and
-people see that list before they turn the presence on.
-
-This page builds a presence for a game, one piece at a time.
+A desktop presence reads the computer through the `host` object, which starts empty. Each
+permission in the manifest adds functions to it, and people see that list before they turn the
+presence on. This guide builds a presence for a game, one piece at a time. Create it from the
+"Desktop program" template of the Developer page, and keep the Test tab watching it as you go.
 
 ## 1. Ask for what you need
 
@@ -125,20 +124,11 @@ Then show it with `state: game.level || t("playing")` in `activity`.
 Read the end of a file and not all of it, and keep the path of the log for a minute instead of
 searching on every call: a folder can hold hundreds of files.
 
-## All the permissions
+## Other permissions
 
-| Permission | What it adds |
-| --- | --- |
-| `"process": true` | `host.process.list()`: names of the running programs. |
-| `"args": {"game.exe": ["-h", "-p"]}` | `host.process.args(name)`: only those options of its command line, or `null` if it is closed. |
-| `"window": true` | `host.window.foreground()`: `{ process, title }` of the focused window. |
-| `"media": true` | `host.media.current()`: what Windows says is playing. |
-| `"query": ["samp"]` | `host.query(protocol, address, port)`: what a game server says about itself, or `null`. |
-| `"http": ["api.example.com"]` | `host.http.get(url)`: HTTPS only, to those exact hosts, no redirects. |
-| `"files": ["%LOCALAPPDATA%/Game/logs"]` | `host.files.latest(dir, suffix)` and `host.files.tail(path, lines)` inside those folders. |
-
-Ask only for what the script uses. An update that adds a permission waits until the person
-accepts it, and the installed version keeps running meanwhile.
+Programs can also be read through their command line, the media Windows is playing, web APIs and
+game servers. [Host](11-host.md) lists every permission and what it adds. Ask only for what the
+script uses: an update that adds a permission waits until the person accepts it.
 
 ## The real thing
 

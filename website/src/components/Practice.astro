@@ -1,0 +1,59 @@
+---
+// The page the first tutorial reads. Its markup is part of the documentation:
+// `h1.video-title`, `a.channel-name` and the `video` must keep these names.
+import Shell from "./Shell.astro";
+import { STRINGS, type Language } from "../i18n/strings";
+import { docsPath, practicePath } from "../data/docs";
+
+interface Props {
+  language: Language;
+}
+
+const { language } = Astro.props;
+const t = STRINGS[language].practice;
+const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const paths = { en: practicePath("en"), es: practicePath("es") };
+const tutorial = `${base}${docsPath(language, "first-presence")}`;
+---
+
+<Shell language={language} title={`${t.title} - Rich Presence Plus`} description={t.meta} paths={paths} allow={["media"]} index={false}>
+  <article class="wrap practice">
+    <video src={`${base}/practice/video.webm`} controls muted loop playsinline preload="metadata" width="320" height="180"></video>
+    <h1 class="video-title">{t.video}</h1>
+    <a class="channel-name" href={`${base}${practicePath(language)}#channel`} id="channel">{t.channel}</a>
+    <p>{t.note}</p>
+    <p><a href={tutorial}>{t.back}</a></p>
+  </article>
+</Shell>
+
+<style>
+  .practice {
+    max-width: 48rem;
+    padding-block: 2.5rem 4rem;
+  }
+
+  .practice video {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 16 / 9;
+    border-radius: 0.5rem;
+    background: var(--surface-panel);
+  }
+
+  .practice h1 {
+    margin: 1.25rem 0 0.25rem;
+    color: var(--text-primary);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+
+  .practice .channel-name {
+    color: var(--text-secondary);
+  }
+
+  .practice p {
+    margin-top: 1.25rem;
+    color: var(--text-secondary);
+  }
+</style>

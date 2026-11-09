@@ -7,7 +7,7 @@ use std::rc::Rc;
 use rpp_plugins::{Host, Manifest, Plugin, Request};
 use serde_json::{Value, json};
 
-/// The video presence that `docs/developers/en/05-web.md` builds.
+/// The video presence that `docs/developers/en/02-first-presence.md` builds, as its last block.
 const WEB: &str = r#"
 function read(context) {
   const page = bestPage(context.pages);
@@ -28,6 +28,7 @@ function activity(video) {
   if (video.channel_url) buttons.push({ label: t("channel"), url: video.channel_url });
 
   return {
+    name: "My Video",
     details: cut(video.title),
     state: video.channel || t("watching"),
     kind: "watching",
@@ -42,7 +43,7 @@ function meta(video) {
 }
 "#;
 
-/// The game presence that `docs/developers/en/06-desktop.md` builds, all steps together.
+/// The game presence that `docs/developers/en/04-desktop.md` builds, all steps together.
 const DESKTOP: &str = r#"
 const PROGRAM = "game.exe";
 let since = 0;
@@ -104,11 +105,31 @@ fn plugin(manifest: Value, source: &str) -> Plugin {
     Plugin::load(manifest, source, Rc::new(Fake)).unwrap()
 }
 
+/// The last JavaScript block of a page, where the tutorial shows the whole file.
+fn last_script(page: &str) -> String {
+    let page = page.replace("\r\n", "\n");
+    let start = page.rfind("```js\n").expect("a js block") + "```js\n".len();
+    let end = start + page[start..].find("```").expect("the end of the block");
+    page[start..end].trim().to_owned()
+}
+
+#[test]
+fn the_tutorial_shows_the_code_this_file_runs() {
+    let english = include_str!("../../../docs/developers/en/02-first-presence.md");
+    let spanish = include_str!("../../../docs/developers/es/02-first-presence.md");
+    assert_eq!(last_script(english), WEB.trim());
+    assert_eq!(
+        last_script(spanish),
+        WEB.trim().replace("My Video", "Mi Video"),
+        "the Spanish page differs only in the name"
+    );
+}
+
 #[test]
 fn the_web_example_works_as_the_page_explains() {
     let manifest = json!({
         "name": "Video", "version": "1.0.0", "client_id": "12345678901234567",
-        "page": {"matches": ["*://www.example.com/watch*"], "extract": {
+        "page": {"matches": ["*://manucabral.github.io/*practice/*"], "extract": {
             "title": {"from": "text", "selector": "h1.video-title"},
             "channel": {"from": "text", "selector": "a.channel-name"},
             "channel_url": {"from": "attr", "selector": "a.channel-name", "name": "href"},
@@ -128,6 +149,7 @@ fn the_web_example_works_as_the_page_explains() {
 
     let playing = plugin.poll(&page(false)).unwrap();
     let shown = playing.activity.unwrap();
+    assert_eq!(shown.name.as_deref(), Some("My Video"));
     assert_eq!(shown.details.as_deref(), Some("A video"));
     assert_eq!(shown.state.as_deref(), Some("A channel"));
     assert_eq!((shown.start, shown.end), (Some(990), Some(1090)));

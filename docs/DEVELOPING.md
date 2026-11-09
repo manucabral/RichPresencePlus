@@ -91,27 +91,31 @@ to start in the tray, with no window.
 
 **A new extractor** touches `crates/rpp-plugins/src/page.rs` (with its limits),
 `extension/extract.js`, `crates/rpp-app/templates/manifest.schema.json`, `value_type` in
-`crates/rpp-app/src/editor.rs`, both `05-web.md`, and a check in `tools/try-extension.mjs`.
+`crates/rpp-app/src/editor.rs`, both `09-extractors.md`, and a check in `tools/try-extension.mjs`.
 
 **A new activity field** touches `crates/rpp-core/src/activity.rs`, `activity_json` in
 `crates/rpp-discord/src/protocol.rs`, `filter_activity` if it can carry a title, the interface
-types, `script-api.d.ts` and `04-functions.md`.
+types, `script-api.d.ts` and both `10-script.md`.
 
 **A new permission** touches `Permissions` in `crates/rpp-plugins/src/permissions.rs`, where
 `grants()` fails to compile until it lists it, so an update that adds it asks first. Then
 `prelude` in `engine.rs`, `Access` in `views.rs`, the `host` part of `editor.rs`, the schema and
-`06-desktop.md`.
+both `11-host.md`.
 
 **A new tag** goes in `crates/rpp-plugins/src/tags.rs`, `manifest.schema.json`,
-`frontend/src/shared/tags.ts`, both locale files and both `03-structure.md`. Tests compare the
-first three. Removing one breaks presences that use it in the catalog check: add, do not rename.
+`frontend/src/shared/tags.ts`, both locale files and both `08-manifest.md`. Tests compare the
+first three, and `website/test/docs.test.ts` checks the pages. Removing one breaks presences that use it in the catalog check: add, do not rename.
 
 **A new page of the interface** goes in `ROUTES` in `frontend/src/main.tsx` and `navItems` in
 `Layout.tsx`, and in `routes` in `tools/try-interface.mjs` so it gets checked.
 
 **A new text** goes in both `frontend/src/locales` files, and `tools/check-locales.mjs` checks
 them. The documentation has the same parts and code blocks in both languages, which
-`website/test/docs.test.ts` checks.
+`website/test/docs.test.ts` checks, along with these: the reference names every field of
+`manifest.schema.json` and `script-api.d.ts`, headings start with the only capital, and every
+link lands on a heading that exists. The tutorial's last block must equal `WEB` in
+`crates/rpp-host/tests/docs_examples.rs`; its page is `website/src/components/Practice.astro`,
+whose class names the tutorial uses.
 
 ## Decisions
 

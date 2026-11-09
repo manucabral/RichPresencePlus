@@ -1,18 +1,13 @@
 ---
-title: Inicio
-description: Aprendé a escribir presencias para Rich Presence Plus en JavaScript, para sitios web y programas de Windows, sin compilar ni instalar herramientas.
+title: Empezar
+description: Escribí presencias para Rich Presence Plus en JavaScript, para sitios web y programas de Windows, sin compilar nada ni instalar herramientas.
 ---
 
-# Inicio
+# Empezar
 
-Esta documentación te enseña a escribir una presencia para Rich Presence Plus, la app que
-muestra en Discord lo que hacés en un sitio web o en un programa de Windows.
-
-Una presencia es una carpeta chica con un archivo JavaScript. Su trabajo es responder una
-pregunta una y otra vez: ¿qué está haciendo esta persona ahora? La aplicación pregunta cada
-pocos segundos, tu código responde, y la aplicación se encarga de Discord.
-
-Este es un script completo. Muestra el título de la página en la que estás:
+Una presencia muestra en Discord lo que alguien hace en un sitio web o en un programa de
+Windows. Es una carpeta con un manifiesto y un archivo de JavaScript. Cada pocos segundos la
+aplicación le pregunta a tu script qué está pasando, y ella se encarga de Discord.
 
 ```js
 function read(context) {
@@ -26,16 +21,31 @@ function activity(seen) {
 }
 ```
 
-`read` mira la página y se queda con lo que necesita. `activity` convierte eso en lo que
-muestra Discord. Esas dos funciones son casi todo lo que vas a escribir.
+Ese es un script completo. `read` junta lo que necesita y `activity` dice qué muestra la
+tarjeta. No necesitás Rust, ni Node, ni compilar: guardás el archivo y la aplicación lo carga.
 
-No necesitás Rust, ni Node, ni compilar nada. Guardás el archivo y la aplicación lo carga.
+## Por dónde seguir
 
-## Para empezar
+| Querés | Leé |
+| --- | --- |
+| Hacer tu primera presencia, paso a paso | [Tu primera presencia](02-first-presence.md) |
+| Mostrar un programa de Windows o un juego | [Mostrar un programa de Windows](04-desktop.md) |
+| Sacar un dato de un sitio | [Leer un sitio](03-read-a-site.md) |
+| Arreglar una presencia que no muestra nada | [Cuando no aparece nada](06-troubleshoot.md) |
+| Consultar un campo o una función | [Manifiesto](08-manifest.md), [Script](10-script.md), [Ayudantes](12-helpers.md) |
+| Entender qué pasa detrás de la tarjeta | [Cómo funciona](14-how-it-works.md) |
 
-- [Instalación](02-setup.md)
-- [Estructura](03-structure.md)
-- [Funciones](04-functions.md)
-- [Presencias web](05-web.md)
-- [Presencias de escritorio](06-desktop.md)
-- [Publicar](07-publish.md)
+## Cómo están ordenadas estas páginas
+
+- **Empezar** enseña con un ejemplo guiado.
+- **Guías** resuelven una tarea cada una.
+- **Referencia** lista cada campo, función y límite, con la misma forma en todas las páginas.
+- **Cómo funciona** explica el diseño detrás de las reglas.
+
+## Qué necesitás
+
+- Windows 10 u 11, con la aplicación de escritorio de Discord abierta.
+- Rich Presence Plus instalado.
+- Un editor de código. Visual Studio Code además explica cada función mientras escribís.
+- Para sitios web, la extensión del navegador, conectada desde la página Navegador de la
+  aplicación.

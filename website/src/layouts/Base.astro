@@ -17,9 +17,11 @@ interface Props {
   index?: boolean;
   /** A script of this site for the page, by its path. */
   script?: string;
+  /** What else the page may load from this site: `media` for video, `connect` for fetch. */
+  allow?: ("media" | "connect")[];
 }
 
-const { language, title, description, paths, data, index = true, script } = Astro.props;
+const { language, title, description, paths, data, index = true, script, allow = [] } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const site = Astro.site;
 const absolute = (path: string) => new URL(`${base}${path}`, site).href;
@@ -29,7 +31,8 @@ const image = absolute("/og.png");
 // Nothing on this site comes from another server. A page runs a script only
 // if it names one, and then only from this site.
 const scripts = script ? " script-src 'self';" : "";
-const policy = `default-src 'none';${scripts} style-src 'unsafe-inline'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none';`;
+const extra = allow.map((kind) => ` ${kind}-src 'self';`).join("");
+const policy = `default-src 'none';${scripts}${extra} style-src 'unsafe-inline'; font-src 'self'; img-src 'self'; base-uri 'none'; form-action 'none';`;
 ---
 
 <!doctype html>

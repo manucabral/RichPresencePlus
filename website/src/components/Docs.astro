@@ -3,7 +3,7 @@ import "../styles/docs.css";
 import DocLinks from "./DocLinks.astro";
 import Shell from "./Shell.astro";
 import { STRINGS, type Language } from "../i18n/strings";
-import { DOC_PAGES, docsPath } from "../data/docs";
+import { DOC_PAGES, DOC_SECTIONS, docsPath } from "../data/docs";
 
 interface Props {
   language: Language;
@@ -19,6 +19,7 @@ interface Doc {
 const { language, slug } = Astro.props;
 const t = STRINGS[language].docs;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
+const REPOSITORY = "https://github.com/manucabral/RichPresencePlus";
 const files = import.meta.glob<Doc>("../../../docs/developers/*/*.md", { eager: true });
 const load = (file: string) => {
   const found = Object.entries(files).find(([path]) => path.endsWith(`/${language}/${file}.md`));
@@ -28,8 +29,13 @@ const load = (file: string) => {
 
 const pages = DOC_PAGES.map((page) => ({
   slug: page.slug,
+  section: page.section,
   href: `${base}${docsPath(language, page.slug)}`,
   title: load(page.file).frontmatter.title,
+}));
+const groups = DOC_SECTIONS.map((section) => ({
+  name: t.sections[section],
+  pages: pages.filter((page) => page.section === section),
 }));
 const at = DOC_PAGES.findIndex((page) => page.slug === slug);
 const doc = load(DOC_PAGES[at].file);
@@ -38,24 +44,49 @@ const headings = doc.getHeadings().filter((heading) => heading.depth === 2);
 const previous = pages[at - 1];
 const next = pages[at + 1];
 const paths = { en: docsPath("en", slug), es: docsPath("es", slug) };
+const edit = `${REPOSITORY}/edit/main/docs/developers/${language}/${DOC_PAGES[at].file}.md`;
+const index = `${base}${docsPath(language, "")}search.json`;
 ---
 
-<Shell language={language} title={`${doc.frontmatter.title} - ${t.suffix}`} description={doc.frontmatter.description} paths={paths}>
+<Shell
+  language={language}
+  title={`${doc.frontmatter.title} - ${t.suffix}`}
+  description={doc.frontmatter.description}
+  paths={paths}
+  script="/docs.js"
+  allow={["connect"]}
+>
   <div class="docs wrap">
-    <details class="docs-menu">
-      <summary>{t.menu}</summary>
-      <ol>
-        {pages.map((page) => <li><a href={page.href} aria-current={page.slug === slug ? "page" : undefined}>{page.title}</a></li>)}
-      </ol>
-    </details>
-    <nav class="docs-nav" aria-label={t.label}>
-      <p>{t.label}</p>
-      <ol>
-        {pages.map((page) => <li><a href={page.href} aria-current={page.slug === slug ? "page" : undefined}>{page.title}</a></li>)}
-      </ol>
-    </nav>
+    <aside class="docs-side">
+      <div class="docs-search" hidden data-index={index} data-base={base} data-none={t.searchNone} data-copy={t.copy} data-copied={t.copied}>
+        <input type="search" placeholder={t.search} aria-label={t.search} autocomplete="off" />
+        <ul class="docs-results" hidden></ul>
+      </div>
+      <details class="docs-menu">
+        <summary>{t.menu}</summary>
+        {groups.map((group) => (
+          <>
+            <p>{group.name}</p>
+            <ul>
+              {group.pages.map((page) => <li><a href={page.href} aria-current={page.slug === slug ? "page" : undefined}>{page.title}</a></li>)}
+            </ul>
+          </>
+        ))}
+      </details>
+      <nav class="docs-nav" aria-label={t.label}>
+        {groups.map((group) => (
+          <>
+            <p>{group.name}</p>
+            <ul>
+              {group.pages.map((page) => <li><a href={page.href} aria-current={page.slug === slug ? "page" : undefined}>{page.title}</a></li>)}
+            </ul>
+          </>
+        ))}
+      </nav>
+    </aside>
     <article class="docs-body">
-      <DocLinks language={language}><Content /></DocLinks>
+      <DocLinks language={language} anchorLabel={t.anchor}><Content /></DocLinks>
+      <p class="docs-edit"><a href={edit}>{t.edit}</a></p>
       <nav class="docs-pager" aria-label={t.pager}>
         {previous && <a href={previous.href} rel="prev"><small>{t.previous}</small>{previous.title}</a>}
         {next && <a class="next" href={next.href} rel="next"><small>{t.next}</small>{next.title}</a>}

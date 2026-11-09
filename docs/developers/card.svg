@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 330" width="720" height="330" font-family="Inter, Segoe UI, system-ui, sans-serif">
+  <title>Where each field of activity shows on the card</title>
+  <rect width="720" height="330" rx="12" fill="#0d0f11"/>
+  <rect x="24" y="24" width="440" height="282" rx="10" fill="#17191c" stroke="#2a2e33"/>
+  <text x="44" y="56" fill="#9aa1a9" font-size="13" font-weight="600">Watching</text>
+  <rect x="44" y="72" width="104" height="104" rx="10" fill="#10b981" opacity="0.85"/>
+  <circle cx="142" cy="170" r="17" fill="#17191c"/>
+  <circle cx="142" cy="170" r="13" fill="#f59e0b"/>
+  <text x="166" y="92" fill="#f1f3f5" font-size="15" font-weight="650">My Video</text>
+  <text x="166" y="116" fill="#d4d8dd" font-size="13">A walk by the river</text>
+  <text x="166" y="138" fill="#d4d8dd" font-size="13">Practice channel</text>
+  <text x="166" y="170" fill="#9aa1a9" font-size="11">0:42</text>
+  <rect x="198" y="164" width="200" height="4" rx="2" fill="#2a2e33"/>
+  <rect x="198" y="164" width="60" height="4" rx="2" fill="#d4d8dd"/>
+  <text x="408" y="170" fill="#9aa1a9" font-size="11">2:30</text>
+  <rect x="44" y="198" width="400" height="34" rx="6" fill="#2a2e33"/>
+  <text x="244" y="220" fill="#f1f3f5" font-size="13" font-weight="500" text-anchor="middle">Watch</text>
+  <rect x="44" y="242" width="400" height="34" rx="6" fill="#2a2e33"/>
+  <text x="244" y="264" fill="#f1f3f5" font-size="13" font-weight="500" text-anchor="middle">Channel</text>
+  <g stroke="#3f454c" stroke-width="1" fill="none">
+    <path d="M110 52 H480"/>
+    <path d="M236 88 H480"/>
+    <path d="M318 112 H480"/>
+    <path d="M290 134 H480"/>
+    <path d="M440 166 H480"/>
+    <path d="M44 150 H34 V294 H480"/>
+    <path d="M158 176 V190 H480"/>
+    <path d="M444 236 H480"/>
+  </g>
+  <g fill="#34d399" font-family="Cascadia Code, Consolas, ui-monospace, monospace" font-size="13">
+    <text x="490" y="56">kind</text>
+    <text x="490" y="92">name</text>
+    <text x="490" y="116">details</text>
+    <text x="490" y="138">state</text>
+    <text x="490" y="170">start, end</text>
+    <text x="490" y="194">small_image</text>
+    <text x="490" y="240">buttons</text>
+    <text x="490" y="298">large_image</text>
+  </g>
+</svg>

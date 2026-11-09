@@ -1,20 +1,31 @@
 ---
-// The documentation links its pages by file, as in `03-structure.md#options`, so they
-// also work on GitHub. This turns those links into the addresses of the site.
-import { docsPath } from "../data/docs";
+// The documentation links its pages by file, as in `08-manifest.md#options`, so they
+// also work on GitHub. This turns those links into the addresses of the site, gives
+// each section heading a link to itself, and wraps tables so they scroll alone.
+import { docsPath, slugOfFile } from "../data/docs";
 import type { Language } from "../i18n/strings";
 
 interface Props {
   language: Language;
+  /** Accessible name of the link next to each heading. */
+  anchorLabel: string;
 }
 
-const { language } = Astro.props;
+const { language, anchorLabel } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, "");
 const rendered = await Astro.slots.render("default");
-const html = rendered.replace(/href="0\d-([a-z]+)\.md(#[^"]*)?"/g, (_, page: string, anchor = "") => {
-  const slug = page === "home" ? "" : page;
-  return `href="${base}${docsPath(language, slug)}${anchor}"`;
-});
+const html = rendered
+  .replace(/href="(\d{2}-[a-z-]+\.md)(#[^"]*)?"/g, (whole, file: string, anchor = "") => {
+    const slug = slugOfFile(file);
+    return slug === null ? whole : `href="${base}${docsPath(language, slug)}${anchor}"`;
+  })
+  .replace(
+    /<(h[23]) id="([^"]+)">([\s\S]*?)<\/\1>/g,
+    (_, tag: string, id: string, text: string) =>
+      `<${tag} id="${id}">${text}<a class="anchor" href="#${id}" aria-label="${anchorLabel}">#</a></${tag}>`,
+  )
+  .replace(/<table>/g, '<div class="table"><table>')
+  .replace(/<\/table>/g, "</table></div>");
 ---
 
 <Fragment set:html={html} />

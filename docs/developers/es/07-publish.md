@@ -1,9 +1,9 @@
 ---
-title: Publicar
+title: Publicar tu presencia
 description: Proponé tu presencia para el catálogo de Rich Presence Plus con un pull request, y que la pueda instalar cualquiera que tenga la app.
 ---
 
-# Publicar
+# Publicar tu presencia
 
 Una presencia que escribís funciona en tu computadora. Para que la pueda instalar todo el mundo,
 proponela para el catálogo. Primero la lee una persona, y cuando se aprueba cualquiera que tenga

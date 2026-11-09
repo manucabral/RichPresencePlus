@@ -23,9 +23,11 @@ function pages(dir = DIST): string[] {
   });
 }
 
-const indexed = () => pages().filter((path) => !path.endsWith("404.html"));
+// Pages kept away from search engines, such as 404 and the tutorial's practice page.
+const indexed = () =>
+  pages().filter((path) => !path.endsWith("404.html") && !readFileSync(path, "utf8").includes('content="noindex"'));
 
-test("every page stays within its size and runs no script", { skip: !built }, () => {
+test("every page stays within its size and runs only its own script", { skip: !built }, () => {
   for (const path of pages()) {
     const html = readFileSync(path, "utf8");
     const limit = path.replaceAll("\\", "/").includes("/docs/") ? MAX_DOC_PAGE : MAX_PAGE;
@@ -33,7 +35,13 @@ test("every page stays within its size and runs no script", { skip: !built }, ()
     const scripts = html.match(/<script[^>]*>/g) ?? [];
     const own = scripts.filter((tag) => !tag.includes("application/ld+json"));
     const inner = path.slice(DIST.length).replace(/\\/g, "/").replace(/^\//, "");
-    const allowed = /^(es\/)?presences\/index\.html$/.test(inner) ? "/search.js" : /^(es\/)?index\.html$/.test(inner) ? "/hero.js" : null;
+    const allowed = /^(es\/)?presences\/index\.html$/.test(inner)
+      ? "/search.js"
+      : /^(es\/)?index\.html$/.test(inner)
+        ? "/hero.js"
+        : /^(es\/)?docs\//.test(inner)
+          ? "/docs.js"
+          : null;
     assert.ok(own.every((tag) => allowed && tag.includes(allowed)), `${inner}: ${own}`);
   }
 });
@@ -68,4 +76,18 @@ test("every page says what search engines need", { skip: !built }, () => {
 test("the sitemap names every page", { skip: !built }, () => {
   const sitemap = readFileSync(join(DIST, "sitemap.xml"), "utf8");
   assert.equal(sitemap.match(/<loc>/g)?.length, indexed().length);
+});
+
+test("every link inside the site lands on a page or file that exists", { skip: !built }, () => {
+  const base = "/RichPresencePlus";
+  for (const path of pages()) {
+    const html = readFileSync(path, "utf8");
+    for (const [, href] of html.matchAll(/(?:href|src)="(\/[^"#?]*)/g)) {
+      if (!href.startsWith(`${base}/`)) continue;
+      const inside = href.slice(base.length).replace(/^\//, "");
+      const target = join(DIST, inside);
+      const exists = href.endsWith("/") ? existsSync(join(target, "index.html")) : existsSync(target);
+      assert.ok(exists, `${path}: ${href}`);
+    }
+  }
 });
