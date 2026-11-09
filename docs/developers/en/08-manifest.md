@@ -96,14 +96,15 @@ anything.
 ## Options
 
 `options` is a list of up to 16 settings people can change. The script reads them in
-`context.options`, and each label comes from the locale key `option.<key>`.
+`context.options`, each label comes from the locale key `option.<key>`, and a line under it that
+explains it from `help.<key>`.
 
 | Field | Type | Required | What it does |
 | --- | --- | --- | --- |
 | `type` | `boolean`, `number`, `text` or `choice` | yes | Which control the application draws. |
 | `key` | text | yes | The name in `context.options`. Unique in the presence. |
 | `default` | depends on `type` | yes | The value before anyone changes it. |
-| `when` | text | no | The key of a boolean option; this one shows only while that one is on. |
+| `when` | text or object | no | The key of a boolean option that must be on, or up to 4 keys of options with the value or values each must have. |
 | `min`, `max` | number | no | Limits of a `number`. |
 | `max_length` | number | no | Longest `text`: 64 by default, at most 256. |
 | `choices` | list of texts | for `choice` | Up to 16 values. Each label comes from `option.<key>.<choice>`. |

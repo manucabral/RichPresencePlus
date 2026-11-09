@@ -228,8 +228,40 @@
         },
         "default": {},
         "when": {
-          "type": "string",
-          "description": "Shows this option only while that boolean option is on."
+          "description": "Shows this option only while that boolean option is on, or while other options have the values given here.",
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "object",
+              "minProperties": 1,
+              "maxProperties": 4,
+              "additionalProperties": {
+                "oneOf": [
+                  {
+                    "type": [
+                      "boolean",
+                      "number",
+                      "string"
+                    ]
+                  },
+                  {
+                    "type": "array",
+                    "minItems": 1,
+                    "maxItems": 16,
+                    "items": {
+                      "type": [
+                        "boolean",
+                        "number",
+                        "string"
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          ]
         },
         "min": {
           "type": "number"

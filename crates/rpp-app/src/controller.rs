@@ -55,6 +55,7 @@ fn option_views(
                     .cloned()
                     .unwrap_or_else(|| setting.default_value()),
                 choice_labels,
+                help: strings.get(&format!("help.{key}")).cloned(),
             }
         })
         .collect()

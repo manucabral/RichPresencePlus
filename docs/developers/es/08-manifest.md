@@ -96,14 +96,15 @@ coincide con cualquier cosa.
 ## Opciones
 
 `options` es una lista de hasta 16 ajustes que la gente puede cambiar. El script los lee en
-`context.options`, y cada etiqueta sale de la clave `option.<clave>` del archivo de idioma.
+`context.options`, cada etiqueta sale de la clave `option.<clave>` del archivo de idioma, y una
+línea que la explica, de `help.<clave>`.
 
 | Campo | Tipo | Obligatorio | Qué hace |
 | --- | --- | --- | --- |
 | `type` | `boolean`, `number`, `text` o `choice` | sí | Qué control dibuja la aplicación. |
 | `key` | texto | sí | El nombre en `context.options`. Único en la presencia. |
 | `default` | según `type` | sí | El valor antes de que alguien lo cambie. |
-| `when` | texto | no | La clave de una opción booleana; esta se muestra solo mientras aquella está activa. |
+| `when` | texto u objeto | no | La clave de una opción booleana que tiene que estar activa, o hasta 4 claves de opciones con el valor o los valores que tiene que tener cada una. |
 | `min`, `max` | número | no | Límites de un `number`. |
 | `max_length` | número | no | El `text` más largo: 64 por defecto, 256 como máximo. |
 | `choices` | lista de textos | para `choice` | Hasta 16 valores. Cada etiqueta sale de `option.<clave>.<valor>`. |

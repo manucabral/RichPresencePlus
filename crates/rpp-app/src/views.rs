@@ -65,6 +65,8 @@ pub struct OptionView {
     pub value: Value,
     /// Text for each choice of a `choice` option, in the same order.
     pub choice_labels: Vec<String>,
+    /// One line that says what the option does, from `help.<key>` of the presence's texts.
+    pub help: Option<String>,
 }
 
 /// A presence in the list.

@@ -316,7 +316,7 @@ fn optioned_presence(root: &Path) {
     fs::write(directory.join("main.js"), OPTIONED).unwrap();
     fs::write(
         directory.join("locales/en.json"),
-        r#"{"option.who":"Name to greet","option.style.b":"Second style"}"#,
+        r#"{"option.who":"Name to greet","option.style.b":"Second style","help.who":"Who the card greets"}"#,
     )
     .unwrap();
 }
@@ -336,6 +336,8 @@ async fn options_are_listed_saved_and_reach_the_running_script() {
     // A label the presence does not translate falls back to the key.
     assert_eq!(options[1].label, "loud");
     assert_eq!(options[2].choice_labels, ["a", "Second style"]);
+    assert_eq!(options[0].help.as_deref(), Some("Who the card greets"));
+    assert_eq!(options[1].help, None);
     eventually("the default text", || {
         discord.details().last() == Some(&Some("Hello Ana".into()))
     })

@@ -45,24 +45,32 @@ export function matches(item: Described, text: string, kind: string): boolean {
 /** The fields of an option that decide whether it is shown. */
 export interface Conditional {
   key: string;
-  type: string;
   value: unknown;
-  if?: string;
+  /** The key of a boolean option that must be on, or the values other options must have. */
+  when?: string | Record<string, unknown>;
+}
+
+/** Each option a condition looks at, with the values that let it show. */
+function requirements(when: Conditional["when"]): [string, unknown[]][] {
+  if (when === undefined || when === null) return [];
+  if (typeof when === "string") return [[when, [true]]];
+  return Object.entries(when).map(([key, value]) => [key, Array.isArray(value) ? value : [value]]);
 }
 
 /**
- * The options to draw: one whose `if` names a boolean option that is off is
- * hidden, and so is anything that depends on a hidden option. The order is kept.
+ * The options to draw: one whose `when` does not hold is hidden, and so is
+ * anything that depends on a hidden option. The order is kept.
  */
 export function shownOptions<T extends Conditional>(options: readonly T[]): T[] {
   const byKey = new Map(options.map((option) => [option.key, option]));
   const shown = (option: T, depth: number): boolean => {
-    if (!option.if) return true;
-    const parent = byKey.get(option.if);
-    // The backend refuses a missing or non-boolean target and loops; the depth
-    // still keeps a bad answer from looping here.
-    if (!parent || parent.type !== "boolean" || depth > options.length) return false;
-    return parent.value === true && shown(parent, depth + 1);
+    // The backend refuses loops and missing targets; the depth still keeps a bad
+    // answer from looping here.
+    if (depth > options.length) return false;
+    return requirements(option.when).every(([key, allowed]) => {
+      const parent = byKey.get(key);
+      return parent !== undefined && allowed.includes(parent.value) && shown(parent, depth + 1);
+    });
   };
   return options.filter((option) => shown(option, 0));
 }

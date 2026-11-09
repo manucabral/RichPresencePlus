@@ -50,6 +50,31 @@ Agregá `when` con la clave de una opción booleana:
 
 `title_length` se oculta mientras `show_title` está apagada. Tu script igual recibe su valor.
 
+## Mostrar una opción solo para algunos valores
+
+Dale a `when` las claves de otras opciones y el valor que tiene que tener cada una, o una lista
+de valores:
+
+```json
+"options": [
+  { "type": "choice", "key": "image", "default": "logo", "choices": ["logo", "cover", "none"] },
+  { "type": "text", "key": "caption", "default": "", "when": { "image": ["cover", "logo"] } }
+]
+```
+
+`caption` se muestra mientras `image` es `cover` o `logo`. Con varias claves, tienen que cumplirse
+todas. Cada valor tiene que ser uno que la otra opción puede tomar, y `when` mira de 1 a 4
+opciones.
+
+## Explicar una opción
+
+Una línea debajo de la opción dice qué hace. Se escribe en los archivos de idioma, bajo `help.` y
+su clave:
+
+```json
+"help.caption": "El texto que se ve al pasar el mouse por la imagen."
+```
+
 ## Ofrecer una lista de opciones
 
 ```json

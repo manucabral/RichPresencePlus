@@ -4,11 +4,12 @@ use std::collections::BTreeSet;
 
 use rpp_core::Kind;
 use serde::Deserialize;
+use serde_json::Value;
 
 use crate::names::{valid_name, valid_person};
 use crate::page::PageSpec;
 use crate::permissions::{Grant, MAX_ARG_FLAGS, MAX_ARG_PROGRAMS, Permissions, QUERY_PROTOCOLS};
-use crate::setting::{MAX_SETTINGS, Setting};
+use crate::setting::{MAX_CONDITION_KEYS, MAX_SETTINGS, Setting, When};
 use crate::tags::is_known_tag;
 
 /// The newest manifest and script format this application reads.
@@ -327,28 +328,67 @@ impl Manifest {
                 return Err(reject("options", "two settings share a key"));
             }
         }
-        // A condition names another boolean setting of the same manifest.
-        // Chains are allowed; a loop, even through several settings, is not.
+        self.validate_conditions()
+    }
+
+    /// A condition looks at other settings of the same manifest, with values each
+    /// of them accepts. Chains are allowed; a loop, even through several
+    /// settings, is not.
+    fn validate_conditions(&self) -> Result<(), ManifestError> {
         let find = |name: &str| self.settings.iter().find(|other| other.key() == name);
         for setting in &self.settings {
-            let Some(name) = setting.condition() else {
+            let Some(when) = setting.condition() else {
                 continue;
             };
-            let boolean = matches!(find(name), Some(Setting::Boolean { .. }));
-            if name == setting.key() || !boolean {
-                return Err(reject(
-                    "options",
-                    "\"when\" names another boolean setting of this presence",
-                ));
+            let needs = when.requirements();
+            if needs.is_empty() || needs.len() > MAX_CONDITION_KEYS {
+                return Err(reject("options", "\"when\" looks at 1 to 4 settings"));
             }
-            let mut next = find(name).and_then(Setting::condition);
-            for _ in 0..self.settings.len() {
-                match next {
-                    Some(key) if key == setting.key() => {
-                        return Err(reject("options", "\"when\" conditions form a loop"));
-                    }
-                    Some(key) => next = find(key).and_then(Setting::condition),
-                    None => break,
+            for (name, allowed) in needs {
+                let Some(other) = find(name).filter(|other| other.key() != setting.key()) else {
+                    return Err(reject(
+                        "options",
+                        "\"when\" names another setting of this presence",
+                    ));
+                };
+                if matches!(when, When::On(_)) && !matches!(other, Setting::Boolean { .. }) {
+                    return Err(reject(
+                        "options",
+                        "\"when\" with a single name needs a boolean setting",
+                    ));
+                }
+                let fits = |value: &Value| !value.is_array() && other.check(value).is_ok();
+                if allowed.is_empty() || allowed.len() > 16 || !allowed.iter().all(fits) {
+                    return Err(reject(
+                        "options",
+                        "\"when\" gives values the named setting can take",
+                    ));
+                }
+            }
+        }
+        // A loop: following conditions from a setting comes back to it.
+        let depends = |setting: &Setting| -> Vec<String> {
+            setting
+                .condition()
+                .map(|when| {
+                    when.requirements()
+                        .iter()
+                        .map(|(key, _)| (*key).to_owned())
+                        .collect()
+                })
+                .unwrap_or_default()
+        };
+        for setting in &self.settings {
+            let mut seen = std::collections::HashSet::new();
+            let mut waiting = depends(setting);
+            while let Some(key) = waiting.pop() {
+                if key == setting.key() {
+                    return Err(reject("options", "\"when\" conditions form a loop"));
+                }
+                if seen.insert(key.clone())
+                    && let Some(other) = find(&key)
+                {
+                    waiting.extend(depends(other));
                 }
             }
         }
@@ -359,6 +399,7 @@ impl Manifest {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serde_json::json;
 
     const GOOD: &str = r#"{
         "name": "Video Site", "version": "1.0.0", "client_id": "1113646725408772176",
@@ -547,7 +588,10 @@ mod tests {
                 {"type":"choice","key":"style","default":"a","choices":["a","b"],"when":"players"}]"#,
         )
         .unwrap();
-        assert_eq!(good.settings[1].condition(), Some("players"));
+        assert_eq!(
+            good.settings[1].condition(),
+            Some(&When::On("players".into()))
+        );
         assert_eq!(good.settings[0].condition(), None);
         for bad in [
             r#"[{"type":"boolean","key":"a","default":true,"when":"a"}]"#,
@@ -559,6 +603,56 @@ mod tests {
         ] {
             assert!(with(bad).is_err(), "{bad}");
         }
+    }
+
+    #[test]
+    fn a_setting_may_depend_on_the_values_of_other_settings() {
+        let with = |settings: &str| {
+            Manifest::parse(&GOOD.replace(
+                "\"kind\": \"video\"",
+                &format!("\"kind\": \"video\", \"options\": {settings}"),
+            ))
+        };
+        let base = r#"{"type":"choice","key":"image","default":"logo","choices":["logo","cover","none"]},
+            {"type":"boolean","key":"show","default":true},
+            {"type":"number","key":"size","default":2,"min":1,"max":5}"#;
+        let good = with(&format!(
+            r#"[{base}, {{"type":"text","key":"caption","default":"","when":{{"image":["cover","logo"],"show":false,"size":3}}}}]"#
+        ))
+        .unwrap();
+        let needs = good.settings[3].condition().unwrap().requirements();
+        assert_eq!(
+            needs,
+            vec![
+                ("image", vec![json!("cover"), json!("logo")]),
+                ("show", vec![json!(false)]),
+                ("size", vec![json!(3)]),
+            ]
+        );
+        for bad in [
+            // A value the named setting cannot take.
+            r#"{"image":"poster"}"#,
+            r#"{"size":9}"#,
+            r#"{"show":"yes"}"#,
+            r#"{"image":[["cover"]]}"#,
+            r#"{"image":[]}"#,
+            // No setting, or itself.
+            r#"{"missing":true}"#,
+            r#"{"caption":""}"#,
+            r#"{}"#,
+            // A single name still needs a boolean.
+            r#""image""#,
+            // More than four settings.
+            r#"{"image":"logo","show":true,"size":1,"a":1,"b":2}"#,
+        ] {
+            let settings =
+                format!(r#"[{base}, {{"type":"text","key":"caption","default":"","when":{bad}}}]"#);
+            assert!(with(&settings).is_err(), "{bad}");
+        }
+        // A loop through values is a loop too.
+        let looped = r#"[{"type":"choice","key":"a","default":"x","choices":["x","y"],"when":{"b":"y"}},
+            {"type":"choice","key":"b","default":"x","choices":["x","y"],"when":{"a":"x"}}]"#;
+        assert!(with(looped).is_err());
     }
 
     #[test]

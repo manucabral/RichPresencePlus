@@ -50,6 +50,28 @@ Add `when` with the key of a boolean option:
 
 `title_length` hides while `show_title` is off. Your script still receives its value.
 
+## Show an option only for some values
+
+Give `when` the keys of other options and the value each must have, or a list of values:
+
+```json
+"options": [
+  { "type": "choice", "key": "image", "default": "logo", "choices": ["logo", "cover", "none"] },
+  { "type": "text", "key": "caption", "default": "", "when": { "image": ["cover", "logo"] } }
+]
+```
+
+`caption` shows while `image` is `cover` or `logo`. With several keys, every one must match. A
+value has to be one the other option can take, and `when` looks at 1 to 4 options.
+
+## Explain an option
+
+A line under the option says what it does. Write it in the locale files, under `help.` and its key:
+
+```json
+"help.caption": "The text shown when hovering the picture."
+```
+
 ## Offer a list of choices
 
 ```json

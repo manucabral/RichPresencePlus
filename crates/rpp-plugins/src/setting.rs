@@ -13,6 +13,39 @@ const MAX_CHOICES: usize = 16;
 const DEFAULT_TEXT_LENGTH: usize = 64;
 /// Longest value of a `text` setting a manifest may allow.
 const MAX_TEXT_LENGTH: usize = 256;
+/// Most settings one condition may look at.
+pub const MAX_CONDITION_KEYS: usize = 4;
+
+/// When a setting shows. Settings that do not show keep their value, and the
+/// script still receives it.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum When {
+    /// The key of a boolean setting that must be on.
+    On(String),
+    /// Keys of other settings and the value each must have, or a list of
+    /// values it may have. Every key must match.
+    Values(BTreeMap<String, Value>),
+}
+
+impl When {
+    /// Each setting this condition looks at, with the values that let it show.
+    pub fn requirements(&self) -> Vec<(&str, Vec<Value>)> {
+        match self {
+            When::On(key) => vec![(key.as_str(), vec![Value::Bool(true)])],
+            When::Values(values) => values
+                .iter()
+                .map(|(key, value)| {
+                    let allowed = match value {
+                        Value::Array(items) => items.clone(),
+                        other => vec![other.clone()],
+                    };
+                    (key.as_str(), allowed)
+                })
+                .collect(),
+        }
+    }
+}
 
 /// One option of a presence.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -22,9 +55,9 @@ pub enum Setting {
     Boolean {
         /// Name the script reads it by.
         key: String,
-        /// A boolean setting that must be on for this one to show.
-        #[serde(rename = "when", default, skip_serializing_if = "Option::is_none")]
-        when: Option<String>,
+        /// When it shows; always when omitted.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        when: Option<When>,
         /// Value until the user changes it.
         default: bool,
     },
@@ -32,9 +65,9 @@ pub enum Setting {
     Number {
         /// Name the script reads it by.
         key: String,
-        /// A boolean setting that must be on for this one to show.
-        #[serde(rename = "when", default, skip_serializing_if = "Option::is_none")]
-        when: Option<String>,
+        /// When it shows; always when omitted.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        when: Option<When>,
         /// Value until the user changes it.
         default: f64,
         /// Smallest accepted value.
@@ -48,9 +81,9 @@ pub enum Setting {
     Text {
         /// Name the script reads it by.
         key: String,
-        /// A boolean setting that must be on for this one to show.
-        #[serde(rename = "when", default, skip_serializing_if = "Option::is_none")]
-        when: Option<String>,
+        /// When it shows; always when omitted.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        when: Option<When>,
         /// Value until the user changes it.
         default: String,
         /// Most characters accepted; 64 when omitted.
@@ -61,9 +94,9 @@ pub enum Setting {
     Choice {
         /// Name the script reads it by.
         key: String,
-        /// A boolean setting that must be on for this one to show.
-        #[serde(rename = "when", default, skip_serializing_if = "Option::is_none")]
-        when: Option<String>,
+        /// When it shows; always when omitted.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        when: Option<When>,
         /// Choice used until the user changes it; one of `choices`.
         default: String,
         /// The values that can be picked.
@@ -91,13 +124,13 @@ impl Setting {
         }
     }
 
-    /// The boolean setting that must be on for this one to show, if any.
-    pub fn condition(&self) -> Option<&str> {
+    /// When this setting shows, if it depends on others.
+    pub fn condition(&self) -> Option<&When> {
         match self {
             Setting::Boolean { when, .. }
             | Setting::Number { when, .. }
             | Setting::Text { when, .. }
-            | Setting::Choice { when, .. } => when.as_deref(),
+            | Setting::Choice { when, .. } => when.as_ref(),
         }
     }
 

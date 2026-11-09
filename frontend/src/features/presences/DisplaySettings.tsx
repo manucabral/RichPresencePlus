@@ -108,6 +108,7 @@ export default function DisplaySettings({ presence, onSaved }: { presence: Prese
             {options.map((option) => (
               <div key={option.key} className="px-4 py-3">
                 <OptionControl option={option} onSave={(value) => saveOption(option.key, value)} />
+                {option.help && <p className="mt-1 text-xs text-neutral-500">{option.help}</p>}
               </div>
             ))}
           </Panel>

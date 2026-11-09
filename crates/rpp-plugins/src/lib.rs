@@ -22,5 +22,5 @@ pub use manifest::{FORMAT, Manifest, ManifestError};
 pub use names::{MAX_NAME, identity, reserved_device, valid_name, valid_person};
 pub use page::{Extractor, FrameSpec, PageSpec, StorageArea};
 pub use permissions::{Denied, Grant, Host, Permissions, Request};
-pub use setting::{Setting, resolve as resolve_settings};
+pub use setting::{Setting, When, resolve as resolve_settings};
 pub use tags::{TAGS, is_known_tag};

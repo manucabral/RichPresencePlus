@@ -42,22 +42,40 @@ test("the kind filter treats unknown kinds as other", () => {
 
 test("options that depend on a switch hide while it is off", () => {
   const options = [
-    { key: "players", type: "boolean", value: false },
-    { key: "style", type: "choice", value: "a", if: "players" },
-    { key: "size", type: "number", value: 1, if: "style" },
-    { key: "deep", type: "boolean", value: true, if: "players" },
-    { key: "deeper", type: "text", value: "x", if: "deep" },
-    { key: "free", type: "text", value: "y" },
+    { key: "players", value: false },
+    { key: "style", value: "a", when: "players" },
+    { key: "deep", value: true, when: "players" },
+    { key: "deeper", value: "x", when: "deep" },
+    { key: "free", value: "y" },
   ];
   assert.deepEqual(shownOptions(options).map((o) => o.key), ["players", "free"]);
   options[0].value = true;
-  // `size` depends on a choice, which the backend refuses; it stays hidden.
   assert.deepEqual(shownOptions(options).map((o) => o.key), ["players", "style", "deep", "deeper", "free"]);
   const loop = [
-    { key: "a", type: "boolean", value: true, if: "b" },
-    { key: "b", type: "boolean", value: true, if: "a" },
+    { key: "a", value: true, when: "b" },
+    { key: "b", value: true, when: "a" },
   ];
   assert.deepEqual(shownOptions(loop), []);
+});
+
+test("options that depend on values show only while every value matches", () => {
+  const options: { key: string; value: unknown; when?: string | Record<string, unknown> }[] = [
+    { key: "image", value: "logo" },
+    { key: "show", value: true },
+    { key: "size", value: 3 },
+    { key: "caption", value: "", when: { image: ["cover", "poster"], show: true } },
+    { key: "zoom", value: 1, when: { size: 3 } },
+    { key: "inner", value: "", when: { caption: "" } },
+    { key: "lost", value: "", when: { missing: 1 } },
+  ];
+  const keys = () => shownOptions(options).map((o) => o.key);
+  assert.deepEqual(keys(), ["image", "show", "size", "zoom"]);
+  options[0].value = "cover";
+  assert.deepEqual(keys(), ["image", "show", "size", "caption", "zoom", "inner"]);
+  options[1].value = false;
+  assert.deepEqual(keys(), ["image", "show", "size", "zoom"], "every value must match");
+  options[2].value = 4;
+  assert.deepEqual(keys(), ["image", "show", "size"]);
 });
 
 test("site patterns read as sites, each once", () => {

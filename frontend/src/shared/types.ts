@@ -29,8 +29,10 @@ export interface OptionView {
   max_length?: number;
   choices: string[];
   choice_labels: string[];
-  /** A boolean option that must be on for this one to show. */
-  if?: string;
+  /** One line under the option that says what it does, in the language in use. */
+  help: string | null;
+  /** The key of a boolean option that must be on, or the values other options must have. */
+  when?: string | Record<string, boolean | number | string | (boolean | number | string)[]>;
 }
 
 /** Where a presence came from; only a local one can be modified. */
