@@ -1,6 +1,6 @@
 {
   "name": "YouTube",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Shows the YouTube video you are watching.",
   "client_id": "1113646725408772176",
   "kind": "video",
@@ -34,6 +34,11 @@
       "player": {
         "from": "media",
         "selector": "video"
+      },
+      "ad": {
+        "from": "attr",
+        "selector": "#movie_player.ad-showing",
+        "name": "id"
       }
     }
   },

@@ -182,6 +182,23 @@ fn texts_follow_the_language_and_buttons_are_translated() {
 }
 
 #[test]
+fn an_ad_keeps_the_video_but_not_the_clock_of_the_ad() {
+    let mut plugin = start_in("es");
+    let mut page = watch("A Video", 3.0, false);
+    page["values"]["ad"] = json!("movie_player");
+    page["values"]["player"]["duration"] = json!(15.0);
+    let tick = tick(&mut plugin, json!([page]));
+    let shown = tick.activity.unwrap();
+    assert_eq!(shown.details.as_deref(), Some("A Video"));
+    assert_eq!((shown.start, shown.end), (None, None));
+    assert_eq!(shown.small_text.as_deref(), Some("Anuncio en curso"));
+    assert!(
+        !tick.meta.paused,
+        "an ad does not give way to a paused video elsewhere"
+    );
+}
+
+#[test]
 fn the_logo_can_replace_the_thumbnail() {
     let mut plugin = start();
     let shown = plugin

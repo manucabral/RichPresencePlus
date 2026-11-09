@@ -9,5 +9,6 @@
   "paused": "Paused",
   "option.image": "Large image",
   "option.image.thumbnail": "Video thumbnail",
-  "option.image.logo": "YouTube logo"
+  "option.image.logo": "YouTube logo",
+  "ad": "Ad playing"
 }

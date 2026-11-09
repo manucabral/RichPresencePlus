@@ -3,5 +3,6 @@
   "listening": "Listening to music",
   "playing": "Playing",
   "paused": "Paused",
-  "option.show_album": "Show the album"
+  "option.show_album": "Show the album",
+  "ad": "Ad playing"
 }

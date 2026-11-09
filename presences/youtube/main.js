@@ -17,6 +17,8 @@ function read(context) {
   const url = parseUrl(page.url);
   const values = page.values;
   const isShort = url.path.startsWith("/shorts/");
+  // During an ad the player is the ad's: its clock is not the video's.
+  const ad = Boolean(values.ad);
   return {
     id: videoId(url),
     browsing: url.path === "/" || !values.player,
@@ -24,6 +26,7 @@ function read(context) {
     author: isShort ? values.shorts_author : values.author,
     author_url: values.author_url,
     thumbnail: context.options.image !== "logo",
+    ad,
     ...playback(values.player, page.received_at),
   };
 }
@@ -41,17 +44,17 @@ function activity(video) {
     details: cut(video.title) || t("watching"),
     state: video.author ? cut(t("by", { author: video.author })) : null,
     kind: "watching",
-    start: video.start,
-    end: video.end,
+    start: video.ad ? null : video.start,
+    end: video.ad ? null : video.end,
     large_image: video.id && video.thumbnail ? `https://i.ytimg.com/vi/${video.id}/hqdefault.jpg` : LOGO,
     large_text: "YouTube",
-    small_image: video.playing ? "play" : "pause",
-    small_text: video.playing ? t("playing") : t("paused"),
+    small_image: video.playing || video.ad ? "play" : "pause",
+    small_text: video.ad ? t("ad") : video.playing ? t("playing") : t("paused"),
     buttons,
   };
 }
 
 // A paused video gives way when something else is playing.
 function meta(video) {
-  return { paused: !video.browsing && !video.playing };
+  return { paused: !video.browsing && !video.playing && !video.ad };
 }

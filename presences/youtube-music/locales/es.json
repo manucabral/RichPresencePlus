@@ -3,5 +3,6 @@
   "listening": "Escuchando música",
   "playing": "Reproduciendo",
   "paused": "En pausa",
-  "option.show_album": "Mostrar el álbum"
+  "option.show_album": "Mostrar el álbum",
+  "ad": "Anuncio en curso"
 }

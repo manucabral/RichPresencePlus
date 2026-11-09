@@ -93,6 +93,22 @@ fn a_playing_song_shows_artist_album_cover_and_a_progress_bar() {
 }
 
 #[test]
+fn an_ad_is_not_shown_as_the_song() {
+    let mut plugin = start("youtube-music", "es");
+    let mut page = song("playing", 3.0);
+    page["values"]["ad"] = json!("movie_player");
+    page["values"]["session"]["title"] = json!("Buy this shampoo");
+    let tick = tick(&mut plugin, json!([page]));
+    let shown = tick.activity.unwrap();
+    assert_eq!(shown.details.as_deref(), Some("Escuchando música"));
+    assert_eq!(shown.state.as_deref(), Some("Anuncio en curso"));
+    assert_eq!(shown.large_image.as_deref(), Some("youtube_music_logo"));
+    assert_eq!((shown.start, shown.end), (None, None));
+    assert!(!format!("{shown:?}").contains("shampoo"));
+    assert!(!tick.meta.paused);
+}
+
+#[test]
 fn a_paused_song_has_no_clock_and_is_marked_paused() {
     let mut plugin = start("youtube-music", "en");
     let tick = tick(&mut plugin, json!([song("paused", 50.0)]));

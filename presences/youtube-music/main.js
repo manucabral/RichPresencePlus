@@ -10,6 +10,9 @@ function read(context) {
   const page = bestPage(context.pages.filter((p) => p.values.session));
   if (!page) return null;
 
+  // During an ad the site publishes the ad as the song; nothing of it is shown.
+  if (page.values.ad) return { ad: true, playing: true };
+
   const song = page.values.session;
   const clock = playback(page.values.player, page.received_at);
   return {
@@ -25,6 +28,15 @@ function read(context) {
 }
 
 function activity(song) {
+  if (song.ad) {
+    return {
+      details: t("listening"),
+      state: t("ad"),
+      kind: "listening",
+      large_image: LOGO,
+      large_text: "YouTube Music",
+    };
+  }
   const artistAndAlbum = [song.artist, song.album].filter(Boolean).join(" | ");
   const cover = song.artwork && song.artwork.length <= MAX_IMAGE ? song.artwork : LOGO;
 
