@@ -279,12 +279,26 @@ function serve(broken) {
   return new Promise((done) => server.listen(0, "127.0.0.1", () => done(server)));
 }
 
-async function devtools(profile) {
+// A cold browser on a shared CI machine can take well over ten seconds to start,
+// and it writes the port file in two steps.
+async function devtools(profile, child) {
   const file = join(profile, "DevToolsActivePort");
-  for (let i = 0; i < 100 && !existsSync(file); i += 1) await wait(100);
-  const port = readFileSync(file, "utf8").split("\n")[0];
-  const pages = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
-  return pages.find((page) => page.type === "page").webSocketDebuggerUrl;
+  const until = Date.now() + 30_000;
+  while (Date.now() < until) {
+    if (child.exitCode !== null) throw new Error(`the browser closed with code ${child.exitCode}`);
+    const port = existsSync(file) ? readFileSync(file, "utf8").split("\n")[0].trim() : "";
+    if (/^\d+$/.test(port)) {
+      try {
+        const pages = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
+        const page = pages.find((item) => item.type === "page");
+        if (page) return page.webSocketDebuggerUrl;
+      } catch {
+        // Not listening yet.
+      }
+    }
+    await wait(100);
+  }
+  throw new Error("the browser did not open its debugging port in 30 seconds");
 }
 
 const wait = (ms) => new Promise((done) => setTimeout(done, ms));
@@ -1087,7 +1101,7 @@ async function main() {
   let failures = [];
   try {
     const problems = [];
-    const page = await connect(await devtools(profile), problems);
+    const page = await connect(await devtools(profile, child), problems);
     await page.call("Page.enable");
     await page.call("Runtime.enable");
     // A page kept by the browser would hide a file that stopped loading.
