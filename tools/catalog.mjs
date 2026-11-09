@@ -34,10 +34,17 @@ const LANGUAGE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
 const MAX_DESCRIPTION = 300;
 
 // The closed list of tags and the newest format, from the file the application and the editor read.
+// Read on first use: tools that only import a name, such as the release cleanup that runs from a
+// copy of this folder, must not need the schema next to them.
 const SCHEMA = new URL("../crates/rpp-app/templates/manifest.schema.json", import.meta.url);
-const SCHEMA_PROPERTIES = JSON.parse(readFileSync(SCHEMA, "utf8")).properties;
-const TAGS = new Set(SCHEMA_PROPERTIES.tags.items.enum);
-const FORMAT = SCHEMA_PROPERTIES.format.maximum;
+let schemaRules = null;
+function rules() {
+  if (!schemaRules) {
+    const properties = JSON.parse(readFileSync(SCHEMA, "utf8")).properties;
+    schemaRules = { tags: new Set(properties.tags.items.enum), format: properties.format.maximum };
+  }
+  return schemaRules;
+}
 
 // The first 12 bytes of an Ed25519 public key in DER, before the 32 raw bytes.
 const SPKI_PREFIX = Buffer.from("302a300506032b6570032100", "hex");
@@ -100,10 +107,11 @@ export function describe(root, folder) {
   if (typeof manifest.name !== "string" || manifest.name.trim() === "")
     throw new Error(`${folder}: the manifest has no name`);
   if (!SEMVER.test(manifest.version)) throw new Error(`${folder}: version ${manifest.version} is not semver (1.2.3)`);
+  const { tags, format: newest } = rules();
   const format = manifest.format ?? 1;
-  if (!Number.isInteger(format) || format < 1 || format > FORMAT)
-    throw new Error(`${folder}: format ${JSON.stringify(manifest.format)} is not a whole number from 1 to ${FORMAT}`);
-  const unknown = (Array.isArray(manifest.tags) ? manifest.tags : []).filter((tag) => !TAGS.has(tag));
+  if (!Number.isInteger(format) || format < 1 || format > newest)
+    throw new Error(`${folder}: format ${JSON.stringify(manifest.format)} is not a whole number from 1 to ${newest}`);
+  const unknown = (Array.isArray(manifest.tags) ? manifest.tags : []).filter((tag) => !tags.has(tag));
   if (unknown.length > 0) throw new Error(`${folder}: tags not on the list: ${unknown.join(", ")}`);
   const paths = filesIn(where);
   if (paths.length === 0 || paths.length > MAX_FILES) throw new Error(`${folder}: expected 1 to ${MAX_FILES} files`);

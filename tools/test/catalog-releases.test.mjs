@@ -59,3 +59,22 @@ test("installs add live downloads and deleted bundles once", () => {
     { folder: "roblox", installs: 0 },
   ]);
 });
+
+test("the cleanup loads from a copy of the tools without the schema", async () => {
+  // The workflow copies tools/ out of the checkout before switching branches.
+  const { cpSync, mkdtempSync, rmSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { pathToFileURL } = await import("node:url");
+  const home = mkdtempSync(join(tmpdir(), "rpp-tools-"));
+  try {
+    cpSync(new URL("..", import.meta.url), join(home, "tools"), {
+      recursive: true,
+      filter: (path) => !path.includes("node_modules"),
+    });
+    const copy = await import(pathToFileURL(join(home, "tools", "catalog-releases.mjs")).href);
+    assert.equal(copy.releaseFor("stable", "youtube"), "catalog-files-2");
+  } finally {
+    rmSync(home, { recursive: true, force: true });
+  }
+});
