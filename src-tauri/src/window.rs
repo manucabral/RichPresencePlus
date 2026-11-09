@@ -235,6 +235,9 @@ pub fn on_event(window: &tauri::Window, event: &WindowEvent) {
             if minimized && state.minimize_to_tray.load(Ordering::Relaxed) {
                 hide(&webview);
             } else if let Some(low) = state.minimized_change(minimized) {
+                // A minimized page still says it is visible, so the interface
+                // would keep refreshing for nobody.
+                announce(&webview, !low);
                 set_low_memory(&webview, low);
             }
         }

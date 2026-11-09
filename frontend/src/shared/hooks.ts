@@ -2,30 +2,33 @@ import { listen } from "@tauri-apps/api/event";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { getWindowVisible } from "../platform/api";
 import { errorMessage } from "./errors";
+import { createScreen } from "./screen";
+
+/** Loads that read again when something changed outside the window, such as from the tray. */
+const reloaders = new Set<() => void>();
+const reloadAll = () => {
+  for (const reload of reloaders) reload();
+};
+listen("app-changed", reloadAll).catch(() => {});
 
 /**
  * The web view still reports itself as visible after the window is hidden to
- * the tray, so the desktop side says when the window is on screen. The window
- * can start hidden, so the first value is asked for too.
+ * the tray or minimized, so the desktop side says when the window is on screen.
+ * The window can start hidden, so the first value is asked for too.
  */
-let onScreen = true;
+const screen = createScreen();
 listen<boolean>("window-visible", (event) => {
-  onScreen = event.payload;
+  // Refreshes were skipped while away; what shows now must not wait a turn.
+  if (screen.set(event.payload)) reloadAll();
 }).catch(() => {
   // Outside the desktop shell there is no event; the page counts as visible.
 });
 getWindowVisible().then(
   (visible) => {
-    onScreen = visible;
+    screen.set(visible);
   },
   () => {},
 );
-
-/** Loads that read again when something changed outside the window, such as from the tray. */
-const reloaders = new Set<() => void>();
-listen("app-changed", () => {
-  for (const reload of reloaders) reload();
-}).catch(() => {});
 
 export interface Loaded<T> {
   data: T | null;
@@ -59,8 +62,8 @@ export function useLoaded<T>(load: () => Promise<T>, every = 0): Loaded<T> {
       );
     run();
     reloaders.add(run);
-    // A window hidden in the tray does not need fresh data.
-    const timer = every > 0 ? setInterval(() => onScreen && !document.hidden && run(), every) : undefined;
+    // A window hidden in the tray or minimized does not need fresh data.
+    const timer = every > 0 ? setInterval(() => screen.on && !document.hidden && run(), every) : undefined;
     return () => {
       alive = false;
       reloaders.delete(run);
