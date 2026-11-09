@@ -50,7 +50,7 @@ These go further, and they run real browsers:
 | Tool | What it proves |
 | --- | --- |
 | `tools/try-interface.mjs` | Every page, form and keyboard path, under the window's real CSP, against a made-up desktop side |
-| `tools/try-extension.mjs` | The extension in Chrome: rules, frames, lists, variables, the picker and the popup. `--show` to watch, `--store docs/store` for the store picture |
+| `tools/try-extension.mjs` | The extension in Chrome: rules, frames, lists, variables, the picker and the popup. `--show` to watch, `--store <folder>` to save a 1280x800 picture of the popup |
 | `tools/try-firefox.mjs` | The same rules and readers in the installed Firefox, over WebDriver BiDi. `--show` to watch |
 | `tools/try-browsers.mjs` | Automatic pairing in real browsers |
 | `tools/try-memory.mjs` | Memory of the release build through idle, moves and the tray |
