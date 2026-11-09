@@ -265,7 +265,9 @@ mod tests {
         let folder = tempfile::tempdir().unwrap();
         write(folder.path(), "main.js", "start");
         let (_watcher, count) = counting(folder.path());
-        write(folder.path(), "main.js", "saved");
+        // Another size: Windows keeps the write time in steps of about 15 ms, so
+        // two writes this close and of the same size look like one file.
+        write(folder.path(), "main.js", "saved edit");
         for _ in 0..100 {
             if count.load(Ordering::SeqCst) > 0 {
                 break;
