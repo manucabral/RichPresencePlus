@@ -1,7 +1,12 @@
 // Builds the zip uploaded to the Chrome Web Store, Edge Add-ons and
 // addons.mozilla.org.
 //
-//   node tools/package-extension.mjs [--out dist]
+//   node tools/package-extension.mjs [--out dist] [--unpacked]
+//
+// With --unpacked it writes the copy people load by hand in a Chromium
+// browser ("Load unpacked", developer mode) while the stores review the
+// extension: the manifest keeps its `key`, so the copy has the ID the desktop
+// app already allows and pairs by itself.
 //
 // Only the files the extension runs go in: no tests, no node_modules, no
 // package files. The manifest loses its `key`, which fixes the ID of an
@@ -19,6 +24,13 @@ const EXTENSION = new URL("../extension/", import.meta.url);
 export function storeManifest(manifest) {
   const { key: _key, ...rest } = manifest;
   return rest;
+}
+
+/** The manifest and zip name for the stores, or for loading by hand with `unpacked`. */
+export function packageFor(manifest, unpacked) {
+  return unpacked
+    ? { manifest, zip: `rich-presence-plus-extension-${manifest.version}-unpacked.zip` }
+    : { manifest: storeManifest(manifest), zip: `rich-presence-plus-extension-${manifest.version}.zip` };
 }
 
 /**
@@ -94,7 +106,7 @@ function main() {
   const missing = missingReferences(sources);
   if (missing.length > 0) throw new Error(`files referenced but not packaged: ${missing.join(", ")}`);
 
-  const manifest = storeManifest(JSON.parse(sources["manifest.json"]));
+  const { manifest, zip: name } = packageFor(JSON.parse(sources["manifest.json"]), process.argv.includes("--unpacked"));
   const stage = join(out, "extension");
   rmSync(stage, { recursive: true, force: true });
   mkdirSync(stage, { recursive: true });
@@ -104,7 +116,7 @@ function main() {
     else cpSync(join(source, file), join(stage, file));
   }
   // Listed one by one so the archive holds plain paths, manifest.json at the root.
-  const zip = join(out, `rich-presence-plus-extension-${manifest.version}.zip`);
+  const zip = join(out, name);
   rmSync(zip, { force: true });
   const result =
     process.platform === "win32"

@@ -3,7 +3,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
-import { missingReferences, packagedFiles, readText, storeManifest } from "../package-extension.mjs";
+import { missingReferences, packagedFiles, packageFor, readText, storeManifest } from "../package-extension.mjs";
 
 const extension = fileURLToPath(new URL("../../extension/", import.meta.url));
 
@@ -62,4 +62,14 @@ test("every file the real extension refers to is packaged", () => {
   assert.ok(missingReferences(broken).includes("status.js"));
   delete broken["icons/icon-48.png"];
   assert.ok(missingReferences(broken).includes("icons/icon-48.png"), "a missing icon is caught too");
+});
+
+test("the copy loaded by hand keeps the key the desktop app allows; the stores' copy drops it", () => {
+  const manifest = { name: "Rich Presence Plus", version: "0.1.0", key: "MIIB" };
+  const unpacked = packageFor(manifest, true);
+  assert.equal(unpacked.manifest.key, "MIIB");
+  assert.equal(unpacked.zip, "rich-presence-plus-extension-0.1.0-unpacked.zip");
+  const store = packageFor(manifest, false);
+  assert.equal("key" in store.manifest, false);
+  assert.equal(store.zip, "rich-presence-plus-extension-0.1.0.zip");
 });
