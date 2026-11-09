@@ -13,6 +13,9 @@ import { pathToFileURL } from "node:url";
 
 const SEMVER = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(-[0-9A-Za-z.-]+)?$/;
 const REPO = /^(?!\.+\/)[A-Za-z0-9._-]+\/(?!\.+$)[A-Za-z0-9._-]+$/;
+// GitHub renames an uploaded file whose name has other characters (spaces
+// become dots), and the address written here would then lead nowhere.
+const ASSET = /^[A-Za-z0-9._-]+$/;
 
 /**
  * The content of `latest.json`.
@@ -24,7 +27,8 @@ const REPO = /^(?!\.+\/)[A-Za-z0-9._-]+\/(?!\.+$)[A-Za-z0-9._-]+$/;
 export function latest({ version, repo, installerName, signature, notes = "", date = new Date() }) {
   if (!SEMVER.test(version)) throw new Error(`version ${version} is not semver (1.2.3)`);
   if (!REPO.test(repo)) throw new Error("repo must look like owner/name");
-  if (!installerName || /[\\/]/.test(installerName)) throw new Error("the installer name must be a file name");
+  if (!installerName || !ASSET.test(installerName))
+    throw new Error("the installer name must be a file name of letters, digits, dots, hyphens and underscores");
   if (!signature || signature.trim() === "") throw new Error("the signature file is empty");
   return {
     version,

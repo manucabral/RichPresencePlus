@@ -117,6 +117,13 @@ jobs:
         with:
           name: ${{ needs.windows-signing.result == 'success' && 'installer-signed' || 'installer' }}
           path: installer
+      # GitHub turns the spaces of an uploaded name into dots; renamed here, the
+      # file keeps one name in the release, the signature and latest.json.
+      - name: Name the installer as GitHub will
+        run: |
+          for file in installer/*-setup.exe; do
+            mv "$file" "installer/$(basename "$file" | tr ' ' '.')"
+          done
       - name: Sign the installer
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
