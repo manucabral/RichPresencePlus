@@ -51,6 +51,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         self.ensure_free(name)?;
         let author = self.default_author();
         let folder = templates::create(&self.roots[0], name, template, author.as_deref())?;
+        self.turn_on_new(name);
         self.reload_presences();
         self.prepare_editors();
         Ok(folder.to_string_lossy().into_owned())
@@ -65,6 +66,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         self.ensure_free(&choice.name)?;
         let author = self.default_author();
         let folder = program::create(&self.roots[0], choice, author.as_deref())?;
+        self.turn_on_new(&choice.name);
         self.reload_presences();
         self.prepare_editors();
         Ok(folder.to_string_lossy().into_owned())
@@ -80,6 +82,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
             match made {
                 Ok(_) => {
                     tracing::info!(presence = %request.name, "made a presence from a page");
+                    self.turn_on_new(&request.name);
                     self.reload_presences();
                 }
                 Err(error) => tracing::warn!("cannot make a presence from a page: {error}"),
@@ -104,6 +107,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
             .ok_or_else(|| format!("Unknown presence: {name}"))?;
         let author = self.default_author();
         let folder = templates::copy(&self.roots[0], &source, new_name, author.as_deref())?;
+        self.turn_on_new(new_name);
         self.reload_presences();
         self.prepare_editors();
         Ok(folder.to_string_lossy().into_owned())
@@ -134,7 +138,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         {
             let mut settings = lock(&self.settings);
             let mut changed = settings.clone();
-            changed.disabled.remove(name);
+            changed.enabled.remove(name);
             changed.favorites.remove(name);
             changed.options.remove(name);
             changed.preferences.presences.remove(name);
@@ -401,10 +405,22 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         }
         let new_name = found.presence.manifest.name.clone();
         let (rules, start, old_name) = {
-            let settings = lock(&self.settings);
+            let mut settings = lock(&self.settings);
             let mut library = lock(&self.library);
             let old_name = library.name_at(folder).map(str::to_owned);
             library.replace(folder, found)?;
+            // A new name keeps the presence on or off as it was.
+            if let Some(old) = old_name.as_deref().filter(|old| *old != new_name)
+                && settings.enabled.contains(old)
+            {
+                let mut changed = settings.clone();
+                changed.enabled.remove(old);
+                changed.enabled.insert(new_name.clone());
+                match self.store.save(&changed) {
+                    Ok(()) => *settings = changed,
+                    Err(error) => tracing::warn!("cannot keep the renamed presence on: {error}"),
+                }
+            }
             let language = effective_language(&settings, &self.system_language);
             let rules = rpp_bridge::Rule::from_manifests(
                 library
@@ -414,7 +430,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
             );
             let start = library
                 .find(&new_name)
-                .filter(|_| !settings.disabled.contains(&new_name))
+                .filter(|_| settings.enabled.contains(&new_name))
                 .map(|presence| library.prepared(presence, &settings, &language));
             (rules, start, old_name)
         };

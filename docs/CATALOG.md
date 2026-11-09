@@ -1,7 +1,7 @@
 # The catalog
 
 Approved presences live in this repository, under `presences/`. The
-application lists them in its Catalog page and installs them from GitHub.
+application lists them under Presences, Add more, and installs them from GitHub.
 
 ## How trust works
 
@@ -88,8 +88,15 @@ A presence installed from the catalog gets a hidden `.catalog.json` marker in
 its folder. The marker lists every file with its SHA-256 and carries a seal: an
 HMAC made with a secret that the application creates on first run
 (`catalog.key` in its data folder) and that never leaves the computer. Only
-marked folders can be updated or removed from the Catalog page. Folders you
-create or copy by hand are never touched.
+marked folders can be updated or removed from the Add more tab of Presences.
+Folders you create or copy by hand are never touched.
+
+The application ships no presences: people install the ones they want from
+Presences, Add more. A presence starts on when someone installs, creates or
+copies it; one that arrives any other way (an update of the application, a
+folder dropped in by hand) waits until it is turned on, and an update of an
+installed presence keeps it on or off as it was. Development builds also read
+the repository's `presences/` folder, as bundled presences, to work on them.
 
 A catalog presence cannot be modified. The application never edits or watches
 one, and the Presences page marks each presence as bundled, catalog or yours;
@@ -98,7 +105,7 @@ copy is yours, and the original author moves to `contributors`.
 
 If a file of an installed presence is edited, added or deleted, or the marker
 is copied from elsewhere, the seal no longer matches. The folder is then not
-loaded: the Catalog page shows "Files changed after installing" with a
+loaded: the Add more tab shows "Files changed after installing" with a
 Reinstall button, and the Dashboard lists the folder under the presences that
 did not load. Reinstalling restores the reviewed files. A modified copy is not
 kept in the history, and a kept copy that was changed there is not restored.
@@ -119,6 +126,6 @@ installing a catalog presence while one of yours has its name.
 
 When an update replaces an installed presence, the old copy is kept in
 `presence-history/<folder>/<version>` next to the settings, and only the two
-newest are kept. The Catalog page lists them under "Previous versions" with a
+newest are kept. The page of each presence in Add more lists them under "Previous versions" with a
 Restore button; restoring swaps the current copy into the history, so it can be
 restored back. A failed update leaves the history as it was.

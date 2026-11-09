@@ -13,6 +13,7 @@ rpp-bridge = { path = "../rpp-bridge" }
 base64 = "0.23"
 ed25519-dalek = { version = "3", default-features = false, features = ["alloc", "zeroize"] }
 rpp-catalog = { path = "../rpp-catalog" }
+rpp-config = { path = "../rpp-config" }
 rpp-discord = { path = "../rpp-discord" }
 rpp-plugins = { path = "../rpp-plugins" }
 serde_json.workspace = true

@@ -7,7 +7,7 @@ description: Proponé tu presencia para el catálogo de Rich Presence Plus con u
 
 Una presencia que escribís funciona en tu computadora. Para que la pueda instalar todo el mundo,
 proponela para el catálogo. Primero la lee una persona, y cuando se aprueba cualquiera que tenga
-la aplicación la descarga desde la página Catálogo.
+la aplicación la descarga desde Presencias, Agregar más.
 
 ## Comprobar que esté lista
 
@@ -50,5 +50,5 @@ catálogo con la siguiente publicación.
 ## Actualizar tu presencia
 
 Cambiá tu carpeta, subí `version` y repetí los pasos. Quienes la instalaron reciben la versión
-nueva desde la página Catálogo. Si pide más acceso que antes, primero lo tienen que aceptar, y la
+nueva desde Presencias, Agregar más. Si pide más acceso que antes, primero lo tienen que aceptar, y la
 versión anterior sigue funcionando hasta entonces.

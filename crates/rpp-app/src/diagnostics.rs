@@ -201,7 +201,7 @@ where
                     let name = presence.manifest.name.clone();
                     PresenceHealth {
                         version: presence.manifest.version.clone(),
-                        enabled: !settings.disabled.contains(&name),
+                        enabled: settings.enabled.contains(&name),
                         running: running.contains(&name),
                         error: status.source_errors.get(&name).cloned(),
                         name,

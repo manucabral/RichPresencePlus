@@ -51,6 +51,8 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
     ) -> Result<InstallOutcome, String> {
         let catalog = self.managed_catalog()?;
         self.ensure_not_local(name)?;
+        // An update keeps the user's choice; a first install is what they asked to run.
+        let first = lock(&self.library).find(name).is_none();
         let entry = match catalog.install(name, accepted) {
             Ok(entry) => entry,
             Err(Error::NewAccess(grants)) => {
@@ -66,6 +68,9 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
             }
         };
         tracing::info!(presence = %entry.name, version = %entry.version, "installed from the catalog");
+        if first {
+            self.turn_on_new(&entry.name);
+        }
         self.reload_presences();
         Ok(InstallOutcome::Installed)
     }

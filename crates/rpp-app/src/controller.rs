@@ -185,6 +185,14 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         }
 
         let library = Library::load(&options.presence_roots, options.catalog.as_deref());
+        // A file from before presences were turned on one by one keeps on what ran.
+        let known = library.presences.iter().map(|p| p.manifest.name.as_str());
+        if settings.turn_around(known)
+            && warning.is_none()
+            && let Err(error) = store.save(&settings)
+        {
+            tracing::warn!("cannot save which presences are on: {error}");
+        }
         tracing::info!(
             version = %options.version,
             presences = library.presences.len(),
@@ -357,7 +365,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
                     kind: manifest.kind,
                     interval: manifest.interval,
                     hide_when_paused: manifest.hide_when_paused,
-                    enabled: !settings.disabled.contains(&manifest.name),
+                    enabled: settings.enabled.contains(&manifest.name),
                     running: running.contains(&manifest.name),
                     access: Access {
                         http: permissions.http.clone(),
@@ -485,6 +493,21 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         lock(&self.library).local_icons().clone()
     }
 
+    /// Turns on a presence the user just made or added, before the library is
+    /// read again; only what someone chose starts running by itself.
+    pub(crate) fn turn_on_new(&self, name: &str) {
+        let mut settings = lock(&self.settings);
+        if settings.enabled.contains(name) {
+            return;
+        }
+        let mut changed = settings.clone();
+        changed.enabled.insert(name.to_owned());
+        match self.store.save(&changed) {
+            Ok(()) => *settings = changed,
+            Err(error) => tracing::warn!(presence = %name, "cannot turn it on: {error}"),
+        }
+    }
+
     /// Turns a presence on or off and remembers the choice.
     pub fn set_enabled(&self, name: &str, enabled: bool) -> Result<(), String> {
         {
@@ -495,9 +518,9 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
             }
             let mut changed = settings.clone();
             if enabled {
-                changed.disabled.remove(name);
+                changed.enabled.insert(name.to_owned());
             } else {
-                changed.disabled.insert(name.to_owned());
+                changed.enabled.remove(name);
             }
             self.store.save(&changed).map_err(|e| e.to_string())?;
             *settings = changed;

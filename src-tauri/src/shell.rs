@@ -9,7 +9,7 @@ use rpp_catalog::{Catalog, Channel, Github, Key, Keys, keys};
 use rpp_discord::DiscordClient;
 use rpp_discord::pipe::{NamedPipeClient, PipeConnector};
 use rpp_host::SystemHost;
-use tauri::{AppHandle, Manager, RunEvent};
+use tauri::{Manager, RunEvent};
 
 use crate::commands::{self, Shared};
 use crate::logging::Logging;
@@ -49,12 +49,11 @@ fn served_by_discord(pipe: &NamedPipeClient) -> Result<(), String> {
     }
 }
 
-/// Folders that hold presences: the user's own first, then the bundled ones.
-fn presence_roots(app: &AppHandle, data_dir: &std::path::Path) -> Vec<PathBuf> {
+/// Folders that hold presences. The application ships none: people install
+/// the ones they want from the catalog, or write their own. A development
+/// build also reads the repository's, to work on them.
+fn presence_roots(data_dir: &std::path::Path) -> Vec<PathBuf> {
     let mut roots = vec![data_dir.join("presences")];
-    if let Ok(resources) = app.path().resource_dir() {
-        roots.push(resources.join("presences"));
-    }
     if cfg!(debug_assertions) {
         roots.push(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../presences"));
     }
@@ -82,7 +81,7 @@ pub fn run() {
                 tracing::warn!("the browsers cannot start the pairing helper: {error}");
             }
             let options = Options {
-                presence_roots: presence_roots(app.handle(), &data_dir),
+                presence_roots: presence_roots(&data_dir),
                 catalog: open_catalog(&data_dir),
                 data_dir,
                 version: app.package_info().version.to_string(),

@@ -3466,6 +3466,7 @@ dependencies = [
  "futures-util",
  "rpp-bridge",
  "rpp-catalog",
+ "rpp-config",
  "rpp-discord",
  "rpp-plugins",
  "serde_json",

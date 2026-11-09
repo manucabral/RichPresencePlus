@@ -41,7 +41,6 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "../presences": "presences",
       "../docs/legal/THIRD_PARTY_NOTICES.md": "THIRD_PARTY_NOTICES.md"
     },
     "publisher": "manucabral",

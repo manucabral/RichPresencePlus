@@ -4,6 +4,7 @@
 
 Rich Presence Plus was rewritten from scratch.
 
+- The app comes empty: install the presences you want from Presences, Add more. Nothing runs until you choose it.
 - A browser extension for Chrome, Edge and Firefox. It finds the app by itself.
 - Each presence tells you what it reads.
 - Web Media shows what plays on any site you allow.

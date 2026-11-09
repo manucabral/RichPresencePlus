@@ -3,6 +3,7 @@
 
 pub mod catalog;
 pub mod extension;
+pub mod settings;
 
 use std::io;
 use std::sync::atomic::{AtomicUsize, Ordering};

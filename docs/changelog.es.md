@@ -4,6 +4,7 @@
 
 Rich Presence Plus se reescribió desde cero.
 
+- La app viene vacía: instalá las presencias que quieras desde Presencias, Agregar más. Nada corre hasta que lo elegís.
 - Una extensión para Chrome, Edge y Firefox. Encuentra la app sola.
 - Cada presencia te dice qué lee.
 - Web Media muestra lo que suena en los sitios que permitas.

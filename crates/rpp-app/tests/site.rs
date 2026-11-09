@@ -17,6 +17,7 @@ async fn asked(message: serde_json::Value) -> (Controller<Processes>, tempfile::
         system_language: "en".into(),
         catalog: None,
     };
+    rpp_testkit::settings::turn_on_found(&options.data_dir, &options.presence_roots);
     let controller = Controller::start(options, Discord::default(), Processes(vec![]))
         .await
         .unwrap();

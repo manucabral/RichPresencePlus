@@ -24,7 +24,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
             let language = effective_language(&settings, &self.system_language);
             changed
                 .iter()
-                .filter(|name| !settings.disabled.contains(*name))
+                .filter(|name| settings.enabled.contains(*name))
                 .filter_map(|name| {
                     let presence = library.find(name)?;
                     Some(library.prepared(presence, &settings, &language))

@@ -74,6 +74,7 @@ async fn start(
         system_language: "en".into(),
         catalog: Some(Arc::new(catalog)),
     };
+    rpp_testkit::settings::turn_on_found(&options.data_dir, &options.presence_roots);
     Controller::start(options, Discord::default(), Processes(vec![]))
         .await
         .unwrap()

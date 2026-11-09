@@ -141,6 +141,7 @@ async fn start(setup: &Setup, discord: &Discord) -> Arc<Controller<Processes>> {
         system_language: "en".into(),
         catalog: None,
     };
+    rpp_testkit::settings::turn_on_found(&options.data_dir, &options.presence_roots);
     let controller = Controller::start(options, discord.clone(), Processes(vec![]))
         .await
         .unwrap();
@@ -176,6 +177,8 @@ async fn a_new_presence_from_a_template_appears_and_names_are_checked() {
         .create_presence("My Game", Template::Desktop)
         .unwrap();
     assert_eq!(names(&controller), ["My Game", "My Site"]);
+    // What the user makes is what they want to see running.
+    assert!(controller.presences().iter().all(|p| p.enabled));
 
     assert!(
         controller
@@ -197,10 +200,9 @@ async fn inspecting_shows_what_a_presence_reads_without_publishing_it() {
         "function read(c){ console.log('reading', c.options); return {n: 1}; } \
          function activity(s){ return {details: 'ONLY INSPECTED ' + s.n}; }",
     );
-    // Turned off before the application starts, so it never runs: the only
-    // way to see its text is to inspect it.
-    let mut settings = rpp_config::Settings::default();
-    settings.disabled.insert("Demo".into());
+    // Off before the application starts (nothing is on in new settings), so
+    // it never runs: the only way to see its text is to inspect it.
+    let settings = rpp_config::Settings::default();
     rpp_config::SettingsStore::new(setup.data.path())
         .save(&settings)
         .unwrap();
@@ -259,7 +261,13 @@ async fn reloading_applies_edits_new_folders_and_removals() {
     assert!(controller.reload_presences().is_empty());
     eventually("the edit", || shows(&discord, "After")).await;
     assert_eq!(names(&controller), ["Demo", "Extra"]);
-    assert!(controller.presences().iter().all(|p| p.running));
+    // A folder added by hand waits for the user to turn it on.
+    let running: Vec<_> = controller
+        .presences()
+        .iter()
+        .map(|p| (p.enabled, p.running))
+        .collect();
+    assert_eq!(running, [(true, true), (false, false)]);
 
     fs::remove_dir_all(setup.user.path().join("extra")).unwrap();
     controller.reload_presences();
@@ -328,6 +336,8 @@ async fn a_renamed_presence_keeps_being_watched() {
     presence(setup.user.path(), "demo", "Renamed", &script("New name"));
     eventually("the new name runs", || shows(&discord, "New name")).await;
     assert_eq!(names(&controller), ["Renamed"]);
+    // The new name stays on, as the old one was.
+    assert!(controller.presences()[0].enabled);
     assert_eq!(controller.dev_status().watching.as_deref(), Some("Renamed"));
 
     presence(
@@ -807,7 +817,7 @@ async fn a_deleted_presence_goes_with_what_was_saved_about_it() {
     let setup = setup();
     presence(setup.user.path(), "mine", "Mine", &script("Hi"));
     let controller = start(&setup, &Discord::default()).await;
-    controller.set_enabled("Mine", false).unwrap();
+    assert!(controller.presences()[0].enabled);
     controller.set_favorite("Mine", true).unwrap();
 
     controller
@@ -822,7 +832,7 @@ async fn a_deleted_presence_goes_with_what_was_saved_about_it() {
     presence(setup.user.path(), "mine", "Mine", &script("Hi"));
     controller.reload_presences();
     let mine = &controller.presences()[0];
-    assert!(mine.enabled);
+    assert!(!mine.enabled);
     assert!(controller.favorites().is_empty());
     controller.shutdown().await;
 }

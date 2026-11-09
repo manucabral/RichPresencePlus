@@ -12,13 +12,14 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         lock(&self.settings).profiles.clone()
     }
 
-    /// Saves the current rules and the presences that are off under a name.
+    /// Saves the current rules and the presences that are on under a name.
     pub fn save_profile(&self, name: &str) -> Result<(), String> {
         let mut settings = lock(&self.settings);
         let profile = Profile {
             name: name.to_owned(),
             preferences: settings.preferences.clone(),
-            disabled: settings.disabled.clone(),
+            enabled: settings.enabled.clone(),
+            legacy_disabled: None,
         }
         .validated()?;
         let mut changed = settings.clone();
@@ -54,7 +55,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
             let preferences = profile.preferences.validated().map_err(|e| e.to_string())?;
             let mut changed = settings.clone();
             changed.preferences = preferences.clone();
-            changed.disabled = profile.disabled;
+            changed.enabled = profile.enabled;
             self.store.save(&changed).map_err(|e| e.to_string())?;
             *settings = changed;
             preferences

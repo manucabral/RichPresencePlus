@@ -238,7 +238,7 @@ impl Library {
     pub fn enabled(&self, settings: &Settings, language: &str) -> Vec<Presence> {
         self.presences
             .iter()
-            .filter(|presence| !settings.disabled.contains(&presence.manifest.name))
+            .filter(|presence| settings.enabled.contains(&presence.manifest.name))
             .map(|presence| self.prepared(presence, settings, language))
             .collect()
     }
@@ -267,6 +267,7 @@ mod tests {
             ..Library::default()
         };
         let mut settings = Settings::default();
+        settings.enabled.insert("Server".into());
         let matches = |settings: &Settings| {
             let enabled = library.enabled(settings, "en");
             rpp_bridge::Rule::from_manifests(enabled.iter().map(|p| &p.manifest))[0]

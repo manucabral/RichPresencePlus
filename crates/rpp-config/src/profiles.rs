@@ -9,15 +9,19 @@ use serde::{Deserialize, Serialize};
 pub const MAX_PROFILES: usize = 20;
 const MAX_NAME: usize = 64;
 
-/// The publishing rules and the presences that were off when it was saved.
+/// The publishing rules and the presences that were on when it was saved.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Profile {
     /// Name shown in the list; also its identifier.
     pub name: String,
     /// Privacy, priorities and per-presence choices.
     pub preferences: Preferences,
-    /// Presences that are turned off.
-    pub disabled: BTreeSet<String>,
+    /// Presences that are turned on.
+    #[serde(default)]
+    pub enabled: BTreeSet<String>,
+    /// What a profile of settings version 1 had off; see `Settings::turn_around`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub legacy_disabled: Option<BTreeSet<String>>,
 }
 
 impl Profile {
@@ -66,7 +70,8 @@ mod tests {
         Profile {
             name: name.into(),
             preferences: Preferences::default(),
-            disabled: BTreeSet::new(),
+            enabled: BTreeSet::new(),
+            legacy_disabled: None,
         }
     }
 
@@ -89,10 +94,10 @@ mod tests {
         let mut list = Vec::new();
         save(&mut list, profile("A")).unwrap();
         let mut changed = profile("A");
-        changed.disabled.insert("Roblox".into());
+        changed.enabled.insert("Roblox".into());
         save(&mut list, changed).unwrap();
         assert_eq!(list.len(), 1);
-        assert!(list[0].disabled.contains("Roblox"));
+        assert!(list[0].enabled.contains("Roblox"));
         assert!(delete(&mut list, "A"));
         assert!(!delete(&mut list, "A"));
     }

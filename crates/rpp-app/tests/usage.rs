@@ -12,14 +12,16 @@ use rpp_testkit::{Discord, Processes, eventually};
 const DAY: &str = "2026-11-05";
 
 fn options(data: &Path, presences: &Path) -> Options {
-    Options {
+    let options = Options {
         data_dir: data.to_owned(),
         presence_roots: vec![presences.to_owned()],
         version: "1".into(),
         port_override: Some(0),
         system_language: "en".into(),
         catalog: None,
-    }
+    };
+    rpp_testkit::settings::turn_on_found(&options.data_dir, &options.presence_roots);
+    options
 }
 
 async fn showing(data: &Path, presences: &Path) -> Controller<Processes> {

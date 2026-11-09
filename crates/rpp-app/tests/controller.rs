@@ -41,14 +41,16 @@ fn setup() -> Setup {
 }
 
 fn options(setup: &Setup) -> Options {
-    Options {
+    let options = Options {
         data_dir: setup.data.path().to_owned(),
         presence_roots: vec![setup.presences.path().to_owned()],
         version: "9.9.9".into(),
         port_override: Some(0),
         system_language: "en".into(),
         catalog: None,
-    }
+    };
+    rpp_testkit::settings::turn_on_found(&options.data_dir, &options.presence_roots);
+    options
 }
 
 async fn start(setup: &Setup, discord: &Discord) -> Controller<Processes> {
@@ -205,6 +207,7 @@ async fn a_busy_bridge_port_falls_back_to_a_free_one_and_says_so() {
         system_language: "en".into(),
         catalog: None,
     };
+    rpp_testkit::settings::turn_on_found(&options.data_dir, &options.presence_roots);
     let controller = Controller::start(options, Discord::default(), Processes(vec![]))
         .await
         .unwrap();

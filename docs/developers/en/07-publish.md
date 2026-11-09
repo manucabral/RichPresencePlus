@@ -7,7 +7,7 @@ description: Propose your presence to the Rich Presence Plus catalog with a pull
 
 A presence you write runs on your computer. To let everyone install it, propose it to the
 catalog. People read it first, and once it is approved anyone with the application can
-download it from the Catalog page.
+download it from Presences, Add more.
 
 ## Check that it is ready
 
@@ -50,5 +50,5 @@ the catalog with the next publication.
 ## Update your presence
 
 Change your folder, raise `version` and repeat the steps. People who installed it get the new
-version from the Catalog page. If it asks for more access than before, they have to accept
+version from Presences, Add more. If it asks for more access than before, they have to accept
 that first, and the old version keeps running until they do.

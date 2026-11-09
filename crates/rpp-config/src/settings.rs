@@ -28,7 +28,7 @@ pub const LOG_LEVELS: [&str; 4] = ["error", "warn", "info", "debug"];
 const MAX_BYTES: u64 = 1024 * 1024;
 
 /// Layout of `settings.json` this build writes.
-pub const SCHEMA_VERSION: u32 = 1;
+pub const SCHEMA_VERSION: u32 = 2;
 
 /// A step that turns a file of one version into the next.
 type Migration = fn(&mut Map<String, Value>);
@@ -36,9 +36,28 @@ type Migration = fn(&mut Map<String, Value>);
 /// Files written before the version was recorded have the layout of version 1.
 fn from_unversioned(_: &mut Map<String, Value>) {}
 
+/// Version 1 kept the presences turned off, so everything else ran, even what
+/// came later. Version 2 keeps the ones turned on. The old list waits under
+/// `legacy_disabled` until the application, which knows every presence, turns
+/// it around ([`Settings::turn_around`]).
+fn keep_what_was_on(document: &mut Map<String, Value>) {
+    fn move_list(object: &mut Map<String, Value>) {
+        let off = object
+            .remove("disabled")
+            .unwrap_or_else(|| Value::Array(Vec::new()));
+        object.insert("legacy_disabled".into(), off);
+    }
+    move_list(document);
+    if let Some(Value::Array(profiles)) = document.get_mut("profiles") {
+        for profile in profiles.iter_mut().filter_map(Value::as_object_mut) {
+            move_list(profile);
+        }
+    }
+}
+
 /// Entry `n` turns version `n` into `n + 1`. A change to the layout adds a
 /// step here and bumps [`SCHEMA_VERSION`]; a step never removes what a user chose.
-const MIGRATIONS: [Migration; SCHEMA_VERSION as usize] = [from_unversioned];
+const MIGRATIONS: [Migration; SCHEMA_VERSION as usize] = [from_unversioned, keep_what_was_on];
 
 /// How a file compared with this build.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -90,8 +109,13 @@ pub struct Settings {
     pub schema_version: u32,
     /// Publishing rules.
     pub preferences: Preferences,
-    /// Names of the presences the user turned off.
-    pub disabled: BTreeSet<String>,
+    /// Names of the presences the user turned on. A presence not named here
+    /// does not run, so a new one waits for the user.
+    pub enabled: BTreeSet<String>,
+    /// The presences a file of version 1 had off, until [`Settings::turn_around`]
+    /// knows the full list.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub legacy_disabled: Option<BTreeSet<String>>,
     /// Names of the presences the user marked as favorite, installed or not.
     pub favorites: BTreeSet<String>,
     /// Loopback port of the extension bridge.
@@ -131,7 +155,8 @@ impl Default for Settings {
         Self {
             schema_version: SCHEMA_VERSION,
             preferences: Preferences::default(),
-            disabled: BTreeSet::new(),
+            enabled: BTreeSet::new(),
+            legacy_disabled: None,
             favorites: BTreeSet::new(),
             bridge_port: default_port(),
             bridge_token: None,
@@ -163,6 +188,37 @@ impl Settings {
     pub fn pairing_code(&mut self) -> String {
         let port = self.bridge_port;
         format!("{port}:{}", self.token())
+    }
+
+    /// Turns the lists of a version 1 file, which named what was off, into
+    /// lists of what is on, now that every presence is known. True when it
+    /// changed something, so the caller saves.
+    ///
+    /// Args:
+    ///     known: Every presence the application has, by name.
+    pub fn turn_around<'a>(&mut self, known: impl IntoIterator<Item = &'a str> + Clone) -> bool {
+        fn on<'b>(
+            known: impl IntoIterator<Item = &'b str>,
+            off: &BTreeSet<String>,
+        ) -> BTreeSet<String> {
+            known
+                .into_iter()
+                .filter(|name| !off.contains(*name))
+                .map(str::to_owned)
+                .collect()
+        }
+        let mut changed = false;
+        if let Some(off) = self.legacy_disabled.take() {
+            self.enabled.extend(on(known.clone(), &off));
+            changed = true;
+        }
+        for profile in &mut self.profiles {
+            if let Some(off) = profile.legacy_disabled.take() {
+                profile.enabled.extend(on(known.clone(), &off));
+                changed = true;
+            }
+        }
+        changed
     }
 }
 
@@ -352,7 +408,7 @@ mod tests {
     fn settings_survive_a_save_and_load() {
         let (_directory, store) = store();
         let mut settings = Settings::default();
-        settings.disabled.insert("Roblox".into());
+        settings.enabled.insert("Roblox".into());
         settings.preferences.global.excluded_domains = vec!["example.com".into()];
         let token = settings.token().to_owned();
         store.save(&settings).unwrap();
@@ -379,12 +435,12 @@ mod tests {
         let (directory, store) = store();
         fs::write(
             directory.path().join("settings.json"),
-            r#"{"disabled": ["A"], "future_option": true}"#,
+            r#"{"schema_version": 2, "enabled": ["A"], "future_option": true}"#,
         )
         .unwrap();
         let loaded = store.load();
         assert_eq!(loaded.warning, None);
-        assert!(loaded.settings.disabled.contains("A"));
+        assert!(loaded.settings.enabled.contains("A"));
         assert_eq!(loaded.settings.bridge_port, DEFAULT_PORT);
     }
 
@@ -453,11 +509,51 @@ mod tests {
         let loaded = store.load();
         assert_eq!(loaded.warning, None);
         assert_eq!(loaded.settings.schema_version, SCHEMA_VERSION);
-        assert!(loaded.settings.disabled.contains("A"));
+        assert_eq!(
+            loaded.settings.legacy_disabled,
+            Some(BTreeSet::from(["A".to_owned()]))
+        );
         assert_eq!(loaded.settings.log_level, "debug");
         store.save(&loaded.settings).unwrap();
         let saved: Value = serde_json::from_str(&fs::read_to_string(&path).unwrap()).unwrap();
         assert_eq!(saved["schema_version"], SCHEMA_VERSION);
+    }
+
+    #[test]
+    fn a_new_file_turns_nothing_on() {
+        assert!(Settings::default().enabled.is_empty());
+    }
+
+    #[test]
+    fn a_version_1_file_keeps_on_what_ran_and_what_came_later_stays_off() {
+        let (directory, store) = store();
+        fs::write(
+            directory.path().join("settings.json"),
+            r#"{"schema_version": 1, "disabled": ["Roblox"],
+                "profiles": [{"name": "Quiet", "preferences": {}, "disabled": ["YouTube"]}]}"#,
+        )
+        .unwrap();
+        let mut settings = store.load().settings;
+        assert!(settings.enabled.is_empty());
+        let known = ["Roblox", "YouTube", "Netflix"];
+        assert!(settings.turn_around(known));
+        assert_eq!(
+            settings.enabled,
+            BTreeSet::from(["Netflix".to_owned(), "YouTube".to_owned()])
+        );
+        assert_eq!(
+            settings.profiles[0].enabled,
+            BTreeSet::from(["Netflix".to_owned(), "Roblox".to_owned()])
+        );
+        assert_eq!(settings.legacy_disabled, None);
+        assert_eq!(settings.profiles[0].legacy_disabled, None);
+
+        // Done once: a presence installed afterwards is not turned on.
+        assert!(!settings.turn_around(["Roblox", "YouTube", "Netflix", "Twitch"]));
+        assert!(!settings.enabled.contains("Twitch"));
+        store.save(&settings).unwrap();
+        let saved = fs::read_to_string(directory.path().join("settings.json")).unwrap();
+        assert!(!saved.contains("legacy_disabled") && !saved.contains("\"disabled\""));
     }
 
     #[test]
@@ -501,12 +597,12 @@ mod tests {
     fn a_file_from_a_newer_version_is_used_and_a_copy_kept_without_pausing() {
         let (directory, store) = store();
         let path = directory.path().join("settings.json");
-        let newer = r#"{"schema_version": 99, "disabled": ["A"], "future_option": true}"#;
+        let newer = r#"{"schema_version": 99, "enabled": ["A"], "future_option": true}"#;
         fs::write(&path, newer).unwrap();
         let loaded = store.load();
         assert!(loaded.warning.unwrap().contains("settings.newer.json"));
         assert!(!loaded.settings.preferences.global.paused);
-        assert!(loaded.settings.disabled.contains("A"));
+        assert!(loaded.settings.enabled.contains("A"));
         assert_eq!(loaded.settings.schema_version, SCHEMA_VERSION);
         assert_eq!(
             fs::read_to_string(directory.path().join("settings.newer.json")).unwrap(),
@@ -532,7 +628,7 @@ mod tests {
         let (directory, store) = store();
         fs::write(
             directory.path().join("settings.json"),
-            r#"{"disabled": ["A"]}"#,
+            r#"{"schema_version": 2, "enabled": ["A"]}"#,
         )
         .unwrap();
         let loaded = store.load();
