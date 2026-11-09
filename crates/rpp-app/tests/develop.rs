@@ -288,7 +288,6 @@ async fn saving_a_watched_presence_applies_it_and_a_typo_keeps_the_old_version()
     eventually("version one", || shows(&discord, "Version one")).await;
     controller.watch(Some("Demo")).unwrap();
     assert_eq!(controller.dev_status().watching.as_deref(), Some("Demo"));
-    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
 
     let main = setup.user.path().join("demo/main.js");
     fs::write(&main, script("Version two")).unwrap();
@@ -325,7 +324,6 @@ async fn a_renamed_presence_keeps_being_watched() {
     let discord = Discord::default();
     let controller = start(&setup, &discord).await;
     controller.watch(Some("Demo")).unwrap();
-    tokio::time::sleep(std::time::Duration::from_millis(400)).await;
 
     presence(setup.user.path(), "demo", "Renamed", &script("New name"));
     eventually("the new name runs", || shows(&discord, "New name")).await;

@@ -80,9 +80,15 @@ impl Watcher {
     pub fn start(folder: PathBuf, changed: impl Fn() -> bool + Send + 'static) -> Self {
         let stop = Arc::new(AtomicBool::new(false));
         let flag = Arc::clone(&stop);
+        // Read here, not on the thread: an edit saved before the thread runs
+        // would already be in its first look and never count as a change.
+        let settling = Settling {
+            settled: fingerprint(&folder).ok(),
+            pending: None,
+        };
         let thread = thread::Builder::new()
             .name("presence-watcher".into())
-            .spawn(move || watch(&folder, &flag, &changed))
+            .spawn(move || watch(&folder, settling, &flag, &changed))
             .inspect_err(|error| tracing::warn!("changes will not reload by themselves: {error}"))
             .ok();
         Self { stop, thread }
@@ -141,11 +147,7 @@ impl Settling {
     }
 }
 
-fn watch(folder: &Path, stop: &AtomicBool, changed: &dyn Fn() -> bool) {
-    let mut settling = Settling {
-        settled: fingerprint(folder).ok(),
-        pending: None,
-    };
+fn watch(folder: &Path, mut settling: Settling, stop: &AtomicBool, changed: &dyn Fn() -> bool) {
     loop {
         thread::park_timeout(POLL);
         if stop.load(Ordering::Relaxed) {
@@ -218,8 +220,6 @@ mod tests {
             seen.fetch_add(1, Ordering::SeqCst);
             true
         });
-        // Let the first look record the starting state.
-        thread::sleep(Duration::from_millis(400));
         (watcher, count)
     }
 
@@ -273,6 +273,25 @@ mod tests {
             thread::sleep(Duration::from_millis(50));
         }
         assert_eq!(count.load(Ordering::SeqCst), 1);
+    }
+
+    /// The starting state is read before `start` returns, so a save right
+    /// after it is a change.
+    #[test]
+    fn an_edit_saved_right_after_the_watch_starts_is_reported() {
+        for _ in 0..5 {
+            let folder = tempfile::tempdir().unwrap();
+            write(folder.path(), "main.js", "start");
+            let (_watcher, count) = counting(folder.path());
+            write(folder.path(), "main.js", "saved at once");
+            for _ in 0..100 {
+                if count.load(Ordering::SeqCst) > 0 {
+                    break;
+                }
+                thread::sleep(Duration::from_millis(50));
+            }
+            assert_eq!(count.load(Ordering::SeqCst), 1);
+        }
     }
 
     #[test]
