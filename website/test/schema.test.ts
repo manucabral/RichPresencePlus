@@ -35,7 +35,7 @@ test("the schema knows every kind of value a page can give", () => {
       assert.ok(known.includes(extractor.from), `${manifest.name}: ${extractor.from}`);
     }
   }
-  assert.deepEqual([...known].sort(), ["attr", "json", "list", "media", "meta", "session", "storage", "style", "text", "variable"]);
+  assert.deepEqual([...known].sort(), ["attr", "json", "list", "media", "meta", "response", "session", "storage", "style", "text", "variable"]);
 });
 
 test("no manifest names its schema: the editor's settings connect them", () => {

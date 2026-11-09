@@ -89,6 +89,13 @@ fn value_type(extractor: &Extractor) -> (&'static str, String) {
             "Session | null",
             "What the site publishes as playing.".to_owned(),
         ),
+        Extractor::Response { url, path } => (
+            "any",
+            format!(
+                "The last answer from `{url}`, at `{}`.",
+                path.as_deref().unwrap_or("its root")
+            ),
+        ),
     }
 }
 

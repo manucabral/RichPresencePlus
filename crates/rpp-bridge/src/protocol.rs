@@ -67,7 +67,11 @@ impl Rule {
         manifests
             .into_iter()
             .filter_map(|manifest| {
-                let page = manifest.page.as_ref()?;
+                // A presence whose person has not added a site yet reads nothing.
+                let page = manifest
+                    .page
+                    .as_ref()
+                    .filter(|page| !page.matches.is_empty())?;
                 Some(Rule {
                     presence: manifest.name.clone(),
                     matches: page.matches.clone(),
@@ -262,7 +266,13 @@ mod tests {
         let without =
             Manifest::parse(r#"{"name":"Game","version":"1","client_id":"12345678901234567"}"#)
                 .unwrap();
-        let rules = Rule::from_manifests([&with, &without]);
+        // Sites of one's own that nobody added yet: nothing to read.
+        let waiting = Manifest::parse(
+            r#"{"name":"Server","version":"1","client_id":"12345678901234567",
+                "page":{"user_sites":true,"extract":{"t":{"from":"meta","name":"og:title"}}}}"#,
+        )
+        .unwrap();
+        let rules = Rule::from_manifests([&with, &without, &waiting]);
         assert_eq!(rules.len(), 1);
         assert_eq!(rules[0].presence, "Video");
         assert_eq!(

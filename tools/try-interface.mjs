@@ -175,6 +175,18 @@ const DESKTOP = `(() => {
         a.preferences = args.preferences;
         return args.preferences;
       }
+      if (command === "set_presence_sites") {
+        a.presences = a.presences.map((p) => (p.name === args.name ? { ...p, user_sites: args.sites } : p));
+        return args.sites;
+      }
+      if (command === "set_presence_option") {
+        a.presences = a.presences.map((p) =>
+          p.name === args.name
+            ? { ...p, options: p.options.map((o) => (o.key === args.key ? { ...o, value: args.value } : o)) }
+            : p,
+        );
+        return null;
+      }
       if (command === "set_presence_enabled") {
         a.presences = a.presences.map((p) => (p.name === args.name ? { ...p, enabled: args.enabled } : p));
         return null;
@@ -638,6 +650,45 @@ async function run(page, shots) {
   const turned = await called("set_presence_enabled");
   check(same(turned, { name: "Roblox", enabled: false }), `the switch turns Roblox off: ${JSON.stringify(turned)}`);
   check(await waitFor(`${toggle}?.getAttribute("aria-checked") === "false"`), "the list shows it off");
+
+  // A presence for a server of one's own takes sites, and an option shows by the value
+  // of another, with its help line under it.
+  await forget();
+  await answer(`a.presences = a.presences.map((p) => p.name !== "Netflix" ? p : { ...p, user_sites: ["media.home"],
+    options: [
+      { type: "choice", key: "image", label: "Imagen", value: "logo", default: "logo", choices: ["logo", "cover"],
+        choice_labels: ["Logo", "Portada"], help: "Qué imagen grande se ve" },
+      { type: "text", key: "caption", label: "Leyenda", value: "", default: "", max_length: 64, choices: [],
+        choice_labels: [], help: null, when: { image: "cover" } },
+    ] });`);
+  const option = (label) =>
+    `[...document.querySelectorAll("main label")].find((item) => item.childNodes[0]?.textContent === ${JSON.stringify(label)})?.querySelector("input, select")`;
+  await visit("/presences/Netflix");
+  check(await shows("Tus sitios"), "a presence for one's own server shows its sites");
+  check(await shows("media.home"), "the sites already added are listed");
+  check(await shows("Qué imagen grande se ve"), "an option shows its help line");
+  check(await waitFor(`!!${option("Imagen")}`), "the choice is drawn");
+  check(!(await read(`!!${option("Leyenda")}`)), "an option hides while another has a different value");
+  await type("Agregar", "http://nas.lan:8096");
+  check(await pressSoon("Agregar", "Agregar"), "the add button is ready");
+  const sites = await called("set_presence_sites");
+  check(
+    same(sites, { name: "Netflix", sites: ["media.home", "http://nas.lan:8096"] }),
+    `a site is added: ${JSON.stringify(sites)}`,
+  );
+  check(await shows("http://nas.lan:8096"), "the new site is listed");
+  await forget();
+  check(await pressSoon("Quitar"), "a site can be taken out");
+  const remaining = await called("set_presence_sites");
+  check(same(remaining?.sites.length, 1), `a site is taken out: ${JSON.stringify(remaining)}`);
+  await read(
+    `(() => { const el = ${option("Imagen")}; el.value = "cover"; el.dispatchEvent(new Event("change", { bubbles: true })); })()`,
+  );
+  check((await called("set_presence_option"))?.value === "cover", "the choice is saved");
+  check(await waitFor(`!!${option("Leyenda")}`), "the option appears once the value matches");
+  await answer(
+    `a.presences = a.presences.map((p) => p.name !== "Netflix" ? p : { ...p, user_sites: undefined, options: [] });`,
+  );
 
   // A running program becomes a presence with the two lines that were typed.
   await forget();

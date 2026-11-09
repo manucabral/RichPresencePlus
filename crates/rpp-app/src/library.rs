@@ -208,6 +208,21 @@ impl Library {
         let mut copy = presence.clone();
         copy.strings = self.strings(&presence.manifest.name, language);
         copy.settings = options_of(presence, settings);
+        // The sites the person added join those of the manifest, so the extension
+        // reads them and asks for each like for any other.
+        if let Some(page) = copy.manifest.page.as_mut().filter(|page| page.user_sites) {
+            for host in settings
+                .sites
+                .get(&presence.manifest.name)
+                .into_iter()
+                .flatten()
+            {
+                let pattern = rpp_plugins::PageSpec::user_pattern(host);
+                if !page.matches.contains(&pattern) {
+                    page.matches.push(pattern);
+                }
+            }
+        }
         copy
     }
 
@@ -226,5 +241,57 @@ impl Library {
             .filter(|presence| !settings.disabled.contains(&presence.manifest.name))
             .map(|presence| self.prepared(presence, settings, language))
             .collect()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_sites_a_person_added_join_the_rule_of_the_presence() {
+        let manifest = rpp_plugins::Manifest::parse(
+            r#"{"name":"Server","version":"1","client_id":"12345678901234567",
+                "page":{"matches":["*://demo.example.com/*"],"user_sites":true,
+                        "extract":{"t":{"from":"meta","name":"og:title"}}}}"#,
+        )
+        .unwrap();
+        let presence = Presence {
+            manifest,
+            source: String::new(),
+            strings: Table::new(),
+            settings: serde_json::Map::new(),
+        };
+        let library = Library {
+            presences: vec![presence],
+            ..Library::default()
+        };
+        let mut settings = Settings::default();
+        let matches = |settings: &Settings| {
+            let enabled = library.enabled(settings, "en");
+            rpp_bridge::Rule::from_manifests(enabled.iter().map(|p| &p.manifest))[0]
+                .matches
+                .clone()
+        };
+        assert_eq!(matches(&settings), ["*://demo.example.com/*"]);
+        settings.sites.insert(
+            "Server".into(),
+            vec!["media.home".into(), "demo.example.com".into()],
+        );
+        assert_eq!(
+            matches(&settings),
+            ["*://demo.example.com/*", "*://media.home/*"]
+        );
+        // The copy the library keeps is left as the manifest wrote it.
+        assert_eq!(
+            library.presences[0]
+                .manifest
+                .page
+                .as_ref()
+                .unwrap()
+                .matches
+                .len(),
+            1
+        );
     }
 }

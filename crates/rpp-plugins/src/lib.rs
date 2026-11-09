@@ -20,7 +20,7 @@ pub mod tags;
 pub use engine::{Meta, Plugin, PluginError, Tick};
 pub use manifest::{FORMAT, Manifest, ManifestError};
 pub use names::{MAX_NAME, identity, reserved_device, valid_name, valid_person};
-pub use page::{Extractor, FrameSpec, PageSpec, StorageArea};
+pub use page::{Extractor, FrameSpec, MAX_USER_SITES, PageSpec, StorageArea, site_host};
 pub use permissions::{Denied, Grant, Host, Permissions, Request};
 pub use setting::{Setting, When, resolve as resolve_settings};
 pub use tags::{TAGS, is_known_tag};

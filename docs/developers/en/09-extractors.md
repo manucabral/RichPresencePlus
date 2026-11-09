@@ -31,6 +31,7 @@ characters, and a list or object from the page up to 4 KB.
 | `json` | `selector`, optional `path` | Same as `variable` |
 | `storage` | `key`, optional `area` and `path` | Same as `variable` |
 | `style` | `selector`, `name` | Text |
+| `response` | `url`, optional `path` | Same as `variable` |
 
 A selector is CSS, up to 256 characters. Write `>>>` to cross into a web component, as in
 `video-player >>> h2`. A path is names joined by dots, such as `video.title`: up to 128
@@ -124,8 +125,28 @@ A computed CSS property of the first element that matches `selector`, by its `na
 "cover": { "from": "style", "selector": ".poster", "name": "background-image" }
 ```
 
+## response
+
+The last JSON answer the page received from an address that matches `url`, whether it asked
+with `fetch` or `XMLHttpRequest`. With `path`, only that part. `url` is a match pattern that
+names a site, such as `*://api.example.com/v1/player/*`, or a path that starts with `/` on the
+site of the page itself; its path also matches the query.
+
+```json
+"title": { "from": "response", "url": "*://api.example.com/v1/player/*", "path": "data.title" }
+```
+
+The page gets its answer as before; the extension only looks at a copy. Answers of more than
+1 MB are left alone. An answer that arrives before the extension starts on the page is still
+read, and a tab that was open before the presence was turned on shows only the answers that
+come after. A presence reads up to 8 addresses, and only in its pages, not in frames.
+
+To find the address, open the Network tab of the browser's tools, filter by Fetch/XHR, and play
+or open what the presence shows.
+
 ## What cannot be read
 
 A path or key that holds `token`, `password`, `secret`, `cookie` and the like is refused when
-the presence loads, so a presence cannot read a login. A frame is read only inside the pages of
+the presence loads, so a presence cannot read a login. Neither can an address that holds those
+words, `login`, `oauth` or `auth/`. A frame is read only inside the pages of
 its own presence.

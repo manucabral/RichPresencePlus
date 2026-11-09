@@ -204,6 +204,26 @@
             }
           },
           "additionalProperties": false
+        },
+        {
+          "description": "The JSON answer the page last received from an address; only the value at path is kept.",
+          "properties": {
+            "from": {
+              "const": "response"
+            },
+            "url": {
+              "type": "string",
+              "description": "Match pattern of the address, naming a site, like *://api.example.com/v1/*, or a path that starts with / on the page's own site.",
+              "pattern": "^((\\*|https?)://[a-z0-9.-]+)?/.*$"
+            },
+            "path": {
+              "$ref": "#/definitions/path"
+            }
+          },
+          "required": [
+            "url"
+          ],
+          "additionalProperties": false
         }
       ]
     },
@@ -391,18 +411,36 @@
     "page": {
       "type": "object",
       "description": "What to read from websites.",
-      "required": [
-        "matches"
+      "anyOf": [
+        {
+          "required": [
+            "matches"
+          ]
+        },
+        {
+          "required": [
+            "user_sites"
+          ],
+          "properties": {
+            "user_sites": {
+              "const": true
+            }
+          }
+        }
       ],
       "additionalProperties": false,
       "properties": {
         "matches": {
           "type": "array",
-          "minItems": 1,
           "maxItems": 16,
           "items": {
             "$ref": "#/definitions/pattern"
           }
+        },
+        "user_sites": {
+          "type": "boolean",
+          "description": "The person adds the sites, such as a server of their own at home. matches may then be empty.",
+          "default": false
         },
         "extract": {
           "$ref": "#/definitions/extractors"

@@ -231,9 +231,16 @@
       .map((spec) => spec.path);
   }
 
+  // The answers a rule reads: the name of each value, the address and the path.
+  function responseEntries(extractors) {
+    return Object.entries(extractors || {})
+      .filter(([, spec]) => spec.from === "response")
+      .map(([name, spec]) => ({ name, url: spec.url, path: spec.path ?? null }));
+  }
+
   // Evaluates every extractor of a rule against a document. `variables` holds what
-  // the page's own world answered, by path.
-  function extractValues(doc, extractors, variables) {
+  // the page's own world answered, by path, and `responses` the answers it kept, by name.
+  function extractValues(doc, extractors, variables, responses) {
     const values = {};
     for (const [name, spec] of Object.entries(extractors || {})) {
       switch (spec.from) {
@@ -259,6 +266,9 @@
           break;
         case "variable":
           values[name] = plain(variables ? variables[spec.path] : null);
+          break;
+        case "response":
+          values[name] = plain(responses ? responses[name] : null);
           break;
         case "json": {
           const element = find(doc, spec.selector);
@@ -354,6 +364,7 @@
     matchesPattern,
     extractValues,
     variablePaths,
+    responseEntries,
     sameState,
     rulesForPage,
     framesForPage,

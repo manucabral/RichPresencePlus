@@ -7,7 +7,7 @@
   if (running?.alive()) return;
   if (running) running.stop();
 
-  const { extractValues, sameState, rulesForPage, variablePaths } = globalThis.RPPExtract;
+  const { extractValues, sameState, rulesForPage, variablePaths, responseEntries } = globalThis.RPPExtract;
   const POLL_MS = 2000;
   // How long a report waits for the page's world to answer: 20 tries of 50 ms.
   const WAIT_MS = 50;
@@ -50,6 +50,27 @@
     return answer;
   }
 
+  // Asks the page's own world for the answers it kept for a presence. The same
+  // request also tells it which addresses to watch.
+  function readResponses(rule) {
+    const entries = responseEntries(rule.extract);
+    if (entries.length === 0) return null;
+    let answer = null;
+    const take = (event) => {
+      try {
+        answer = JSON.parse(event.detail);
+      } catch {
+        answer = null;
+      }
+    };
+    document.addEventListener("rpp-answers", take);
+    document.dispatchEvent(
+      new CustomEvent("rpp-responses", { detail: JSON.stringify({ presence: rule.presence, entries }) }),
+    );
+    document.removeEventListener("rpp-answers", take);
+    return answer;
+  }
+
   function report() {
     // Once cut off, every call to the worker throws; the timer ends with it.
     if (!alive()) {
@@ -59,10 +80,15 @@
     const address = location.href;
     const matching = rulesForPage(rules, address);
     const variables = matching.map((rule) => readVariables(rule.extract));
+    const responses = matching.map(readResponses);
     // The script in the page's world can start after this one; Firefox does it even
     // when it was registered first. Without a wait, the first report leaves without
     // the variables and they come one poll later.
-    const unanswered = matching.some((rule, index) => variables[index] === null && variablePaths(rule.extract).length);
+    const unanswered = matching.some(
+      (rule, index) =>
+        (variables[index] === null && variablePaths(rule.extract).length) ||
+        (responses[index] === null && responseEntries(rule.extract).length),
+    );
     if (unanswered && waits < MAX_WAITS) {
       waits += 1;
       setTimeout(report, WAIT_MS);
@@ -72,7 +98,7 @@
       const state = {
         url: address,
         title: document.title,
-        values: extractValues(document, rule.extract, variables[index]),
+        values: extractValues(document, rule.extract, variables[index], responses[index]),
         at: Date.now(),
       };
       const previous = sent.get(rule.presence);

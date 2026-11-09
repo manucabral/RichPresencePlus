@@ -102,6 +102,8 @@ pub struct Settings {
     pub language: String,
     /// Values picked for the options each presence declares, by presence and key.
     pub options: BTreeMap<String, BTreeMap<String, Value>>,
+    /// Hosts the user added to presences that read sites of one's own, by presence.
+    pub sites: BTreeMap<String, Vec<String>>,
     /// Detail of the log file: `error`, `warn`, `info` or `debug`.
     pub log_level: String,
     /// Activities written by hand and the one on display.
@@ -135,6 +137,7 @@ impl Default for Settings {
             bridge_token: None,
             language: "auto".to_owned(),
             options: BTreeMap::new(),
+            sites: BTreeMap::new(),
             log_level: DEFAULT_LOG_LEVEL.to_owned(),
             manual: Manual::default(),
             profiles: Vec::new(),

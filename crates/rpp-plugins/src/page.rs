@@ -18,6 +18,10 @@ const MAX_PATH: usize = 128;
 const MAX_PATH_PARTS: usize = 8;
 /// Longest selector, attribute or meta name.
 const MAX_TEXT: usize = 256;
+/// Most addresses whose answers one presence reads.
+const MAX_RESPONSES: usize = 8;
+/// Most sites of their own a person adds to one presence.
+pub const MAX_USER_SITES: usize = 8;
 
 /// One value read from a page.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
@@ -96,6 +100,16 @@ pub enum Extractor {
     /// What the page publishes through `navigator.mediaSession`:
     /// `{title, artist, album, artwork, state}`, or `null` when it publishes nothing.
     Session,
+    /// The JSON answer the page last received from an address, such as
+    /// `*://api.example.com/v1/player/*`. Only the value at `path` is kept;
+    /// nothing is sent and the request itself is left as the page made it.
+    Response {
+        /// Match pattern of the address; it names a site.
+        url: String,
+        /// Where to go inside the answer; the whole answer when omitted.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        path: Option<String>,
+    },
 }
 
 /// Which storage of the site an entry lives in.
@@ -113,8 +127,13 @@ pub enum StorageArea {
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PageSpec {
-    /// Chrome match patterns such as `*://*.example.com/*`.
+    /// Chrome match patterns such as `*://*.example.com/*`; may be empty with
+    /// `user_sites`.
+    #[serde(default)]
     pub matches: Vec<String>,
+    /// The person adds the sites, such as a server of their own at home.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub user_sites: bool,
     /// Values to read, by the name the script will see.
     #[serde(default)]
     pub extract: BTreeMap<String, Extractor>,
@@ -200,14 +219,53 @@ fn valid_text(text: &str) -> bool {
     !text.is_empty() && text.len() <= MAX_TEXT && !text.contains('\0')
 }
 
+/// The host of an address a person typed, such as `http://media.home:8096/web`.
+///
+/// Returns:
+///     The host in lower case, without scheme, port or path; `None` when it is not
+///     one a match pattern can name.
+pub fn site_host(address: &str) -> Option<String> {
+    let text = address.trim().to_ascii_lowercase();
+    let rest = text
+        .strip_prefix("https://")
+        .or_else(|| text.strip_prefix("http://"))
+        .unwrap_or(&text);
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or_default();
+    if authority.contains('@') {
+        return None;
+    }
+    let host = match authority.rsplit_once(':') {
+        Some((host, port)) if !port.is_empty() && port.bytes().all(|b| b.is_ascii_digit()) => host,
+        Some(_) => return None,
+        None => authority,
+    };
+    let fine = !host.is_empty()
+        && host.len() <= 253
+        && host.split('.').all(|label| {
+            !label.is_empty()
+                && label
+                    .bytes()
+                    .all(|b| b.is_ascii_lowercase() || b.is_ascii_digit() || b == b'-')
+        });
+    fine.then(|| host.to_owned())
+}
+
 impl PageSpec {
+    /// The match pattern of a host the person added.
+    pub fn user_pattern(host: &str) -> String {
+        format!("*://{host}/*")
+    }
+
     /// Checks the sizes and shapes the extension relies on.
     ///
     /// Raises:
     ///     &'static str: A short reason when a pattern, name or selector is not valid.
     pub fn validate(&self) -> Result<(), &'static str> {
-        if self.matches.is_empty() || self.matches.len() > MAX_MATCHES {
-            return Err("expected 1 to 16 match patterns");
+        if (self.matches.is_empty() && !self.user_sites) || self.matches.len() > MAX_MATCHES {
+            return Err("expected 1 to 16 match patterns, or none with user_sites");
+        }
+        if self.user_sites && self.matches.iter().any(|pattern| pattern.contains("://*/")) {
+            return Err("a presence for every site has no sites of its own");
         }
         if !self.matches.iter().all(|pattern| valid_pattern(pattern)) {
             return Err("match patterns must look like *://*.example.com/*");
@@ -228,6 +286,14 @@ impl PageSpec {
             return Err("extract at most 32 values");
         }
         check_extractors(&self.extract)?;
+        let responses = self
+            .extract
+            .values()
+            .filter(|extractor| matches!(extractor, Extractor::Response { .. }))
+            .count();
+        if responses > MAX_RESPONSES {
+            return Err("read the answers of at most 8 addresses");
+        }
         let Some(frames) = &self.frames else {
             return Ok(());
         };
@@ -250,12 +316,13 @@ impl PageSpec {
         {
             return Err("a value of a frame cannot use a name of the page");
         }
-        if frames
-            .extract
-            .values()
-            .any(|extractor| matches!(extractor, Extractor::Variable { .. }))
-        {
-            return Err("variables can only be read from the page");
+        if frames.extract.values().any(|extractor| {
+            matches!(
+                extractor,
+                Extractor::Variable { .. } | Extractor::Response { .. }
+            )
+        }) {
+            return Err("variables and answers can only be read from the page");
         }
         Ok(())
     }
@@ -326,6 +393,25 @@ fn check_extractors(extract: &BTreeMap<String, Extractor>) -> Result<(), &'stati
             }
             Extractor::Style { selector, name } => valid_text(selector) && valid_text(name),
             Extractor::Session => true,
+            Extractor::Response { url, path } => {
+                // The address has to say which site answers, as a frame does, or start
+                // with `/` for the site of the page itself.
+                let same_site = url.starts_with('/') && valid_text(url) && !url.contains(' ');
+                if !same_site && (!valid_pattern(url) || url.contains("://*")) {
+                    return Err("an address names a site, like *://api.example.com/v1/*");
+                }
+                if names_a_credential(url)
+                    || ["login", "oauth", "auth/"]
+                        .iter()
+                        .any(|w| url.to_ascii_lowercase().contains(w))
+                {
+                    return Err(CREDENTIAL);
+                }
+                if let Some(path) = path {
+                    check_path(path)?;
+                }
+                true
+            }
         };
         if !fields_ok {
             return Err("selectors and names must be 1 to 256 characters");
@@ -463,6 +549,111 @@ mod tests {
 
     fn extractor(value: serde_json::Value) -> Result<(), &'static str> {
         spec(json!({"matches": ["*://a.example/*"], "extract": {"x": value}})).validate()
+    }
+
+    #[test]
+    fn an_answer_is_read_from_an_address_that_names_a_site() {
+        let page = |extract: serde_json::Value| {
+            serde_json::from_value::<PageSpec>(
+                json!({"matches": ["*://www.example.com/*"], "extract": extract}),
+            )
+            .unwrap()
+            .validate()
+        };
+        let read = |url: &str, path: Option<&str>| {
+            let mut spec = json!({"from": "response", "url": url});
+            if let Some(path) = path {
+                spec["path"] = json!(path);
+            }
+            page(json!({ "v": spec }))
+        };
+        assert!(read("*://api.example.com/v1/player/*", Some("data.title")).is_ok());
+        assert!(read("https://www.example.com/api/now?*", None).is_ok());
+        for (url, path) in [
+            ("*://*/*", None),
+            ("*://*.example.com/*", None),
+            ("api.example.com/v1", None),
+            ("*://api.example.com/oauth/*", None),
+            ("*://api.example.com/v1/token", None),
+            ("*://api.example.com/LOGIN/*", None),
+            ("*://api.example.com/v1/*", Some("user.password")),
+            ("*://api.example.com/v1/*", Some("a()")),
+        ] {
+            assert!(read(url, path).is_err(), "{url} {path:?}");
+        }
+        let many: serde_json::Map<String, serde_json::Value> = (0..9)
+            .map(|n| {
+                (
+                    format!("v{n}"),
+                    json!({"from": "response", "url": "*://api.example.com/*"}),
+                )
+            })
+            .collect();
+        assert!(page(serde_json::Value::Object(many)).is_err());
+        let framed = json!({
+            "matches": ["*://www.example.com/*"],
+            "frames": {"matches": ["*://player.example.com/*"],
+                       "extract": {"v": {"from": "response", "url": "*://api.example.com/*"}}}
+        });
+        assert!(
+            serde_json::from_value::<PageSpec>(framed)
+                .unwrap()
+                .validate()
+                .is_err()
+        );
+    }
+
+    #[test]
+    fn a_presence_may_leave_its_sites_to_the_person() {
+        let spec = |value: serde_json::Value| {
+            serde_json::from_value::<PageSpec>(value)
+                .unwrap()
+                .validate()
+        };
+        let media = json!({"player": {"from": "media"}});
+        assert!(spec(json!({"user_sites": true, "extract": media})).is_ok());
+        assert!(
+            spec(
+                json!({"matches": ["*://demo.example.com/*"], "user_sites": true, "extract": media})
+            )
+            .is_ok()
+        );
+        assert!(spec(json!({"extract": media})).is_err());
+        assert!(
+            spec(json!({"matches": ["*://*/*"], "user_sites": true, "extract": media})).is_err()
+        );
+        let own = json!({"v": {"from": "response", "url": "/api/now?*", "path": "item.name"}});
+        assert!(spec(json!({"user_sites": true, "extract": own})).is_ok());
+        let spaced = json!({"v": {"from": "response", "url": "/api/a b"}});
+        assert!(spec(json!({"user_sites": true, "extract": spaced})).is_err());
+        let login = json!({"v": {"from": "response", "url": "/auth/me"}});
+        assert!(spec(json!({"user_sites": true, "extract": login})).is_err());
+    }
+
+    #[test]
+    fn a_typed_address_becomes_a_host() {
+        for (typed, host) in [
+            ("media.home.lan", "media.home.lan"),
+            ("http://192.168.1.5:8096/web/index.html", "192.168.1.5"),
+            ("  HTTPS://Jelly.Example.com/  ", "jelly.example.com"),
+            ("nas:32400", "nas"),
+            ("https://music.example.com?x=1", "music.example.com"),
+        ] {
+            assert_eq!(site_host(typed).as_deref(), Some(host), "{typed}");
+        }
+        for typed in [
+            "",
+            "ftp://a.b",
+            "user@host.com",
+            "a..b",
+            "host:port",
+            "*.example.com",
+            "a b.com",
+            "[::1]",
+        ] {
+            assert_eq!(site_host(typed), None, "{typed}");
+        }
+        assert_eq!(PageSpec::user_pattern("nas"), "*://nas/*");
     }
 
     #[test]

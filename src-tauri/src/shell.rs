@@ -115,6 +115,7 @@ pub fn run() {
             commands::presences,
             commands::set_presence_enabled,
             commands::set_presence_option,
+            commands::set_presence_sites,
             commands::log_level,
             commands::set_log_level,
             commands::author,

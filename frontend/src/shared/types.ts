@@ -58,6 +58,8 @@ export interface PresenceView {
   icon: string | null;
   /** Other names it is searched by. */
   other_names: string[];
+  /** The hosts the person added, when the presence reads sites of one's own. */
+  user_sites: string[] | null;
 }
 
 export interface Row {

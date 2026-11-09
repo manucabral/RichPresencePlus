@@ -391,6 +391,78 @@ async fn options_are_listed_saved_and_reach_the_running_script() {
     finish(restarted).await;
 }
 
+#[tokio::test(flavor = "multi_thread")]
+async fn the_sites_a_person_adds_are_read_and_remembered() {
+    let setup = setup();
+    let directory = setup.presences.path().join("server");
+    fs::create_dir_all(&directory).unwrap();
+    fs::write(
+        directory.join("manifest.json"),
+        r#"{"name":"Server","version":"1","client_id":"12345678901234567","interval":1,
+            "page":{"user_sites":true,"extract":{"t":{"from":"response","url":"/api/now"}}}}"#,
+    )
+    .unwrap();
+    fs::write(directory.join("main.js"), SCRIPT).unwrap();
+    let discord = Discord::default();
+    let controller = start(&setup, &discord).await;
+    let server = |controller: &Controller<Processes>| {
+        controller
+            .presences()
+            .into_iter()
+            .find(|p| p.name == "Server")
+            .unwrap()
+    };
+    assert_eq!(server(&controller).user_sites, Some(vec![]));
+    // A presence with sites of its own lists none until the person adds one.
+    let demo = controller
+        .presences()
+        .into_iter()
+        .find(|p| p.name == "Demo")
+        .unwrap();
+    assert_eq!(demo.user_sites, None);
+
+    let saved = controller
+        .set_sites(
+            "Server",
+            &[
+                "http://Media.Home:8096/web".into(),
+                "media.home".into(),
+                "192.168.1.5".into(),
+            ],
+        )
+        .unwrap();
+    assert_eq!(saved, ["media.home", "192.168.1.5"]);
+    let view = server(&controller);
+    assert_eq!(view.user_sites.as_deref(), Some(&saved[..]));
+    assert_eq!(view.access.sites, ["*://media.home/*", "*://192.168.1.5/*"]);
+
+    assert!(
+        controller
+            .set_sites("Server", &["user@host".into()])
+            .is_err()
+    );
+    assert!(controller.set_sites("Demo", &["a.io".into()]).is_err());
+    assert!(controller.set_sites("Nope", &["a.io".into()]).is_err());
+    let nine: Vec<String> = (0..9).map(|n| format!("h{n}.lan")).collect();
+    assert!(controller.set_sites("Server", &nine).is_err());
+    assert_eq!(
+        server(&controller).user_sites.as_deref(),
+        Some(&saved[..]),
+        "a refused change keeps the sites"
+    );
+    finish(controller).await;
+
+    let controller = start(&setup, &discord).await;
+    assert_eq!(
+        server(&controller).user_sites.as_deref(),
+        Some(&saved[..]),
+        "the sites are remembered"
+    );
+    controller.set_sites("Server", &[]).unwrap();
+    assert_eq!(server(&controller).user_sites, Some(vec![]));
+    finish(controller).await;
+}
+
 fn written(name: &str, details: &str) -> rpp_config::ManualPreset {
     rpp_config::ManualPreset {
         name: name.into(),

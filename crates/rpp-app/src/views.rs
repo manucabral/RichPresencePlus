@@ -107,6 +107,8 @@ pub struct PresenceView {
     pub icon: Option<String>,
     /// Other names it is searched by.
     pub other_names: Vec<String>,
+    /// The hosts the person added, when the presence reads sites of one's own.
+    pub user_sites: Option<Vec<String>>,
 }
 
 /// The author written into new presences.

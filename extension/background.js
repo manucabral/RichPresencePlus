@@ -26,6 +26,7 @@ const PROTOCOL = 2;
 const CONTENT_FILES = ["extract.js", "content.js"];
 const FRAME_FILES = ["extract.js", "frame.js"];
 const VARIABLE_FILES = ["variables.js"];
+const RESPONSE_FILES = ["responses.js"];
 const HEARTBEAT_MS = 20000;
 
 let socket = null;
@@ -101,9 +102,11 @@ async function finishPick(tab, message) {
   return { ok: true };
 }
 
-const { declaredValues, framesForPage, joinFrames, rulesForPage, variablePaths } = globalThis.RPPExtract;
+const { declaredValues, framesForPage, joinFrames, responseEntries, rulesForPage, variablePaths } =
+  globalThis.RPPExtract;
 
 const readsVariables = (rule) => variablePaths(rule.extract).length > 0;
+const readsResponses = (rule) => responseEntries(rule.extract).length > 0;
 
 // Sends a page with what its frames said. A page can make its address as long as
 // it likes; the app closes the link at a message that is too long, and every tab
@@ -218,6 +221,15 @@ async function registerRules(next) {
         ...(readsVariables(rule)
           ? [script(`rpp-variables-${index}`, matchesOf(rule), VARIABLE_FILES, { world: "MAIN" })]
           : []),
+        // Answers start before the page is idle, so this one runs from the first moment.
+        ...(readsResponses(rule)
+          ? [
+              script(`rpp-responses-${index}`, matchesOf(rule), RESPONSE_FILES, {
+                world: "MAIN",
+                runAt: "document_start",
+              }),
+            ]
+          : []),
       ]),
     );
   }
@@ -230,6 +242,12 @@ async function registerRules(next) {
       if (page.some(readsVariables)) {
         chrome.scripting
           .executeScript({ target: { tabId: tab.id }, files: VARIABLE_FILES, world: "MAIN" })
+          .catch(() => {});
+      }
+      // An open tab only shows answers that arrive from now on.
+      if (page.some(readsResponses)) {
+        chrome.scripting
+          .executeScript({ target: { tabId: tab.id }, files: RESPONSE_FILES, world: "MAIN" })
           .catch(() => {});
       }
       chrome.scripting.executeScript({ target: { tabId: tab.id }, files: CONTENT_FILES }).catch(() => {});

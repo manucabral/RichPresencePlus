@@ -87,7 +87,8 @@ y una actualización que pide más espera hasta que lo acepten.
 
 | Campo | Tipo | Obligatorio | Qué hace |
 | --- | --- | --- | --- |
-| `matches` | lista de patrones | sí | Direcciones que lee la presencia, de 1 a 16, como `*://www.example.com/*`. |
+| `matches` | lista de patrones | sí, salvo con `user_sites` | Direcciones que lee la presencia, hasta 16, como `*://www.example.com/*`. |
+| `user_sites` | booleano | no | `true` para un servicio que cada uno instala en su propio servidor: cada persona agrega su dirección en la aplicación. |
 | `extract` | objeto | no | Hasta 32 valores, cada uno con un nombre de letras, números y `_`. |
 | `frames` | objeto | no | Frames de otros sitios para leer dentro de esas páginas: `matches` (de 1 a 8) y `extract`. |
 

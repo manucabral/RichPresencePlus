@@ -40,6 +40,8 @@ export const setPresenceEnabled = (name: string, enabled: boolean) =>
   invoke<void>("set_presence_enabled", { name, enabled });
 export const setPresenceOption = (name: string, key: string, value: boolean | number | string) =>
   invoke<void>("set_presence_option", { name, key, value });
+export const setPresenceSites = (name: string, sites: string[]) =>
+  invoke<string[]>("set_presence_sites", { name, sites });
 export const getIcons = () => invoke<Record<string, string>>("presence_icons");
 export const updateManifest = (name: string, changes: ManifestChanges) =>
   invoke<void>("update_manifest", { name, changes });

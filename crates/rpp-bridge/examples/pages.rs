@@ -60,6 +60,26 @@ fn framed() -> Rule {
             "inside".to_owned(),
             extractor(json!({"from": "text", "selector": "#host >>> h2"})),
         ),
+        (
+            "answer".to_owned(),
+            extractor(
+                json!({"from": "response", "url": "http://127.0.0.1/api/early", "path": "data.title"}),
+            ),
+        ),
+        (
+            "own".to_owned(),
+            extractor(json!({"from": "response", "url": "/api/early", "path": "data.title"})),
+        ),
+        (
+            "page_saw".to_owned(),
+            extractor(json!({"from": "text", "selector": "#early"})),
+        ),
+        (
+            "xhr".to_owned(),
+            extractor(
+                json!({"from": "response", "url": "http://127.0.0.1/api/xhr*", "path": "now.track"}),
+            ),
+        ),
     ]);
     rule.frames = Some(FrameSpec {
         matches: vec!["http://localhost/*".to_owned()],

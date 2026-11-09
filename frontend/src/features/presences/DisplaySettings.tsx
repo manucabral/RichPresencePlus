@@ -8,6 +8,7 @@ import { useT } from "../../shared/i18n";
 import { shownOptions } from "../../shared/presence";
 import type { PresencePreferences, PresenceView, StatusDisplay } from "../../shared/types";
 import OptionControl from "./OptionControl";
+import UserSites from "./UserSites";
 
 const DEFAULTS: PresencePreferences = {
   enabled: true,
@@ -57,6 +58,7 @@ export default function DisplaySettings({ presence, onSaved }: { presence: Prese
 
   return (
     <>
+      {presence.user_sites && <UserSites name={presence.name} sites={presence.user_sites} onSaved={onSaved} />}
       <Section title={t("presences.display")}>
         <Panel>
           {toggle("show_title", t("presences.showTitles"))}

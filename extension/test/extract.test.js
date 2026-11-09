@@ -12,6 +12,7 @@ const {
   sameState,
   rulesForPage,
   variablePaths,
+  responseEntries,
   framesForPage,
   declaredValues,
   joinFrames,
@@ -251,6 +252,23 @@ test("a rule says which variables it needs", () => {
     "x.y",
   ]);
   assert.deepEqual(variablePaths({ b: { from: "text", selector: "h1" } }), []);
+});
+
+test("answers are named by value and checked like variables", () => {
+  const extract = {
+    title: { from: "response", url: "*://api.example.com/*", path: "data.title" },
+    all: { from: "response", url: "*://api.example.com/now" },
+    h: { from: "text", selector: "h1" },
+  };
+  assert.deepEqual(responseEntries(extract), [
+    { name: "title", url: "*://api.example.com/*", path: "data.title" },
+    { name: "all", url: "*://api.example.com/now", path: null },
+  ]);
+  assert.deepEqual(responseEntries({ h: extract.h }), []);
+  const doc = elements([]);
+  const values = extractValues(doc, extract, null, { title: " A ", all: { long: "x".repeat(5000) } });
+  assert.deepEqual([values.title, values.all], ["A", null]);
+  assert.deepEqual(extractValues(doc, { title: extract.title }, null, null), { title: null });
 });
 
 const framed = {

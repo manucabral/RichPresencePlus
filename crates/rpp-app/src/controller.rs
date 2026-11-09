@@ -336,6 +336,17 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
                 let strings = library.strings(&manifest.name, &language);
                 let values = options_of(presence, &settings);
                 let permissions = &manifest.permissions;
+                let user_sites = manifest
+                    .page
+                    .as_ref()
+                    .filter(|page| page.user_sites)
+                    .map(|_| {
+                        settings
+                            .sites
+                            .get(&manifest.name)
+                            .cloned()
+                            .unwrap_or_default()
+                    });
                 PresenceView {
                     name: manifest.name.clone(),
                     version: manifest.version.clone(),
@@ -360,8 +371,15 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
                             .page
                             .iter()
                             .flat_map(|page| page.sites().cloned())
+                            .chain(
+                                user_sites
+                                    .iter()
+                                    .flatten()
+                                    .map(|host| rpp_plugins::PageSpec::user_pattern(host)),
+                            )
                             .collect(),
                     },
+                    user_sites,
                     options: option_views(&manifest.settings, &values, &strings),
                     origin: library.origin_of(&manifest.name).unwrap_or(Origin::Bundled),
                     editable: library.origin_of(&manifest.name) == Some(Origin::Local),
@@ -409,6 +427,57 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         };
         self.service.set_settings(name, values);
         Ok(())
+    }
+
+    /// Saves the sites the person added to a presence that reads sites of one's own,
+    /// and has the extension read them.
+    ///
+    /// Args:
+    ///     addresses: What the person typed, such as `http://media.home:8096`; only
+    ///         the host is kept, and each host once.
+    ///
+    /// Returns:
+    ///     The hosts saved, in order.
+    ///
+    /// Raises:
+    ///     String: The presence does not exist or takes no sites, an address names
+    ///         no host, there are more than 8, or they cannot be saved.
+    pub fn set_sites(&self, name: &str, addresses: &[String]) -> Result<Vec<String>, String> {
+        let mut hosts: Vec<String> = Vec::new();
+        for address in addresses {
+            let host = rpp_plugins::site_host(address)
+                .ok_or_else(|| format!("Not a site address: {address}"))?;
+            if !hosts.contains(&host) {
+                hosts.push(host);
+            }
+        }
+        if hosts.len() > rpp_plugins::MAX_USER_SITES {
+            return Err(format!("Add up to {} sites", rpp_plugins::MAX_USER_SITES));
+        }
+        {
+            let mut settings = lock(&self.settings);
+            let library = lock(&self.library);
+            let takes = library
+                .find(name)
+                .ok_or_else(|| format!("Unknown presence: {name}"))?
+                .manifest
+                .page
+                .as_ref()
+                .is_some_and(|page| page.user_sites);
+            if !takes {
+                return Err(format!("{name} does not take sites of your own"));
+            }
+            let mut changed = settings.clone();
+            if hosts.is_empty() {
+                changed.sites.remove(name);
+            } else {
+                changed.sites.insert(name.to_owned(), hosts.clone());
+            }
+            self.store.save(&changed).map_err(|e| e.to_string())?;
+            *settings = changed;
+        }
+        self.sync_running();
+        Ok(hosts)
     }
 
     /// The logos kept as files in the presence folders, as `data:` images by name.

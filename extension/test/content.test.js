@@ -31,6 +31,7 @@ function tab({ variables = false } = {}) {
         rulesForPage: (rules) => rules,
         extractValues: (_, __, read) => (variables ? { episode: read?.["app.episode"] ?? null } : {}),
         variablePaths: () => (variables ? ["app.episode"] : []),
+        responseEntries: () => [],
         sameState: () => false,
       },
     },

@@ -26,6 +26,8 @@ Un script que pasa un límite se detiene en esa vuelta y la pestaña Probar mues
 | `page.matches` | De 1 a 16 patrones |
 | `page.frames.matches` | De 1 a 8 patrones |
 | Valores en un `extract` | 32 |
+| Direcciones leídas con `response` | 8, cada respuesta de hasta 1 MB |
+| Sitios que una persona agrega con `user_sites` | 8 |
 | Un selector, atributo o nombre de meta | 256 caracteres |
 | Una ruta | 128 caracteres, 8 nombres |
 | Elementos de `list` | 16 por defecto, 32 como máximo |

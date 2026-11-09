@@ -80,10 +80,32 @@ otros lugares, y una presencia puede leerlos sin correr nada en la página.
 | Una imagen de fondo | Inspeccioná el elemento y buscá `background-image`. | `{ "from": "style", "selector": ".poster", "name": "background-image" }` |
 | Dentro de un componente web | Escribí `>>>` para entrar. | `{ "from": "text", "selector": "video-player >>> h2" }` |
 | Los controles de medios del sitio | Los sitios de música suelen llenarlos. | `{ "from": "session" }` |
+| Una respuesta que la página pide | Filtrá la pestaña Red por Fetch/XHR. | `{ "from": "response", "url": "*://api.example.com/v1/*", "path": "data.title" }` |
 
 Un nombre que contiene `token`, `password`, `secret`, `cookie` y parecidos se rechaza, así que
 una presencia no puede leer un inicio de sesión. Leé solo lo que mostrás: quienes revisan miran
 cada ruta.
+
+## Leer un sitio que cada uno instala
+
+Algunos servicios no tienen una dirección fija: cada persona los instala en una computadora o un
+servidor de su casa. Escribí `"user_sites": true` y no pongas `matches`, o dejá en él un sitio
+de prueba:
+
+```json
+"page": {
+  "user_sites": true,
+  "extract": {
+    "title": { "from": "response", "url": "/api/now-playing", "path": "item.name" },
+    "player": { "from": "media" }
+  }
+}
+```
+
+Entonces la página de la presencia en la aplicación tiene "Tus sitios", donde la persona escribe
+la dirección de su servidor, como `media.home:8096`. La extensión pregunta antes de leerlo, como
+con cualquier sitio. Una dirección de respuesta que empieza con `/` se lee en el sitio de la
+página, sea cual sea.
 
 ## Empezar sin código
 

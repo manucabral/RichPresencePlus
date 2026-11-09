@@ -79,9 +79,29 @@ presence can read it without running anything in the page.
 | A background picture | Inspect the element and find `background-image`. | `{ "from": "style", "selector": ".poster", "name": "background-image" }` |
 | Inside a web component | Write `>>>` to cross into it. | `{ "from": "text", "selector": "video-player >>> h2" }` |
 | The site's media controls | Music sites often fill them. | `{ "from": "session" }` |
+| An answer the page asks for | Filter the Network tab by Fetch/XHR. | `{ "from": "response", "url": "*://api.example.com/v1/*", "path": "data.title" }` |
 
 A name that holds `token`, `password`, `secret`, `cookie` and the like is refused, so a
 presence cannot read a login. Read only what you show: reviewers check each path.
+
+## Read a site people run themselves
+
+Some services have no fixed address: each person installs them on a computer or a server at
+home. Write `"user_sites": true` and leave `matches` out, or keep a demo site in it:
+
+```json
+"page": {
+  "user_sites": true,
+  "extract": {
+    "title": { "from": "response", "url": "/api/now-playing", "path": "item.name" },
+    "player": { "from": "media" }
+  }
+}
+```
+
+The presence page of the application then has "Your sites", where the person writes the address
+of their server, such as `media.home:8096`. The extension asks before reading it, as for any
+site. An answer address that starts with `/` is read on the site of the page, whichever it is.
 
 ## Start without code
 

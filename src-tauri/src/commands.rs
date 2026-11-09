@@ -224,6 +224,16 @@ pub async fn set_presence_option(
     blocking(&state, move |app| app.set_option(&name, &key, value)).await?
 }
 
+/// Saves the sites the person added to a presence made for a server of their own.
+#[tauri::command]
+pub async fn set_presence_sites(
+    state: State<'_, Shared>,
+    name: String,
+    sites: Vec<String>,
+) -> Result<Vec<String>, String> {
+    blocking(&state, move |app| app.set_sites(&name, &sites)).await?
+}
+
 /// The saved publishing preferences.
 #[tauri::command]
 pub async fn preferences(state: State<'_, Shared>) -> Result<Preferences, String> {

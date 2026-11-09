@@ -90,10 +90,22 @@ async function main() {
   writeFileSync(background, `${readFileSync(background, "utf8")}\nglobalThis.startPick = startPick;\n`);
 
   const server = createServer((request, response) => {
+    if (request.url.startsWith("/api/")) {
+      // Answers the page asks for: one before the extension is ready, one after.
+      response.writeHead(200, { "content-type": "application/json" });
+      response.end(
+        request.url === "/api/early"
+          ? '{"data":{"title":"From an answer","secret":"stays"}}'
+          : '{"now":{"track":"From XHR"}}',
+      );
+      return;
+    }
     if (request.url.startsWith("/framed")) {
       response.writeHead(200, { "content-type": "text/html; charset=utf-8" });
       response.end(
-        `<!doctype html><title>Framed</title><ul><li class="tag">Action</li><li class="tag">Drama</li></ul>
+        `<!doctype html><title>Framed</title>
+          <script>fetch("/api/early").then((r) => r.json()).then((d) => { document.getElementById("early").textContent = d.data.title; });</script>
+          <p id="early"></p><ul><li class="tag">Action</li><li class="tag">Drama</li></ul>
           <script id="data" type="application/json">{"video":{"title":"From JSON"}}</script>
           <div id="poster" style="color: rgb(1, 2, 3)"></div><x-player id="host"></x-player>
           <script>
@@ -102,7 +114,10 @@ async function main() {
             document.getElementById("host").attachShadow({ mode: "open" }).innerHTML = "<h2>In a component</h2>";
           </script>
           <iframe id="ad" src="http://localhost:${server.address().port}/ad"></iframe>
-          <iframe id="player" src="http://localhost:${server.address().port}/player"></iframe>`,
+          <iframe id="player" src="http://localhost:${server.address().port}/player"></iframe>
+          <script>
+            setTimeout(() => { const x = new XMLHttpRequest(); x.open("GET", "/api/xhr?n=1"); x.send(); }, 1500);
+          </script>`,
       );
       return;
     }
@@ -330,6 +345,15 @@ async function main() {
     check(framedPage().inside === "In a component", "a selector crosses into a component");
     if (!framedPage().stored) await until(() => framedPage().stored === "From storage");
     check(framedPage().stored === "From storage", "the storage of the site reaches the app");
+    check(
+      framedPage().answer === "From an answer",
+      "an answer that came before the extension was ready reaches the app",
+    );
+    if (framedPage().xhr !== "From XHR") await until(() => framedPage().xhr === "From XHR");
+    check(framedPage().xhr === "From XHR", "a later XMLHttpRequest answer reaches the app");
+    check(framedPage().page_saw === "From an answer", "the page still receives its own answer");
+    check(framedPage().own === "From an answer", "an address that starts with / is read on the site of the page");
+    check(!JSON.stringify(framedPage()).includes("stays"), "nothing outside the declared path leaves the page");
     const inner = await page.call("Runtime.evaluate", {
       expression: `document.getElementById("player").contentWindow.location.pathname`,
       returnByValue: true,

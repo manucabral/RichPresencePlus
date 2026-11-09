@@ -87,7 +87,8 @@ presence on, and an update that asks for more waits until they accept it.
 
 | Field | Type | Required | What it does |
 | --- | --- | --- | --- |
-| `matches` | list of patterns | yes | Addresses the presence reads, 1 to 16, such as `*://www.example.com/*`. |
+| `matches` | list of patterns | yes, unless `user_sites` | Addresses the presence reads, up to 16, such as `*://www.example.com/*`. |
+| `user_sites` | boolean | no | `true` for a service people run on their own server: each person adds its address in the application. |
 | `extract` | object | no | Up to 32 values, each under a name of letters, digits and `_`. |
 | `frames` | object | no | Frames of other sites to read inside those pages: `matches` (1 to 8) and `extract`. |
 

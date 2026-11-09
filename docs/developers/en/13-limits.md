@@ -26,6 +26,8 @@ goes over a limit stops for that round and the Test tab shows the error.
 | `page.matches` | 1 to 16 patterns |
 | `page.frames.matches` | 1 to 8 patterns |
 | Values in one `extract` | 32 |
+| Addresses read with `response` | 8, each answer up to 1 MB |
+| Sites a person adds with `user_sites` | 8 |
 | A selector, attribute or meta name | 256 characters |
 | A path | 128 characters, 8 names |
 | `list` items | 16 by default, at most 32 |
