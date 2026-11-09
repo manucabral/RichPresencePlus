@@ -5,7 +5,7 @@ import { getExtensionSessions, getPairing } from "../../platform/api";
 import Accordion from "../../shared/components/Accordion";
 import Button from "../../shared/components/Button";
 import PageTitle from "../../shared/components/PageTitle";
-import { browserName, duration } from "../../shared/connection";
+import { browserMark, browserName, duration } from "../../shared/connection";
 import { useLoaded } from "../../shared/hooks";
 import { useT } from "../../shared/i18n";
 import type { SessionView } from "../../shared/types";
@@ -31,11 +31,16 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
   );
 }
 
-/** First letter of the browser in a small tile; real logos are trademarks. */
-function Badge({ name, live }: { name: string; live: boolean }) {
+/** The browser's initial on its own tint; the makers' logos need their permission. */
+function Badge({ browser, live }: { browser: string; live: boolean }) {
+  const { letter, tint } = browserMark(browser);
   return (
-    <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-neutral-800 bg-neutral-900 text-[13px] font-semibold text-neutral-300">
-      {name.charAt(0)}
+    <span
+      aria-hidden="true"
+      className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-[13px] font-semibold"
+      style={{ backgroundColor: `${tint}26`, borderColor: `${tint}66`, color: tint }}
+    >
+      {letter}
       {live && (
         <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full border-2 border-neutral-950 bg-accent" />
       )}
@@ -59,7 +64,7 @@ function SessionRow({ session, now }: { session: SessionView; now: number }) {
         });
   return (
     <li className="flex items-center gap-3 px-3 py-2.5">
-      <Badge name={name} live={end === null} />
+      <Badge browser={session.browser} live={end === null} />
       <div className="min-w-0 flex-1">
         <p className="truncate text-[13px] text-neutral-100">
           <span className="font-medium">{name}</span>

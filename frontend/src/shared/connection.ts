@@ -32,6 +32,28 @@ function lookup(table: Record<string, string>, browser: string, t: Translate): s
   return Object.hasOwn(table, browser) ? table[browser] : t("browser.other");
 }
 
+/**
+ * A tint of our own for each browser's tile. The makers' logos are
+ * trademarks that need their permission, so the tile carries the initial of
+ * the short name on a color that tells the browsers apart.
+ */
+const TINT: Record<string, string> = {
+  chrome: "#3b82f6",
+  edge: "#14b8a6",
+  firefox: "#f97316",
+  opera: "#ef4444",
+  brave: "#f59e0b",
+  vivaldi: "#e11d48",
+  yandex: "#eab308",
+};
+
+/** The letter and color of a browser's tile; "other" gets a question mark in gray. */
+export function browserMark(browser: string): { letter: string; tint: string } {
+  return Object.hasOwn(SHORT, browser)
+    ? { letter: SHORT[browser].charAt(0), tint: TINT[browser] }
+    : { letter: "?", tint: "#71717a" };
+}
+
 /** The full name of a browser the bridge reports. */
 export function browserName(browser: string, t: Translate): string {
   return lookup(FULL, browser, t);

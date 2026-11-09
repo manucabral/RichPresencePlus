@@ -98,7 +98,33 @@ const ANSWERS = {
   language: { setting: "es", system: "es" },
   favorites: [],
   catalog: { available: false, items: [] },
-  extension_sessions: { live: [], recent: [] },
+  extension_sessions: {
+    live: [
+      {
+        browser: "chrome",
+        version: "142.0",
+        connected_at: Math.floor(Date.now() / 1000) - 600,
+        ended_at: null,
+        tabs: 2,
+      },
+      {
+        browser: "firefox",
+        version: "145.0",
+        connected_at: Math.floor(Date.now() / 1000) - 120,
+        ended_at: null,
+        tabs: 1,
+      },
+    ],
+    recent: [
+      {
+        browser: "edge",
+        version: "142.0",
+        connected_at: Math.floor(Date.now() / 1000) - 7200,
+        ended_at: Math.floor(Date.now() / 1000) - 3600,
+        tabs: 0,
+      },
+    ],
+  },
   diagnostics: {
     version: "0.0.0",
     resources: null,

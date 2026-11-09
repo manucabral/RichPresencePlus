@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import test from "node:test";
-import { browserList, discordAdvice, discordText } from "../src/shared/connection.ts";
+import { browserList, browserMark, discordAdvice, discordText } from "../src/shared/connection.ts";
 import { translate } from "../src/shared/i18n/core.ts";
 import { shortcutOf } from "../src/features/settings/shortcut.ts";
 
@@ -51,4 +51,16 @@ test("a key press becomes a shortcut in the stored order", () => {
   for (const code of ["ControlLeft", "Space", "F25", "Semicolon", "Numpad1"]) {
     assert.equal(shortcutOf(press(code, { ctrlKey: true })), null, code);
   }
+});
+
+test("each browser gets its own letter and tint, never a maker's logo", () => {
+  const marks = ["chrome", "edge", "firefox", "opera", "brave", "vivaldi", "yandex"].map(browserMark);
+  // Edge and Firefox used to share the M of their makers' names.
+  assert.deepEqual(
+    marks.map((mark) => mark.letter),
+    ["C", "E", "F", "O", "B", "V", "Y"],
+  );
+  assert.equal(new Set(marks.map((mark) => mark.tint)).size, marks.length);
+  assert.deepEqual(browserMark("other"), { letter: "?", tint: "#71717a" });
+  assert.equal(browserMark("toString").letter, "?");
 });
