@@ -1,6 +1,22 @@
 {
-  "generated_at": 1794240918,
+  "generated_at": 1794322314,
   "stable": [
+    {
+      "folder": "youtube",
+      "installs": 4
+    },
+    {
+      "folder": "ready-or-not",
+      "installs": 2
+    },
+    {
+      "folder": "roblox",
+      "installs": 2
+    },
+    {
+      "folder": "sa-mp",
+      "installs": 2
+    },
     {
       "folder": "creator-tools",
       "installs": 1
@@ -22,23 +38,7 @@
       "installs": 1
     },
     {
-      "folder": "ready-or-not",
-      "installs": 1
-    },
-    {
-      "folder": "roblox",
-      "installs": 1
-    },
-    {
-      "folder": "sa-mp",
-      "installs": 1
-    },
-    {
       "folder": "web-media",
-      "installs": 1
-    },
-    {
-      "folder": "youtube",
       "installs": 1
     },
     {
