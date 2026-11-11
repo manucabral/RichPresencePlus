@@ -1,9 +1,17 @@
 {
-  "generated_at": 1794322314,
+  "generated_at": 1794406743,
   "stable": [
     {
       "folder": "youtube",
-      "installs": 4
+      "installs": 5
+    },
+    {
+      "folder": "youtube-music",
+      "installs": 3
+    },
+    {
+      "folder": "desktop-media",
+      "installs": 2
     },
     {
       "folder": "ready-or-not",
@@ -18,6 +26,10 @@
       "installs": 2
     },
     {
+      "folder": "web-media",
+      "installs": 2
+    },
+    {
       "folder": "creator-tools",
       "installs": 1
     },
@@ -26,23 +38,11 @@
       "installs": 1
     },
     {
-      "folder": "desktop-media",
-      "installs": 1
-    },
-    {
       "folder": "nepu",
       "installs": 1
     },
     {
       "folder": "netflix",
-      "installs": 1
-    },
-    {
-      "folder": "web-media",
-      "installs": 1
-    },
-    {
-      "folder": "youtube-music",
       "installs": 1
     }
   ],
