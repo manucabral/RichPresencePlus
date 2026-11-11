@@ -11,4 +11,4 @@ pub mod sessions;
 
 pub use protocol::{Browser, Page, Rule, SiteRequest, VERSION};
 pub use server::{Bridge, Config, generate_token};
-pub use sessions::SessionView;
+pub use sessions::{EXPECTED_EXTENSION, SessionView};

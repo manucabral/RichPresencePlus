@@ -69,6 +69,7 @@ function SessionRow({ session, now }: { session: SessionView; now: number }) {
         <p className="truncate text-[13px] text-neutral-100">
           <span className="font-medium">{name}</span>
           <span className="ml-2 text-neutral-500">{session.version || t("browser.unknownVersion")}</span>
+          {session.outdated && end === null && <span className="ml-2 text-warning">{t("browser.outdated")}</span>}
         </p>
         <p className="truncate text-xs text-neutral-500">{when}</p>
       </div>
@@ -112,6 +113,9 @@ export default function BrowserPage() {
 
       <Section title={t("browser.live")}>
         <SessionList sessions={live} empty={t("browser.noLive")} now={now} />
+        {live.some((session) => session.outdated) && (
+          <p className="mt-2 text-xs text-neutral-400">{t("browser.outdatedHint")}</p>
+        )}
       </Section>
 
       <Section title={t("browser.recent")} hint={t("browser.recentHint")}>

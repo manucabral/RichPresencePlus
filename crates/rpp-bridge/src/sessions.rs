@@ -10,6 +10,9 @@ use crate::protocol::Browser;
 pub const RECENT_SESSIONS: usize = 10;
 /// Longest version kept; real ones look like `24.12.1.712`.
 const MAX_VERSION: usize = 24;
+/// Oldest extension that sends everything this build reads. Raise it when the
+/// application starts to use something a newer extension sends.
+pub const EXPECTED_EXTENSION: &str = "0.1.2";
 
 /// One connection of a browser extension.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -18,6 +21,10 @@ pub struct SessionView {
     pub browser: Browser,
     /// Its version as the extension read it, or empty when unknown.
     pub version: String,
+    /// Version of the extension, or empty for one from before it said so.
+    pub extension: String,
+    /// The extension is older than [`EXPECTED_EXTENSION`].
+    pub outdated: bool,
     /// When the extension proved itself, in Unix seconds.
     pub connected_at: u64,
     /// When the connection closed, in Unix seconds; `None` while it is open.
@@ -40,6 +47,21 @@ pub fn clean_version(version: &str) -> String {
     }
 }
 
+/// Whether a version of digits and dots comes before another; a part that
+/// is missing counts as 0, and an empty version comes before every other.
+fn older(version: &str, than: &str) -> bool {
+    let parts = |text: &str| -> Vec<u64> {
+        text.split('.')
+            .map(|part| part.parse().unwrap_or(0))
+            .collect()
+    };
+    let (mut ours, mut theirs) = (parts(version), parts(than));
+    let length = ours.len().max(theirs.len());
+    ours.resize(length, 0);
+    theirs.resize(length, 0);
+    ours < theirs
+}
+
 /// Open sessions by connection, and the last ones that ended.
 #[derive(Debug, Default)]
 pub(crate) struct Sessions {
@@ -49,12 +71,22 @@ pub(crate) struct Sessions {
 
 impl Sessions {
     /// Records a connection that completed the hello.
-    pub(crate) fn open(&mut self, id: u64, browser: Browser, version: &str, now: u64) {
+    pub(crate) fn open(
+        &mut self,
+        id: u64,
+        browser: Browser,
+        version: &str,
+        extension: &str,
+        now: u64,
+    ) {
+        let extension = clean_version(extension);
         self.live.insert(
             id,
             SessionView {
                 browser,
                 version: clean_version(version),
+                outdated: older(&extension, EXPECTED_EXTENSION),
+                extension,
                 connected_at: now,
                 ended_at: None,
                 tabs: 0,
@@ -119,14 +151,17 @@ mod tests {
     #[test]
     fn a_closed_session_moves_to_the_recent_list_with_its_end() {
         let mut sessions = Sessions::default();
-        sessions.open(1, Browser::Yandex, "24.12", 100);
-        sessions.open(2, Browser::Firefox, "x", 110);
+        sessions.open(1, Browser::Yandex, "24.12", EXPECTED_EXTENSION, 100);
+        sessions.open(2, Browser::Firefox, "x", "", 110);
         sessions.set_tabs(&BTreeMap::from([(1, 3)]));
         assert_eq!(sessions.count(), 2);
         assert_eq!(sessions.browsers(), [Browser::Firefox, Browser::Yandex]);
         let live = sessions.live();
         assert_eq!(live[0].tabs, 3);
         assert_eq!(live[1].version, "");
+        // An extension that does not say its version is from before it could.
+        assert!(!live[0].outdated && live[1].outdated);
+        assert_eq!(live[0].extension, EXPECTED_EXTENSION);
 
         sessions.close(1, 160);
         sessions.close(1, 170); // A second close changes nothing.
@@ -139,10 +174,38 @@ mod tests {
     }
 
     #[test]
+    fn versions_compare_by_their_numbers() {
+        assert!(older("0.1.1", "0.1.2"));
+        assert!(older("0.1", "0.1.2"));
+        assert!(older("", "0.1.2"));
+        assert!(older("0.9.9", "0.10.0"));
+        for same_or_newer in ["0.1.2", "0.1.2.0", "0.1.10", "0.2", "1"] {
+            assert!(!older(same_or_newer, "0.1.2"), "{same_or_newer}");
+        }
+        // Anything but a plain version was emptied before it gets here.
+        let mut sessions = Sessions::default();
+        sessions.open(1, Browser::Chrome, "1", "9.9<b>", 1);
+        assert!(sessions.live()[0].outdated);
+        assert_eq!(sessions.live()[0].extension, "");
+    }
+
+    #[test]
+    fn the_extension_in_the_repository_is_the_one_this_build_expects() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../extension/manifest.json");
+        let manifest: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(path).unwrap()).unwrap();
+        let shipped = manifest["version"].as_str().unwrap();
+        assert!(
+            !older(shipped, EXPECTED_EXTENSION),
+            "the extension is {shipped} and the application expects {EXPECTED_EXTENSION}"
+        );
+    }
+
+    #[test]
     fn only_the_last_sessions_are_kept() {
         let mut sessions = Sessions::default();
         for id in 0..(RECENT_SESSIONS as u64 + 5) {
-            sessions.open(id, Browser::Chrome, "1", id);
+            sessions.open(id, Browser::Chrome, "1", "", id);
             sessions.close(id, id + 1);
         }
         let recent = sessions.recent();

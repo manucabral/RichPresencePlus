@@ -117,8 +117,9 @@ impl<'a> Registered<'a> {
         id: u64,
         browser: Browser,
         version: &str,
+        extension: &str,
     ) -> Self {
-        sessions.send_modify(|all| all.open(id, browser, version, unix_now()));
+        sessions.send_modify(|all| all.open(id, browser, version, extension, unix_now()));
         Self { sessions, id }
     }
 }
@@ -369,6 +370,7 @@ async fn converse(stream: TcpStream, shared: &Shared, id: u64, stop: &mut watch:
     let Ok(FromExtension::Hello {
         browser,
         browser_version,
+        extension_version,
         version,
         nonce: client_nonce,
         proof,
@@ -398,7 +400,13 @@ async fn converse(stream: TcpStream, shared: &Shared, id: u64, stop: &mut watch:
     let mut session = Session::for_application(token, &server_nonce, &client_nonce);
 
     let kind = Browser::from_hello(&browser);
-    let _registered = Registered::new(&shared.sessions, id, kind, &browser_version);
+    let _registered = Registered::new(
+        &shared.sessions,
+        id,
+        kind,
+        &browser_version,
+        &extension_version,
+    );
     tracing::info!(browser = ?kind, "browser extension connected");
     let mut rules = shared.rules.clone();
     let connection = Connection {

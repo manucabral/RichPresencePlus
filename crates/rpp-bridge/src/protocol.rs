@@ -124,6 +124,9 @@ pub enum FromExtension {
         /// Browser version, such as `24.12.1.712`; older extensions omit it.
         #[serde(default)]
         browser_version: String,
+        /// Version of the extension, such as `0.1.2`; older extensions omit it.
+        #[serde(default)]
+        extension_version: String,
         /// Protocol version.
         version: u32,
         /// The extension's own random value, as base64.

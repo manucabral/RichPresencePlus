@@ -104,6 +104,8 @@ const ANSWERS = {
       {
         browser: "chrome",
         version: "142.0",
+        extension: "0.1.2",
+        outdated: false,
         connected_at: Math.floor(Date.now() / 1000) - 600,
         ended_at: null,
         tabs: 2,
@@ -111,6 +113,8 @@ const ANSWERS = {
       {
         browser: "firefox",
         version: "145.0",
+        extension: "0.1.1",
+        outdated: true,
         connected_at: Math.floor(Date.now() / 1000) - 120,
         ended_at: null,
         tabs: 1,
@@ -120,6 +124,8 @@ const ANSWERS = {
       {
         browser: "edge",
         version: "142.0",
+        extension: "",
+        outdated: true,
         connected_at: Math.floor(Date.now() / 1000) - 7200,
         ended_at: Math.floor(Date.now() / 1000) - 3600,
         tabs: 0,
@@ -1026,6 +1032,18 @@ async function run(page, shots) {
   );
   await visit("/catalog");
   check(await shows("12.345 instalaciones"), "the list says how many times a presence was installed");
+  check(
+    await waitFor(`!!document.querySelector('select[aria-label="Orden"] option[value="installs"]')`),
+    "the list can be ordered by installs once there are counts",
+  );
+  await visit("/browser");
+  check(await shows("Extensión anterior"), "a connected browser with an older extension is marked");
+  check(await shows("Las tiendas la actualizan solas"), "and the page says what to do about it");
+  check(
+    (await read(`String((document.querySelector("main").innerText.match(/Extensión anterior/g) || []).length)`)) ===
+      "1",
+    "a session that ended is not marked",
+  );
   await visit("/catalog/Alfa");
   check(await shows("12.345 instalaciones"), "and so does the page of the presence");
   check(await shows("Actualización disponible"), "the catalog offers the update");

@@ -365,6 +365,10 @@ export interface SessionView {
   browser: BrowserKind;
   /** Digits and dots, or empty when unknown. */
   version: string;
+  /** Version of the extension; empty for one from before it said so. */
+  extension: string;
+  /** The extension is older than the one this version of the application expects. */
+  outdated: boolean;
   /** Unix seconds. */
   connected_at: number;
   /** Unix seconds; null while connected. */

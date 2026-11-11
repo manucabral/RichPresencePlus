@@ -146,7 +146,15 @@ impl Diagnostics {
                 } else {
                     &session.version
                 };
-                format!("{} {version}", browser_name(session.browser))
+                let extension = if session.extension.is_empty() {
+                    "?"
+                } else {
+                    &session.extension
+                };
+                format!(
+                    "{} {version} (extension {extension})",
+                    browser_name(session.browser)
+                )
             })
             .collect();
         let _ = writeln!(
@@ -252,6 +260,8 @@ mod tests {
             extensions: vec![SessionView {
                 browser: Browser::Yandex,
                 version: "24.12".into(),
+                extension: "0.1.2".into(),
+                outdated: false,
                 connected_at: 1,
                 ended_at: None,
                 tabs: 2,
@@ -285,7 +295,7 @@ mod tests {
         let report = sample().report(Some(r"C:\Users\ana"));
         assert!(report.contains("Rich Presence Plus 1.2.3"));
         assert!(report.contains("App: 50.0 MB, 3.0 s CPU; WebView: 200.0 MB in 4 processes"));
-        assert!(report.contains("Extensions: Yandex 24.12"));
+        assert!(report.contains("Extensions: Yandex 24.12 (extension 0.1.2)"));
         assert!(report.contains("YouTube 2.0.0: error"));
         assert!(report.contains("Roblox 2.1.0: off"));
         assert!(!report.contains("Secret"), "{report}");

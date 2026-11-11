@@ -134,6 +134,7 @@ async fn answer_as(
     socket
         .send_json(
             json!({"type": "hello", "browser": browser, "browser_version": "24.12.1",
+                    "extension_version": "0.1.2",
                     "version": version, "nonce": client, "proof": proof}),
         )
         .await;
@@ -495,6 +496,8 @@ async fn each_connection_reports_its_browser() {
     assert_eq!(recent.len(), 1);
     assert_eq!(recent[0].browser, Browser::Edge);
     assert_eq!(recent[0].version, "24.12.1");
+    assert_eq!(recent[0].extension, "0.1.2");
+    assert!(!recent[0].outdated);
     assert!(recent[0].ended_at.is_some());
     assert_eq!(bridge.live_sessions().len(), 2);
     drop(chrome);

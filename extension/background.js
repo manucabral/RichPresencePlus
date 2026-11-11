@@ -353,6 +353,7 @@ async function receive(ws, token, link, text) {
         type: "hello",
         browser: BROWSER.name,
         browser_version: BROWSER.version,
+        extension_version: chrome.runtime.getManifest().version,
         version: PROTOCOL,
         nonce: link.client,
         proof: answer,
