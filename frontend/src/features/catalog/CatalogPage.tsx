@@ -14,7 +14,17 @@ import { useT } from "../../shared/i18n";
 import type { CatalogItem } from "../../shared/types";
 import { catalogPath } from "../../shared/navigation";
 import PresenceTabs from "../presences/PresenceTabs";
-import { catalogError, installsText, stateKey, toAdd } from "./catalog";
+import { catalogError, installsText, readOrder, stateKey, toAdd, type Order } from "./catalog";
+
+const STORED_ORDER = "rpp.catalogOrder";
+
+function storedOrder(): Order {
+  try {
+    return readOrder(localStorage.getItem(STORED_ORDER));
+  } catch {
+    return "name"; // Storage can be blocked; the default still works.
+  }
+}
 
 /** One line per item; installing and versions are on its own page. */
 interface RowProps {
@@ -58,11 +68,16 @@ export default function CatalogPage() {
   const icons = useLoaded(getIcons).data ?? {};
   const { favorites, toggle } = useFavorites();
   const [filter, setFilter] = useState<Filter>(NO_FILTER);
+  const [order, setOrder] = useState<Order>(storedOrder);
   const paging = usePaging();
   const data = catalog.data;
   // What is installed lives in the first tab; here is what is left to add or update.
   const items = useMemo(() => toAdd(data?.items ?? []), [data]);
-  const found = useMemo(() => browse(items, filter, favorites), [items, filter, favorites]);
+  const counted = installs !== null && Object.keys(installs).length > 0;
+  const found = useMemo(
+    () => browse(items, filter, favorites, order === "installs" ? installs : null),
+    [items, filter, favorites, order, installs],
+  );
   const counts = useMemo(() => countByCategory(items), [items]);
 
   if (!data)
@@ -79,6 +94,15 @@ export default function CatalogPage() {
     setFilter(next);
     paging.setPage(0);
   };
+  const reorder = (next: Order) => {
+    setOrder(next);
+    paging.setPage(0);
+    try {
+      localStorage.setItem(STORED_ORDER, next);
+    } catch {
+      // Without storage the choice lasts until the page closes.
+    }
+  };
 
   return (
     <div className={pageWidth}>
@@ -93,6 +117,21 @@ export default function CatalogPage() {
             counts={counts}
             favoriteCount={items.filter((item) => favorites.has(item.name)).length}
             onChange={change}
+            extra={
+              // Without counts there is one order only, so the choice is not offered.
+              counted && (
+                <select
+                  value={order}
+                  aria-label={t("catalog.order")}
+                  style={{ minHeight: 0 }}
+                  className="rounded-md border border-neutral-800 bg-neutral-900 px-2 py-1 text-xs text-neutral-300"
+                  onChange={(event) => reorder(readOrder((event.target as HTMLSelectElement).value))}
+                >
+                  <option value="name">{t("catalog.orderName")}</option>
+                  <option value="installs">{t("catalog.orderInstalls")}</option>
+                </select>
+              )
+            }
           />
           {shown.items.length === 0 ? (
             <p className="text-sm text-neutral-500">{items.length === 0 ? t("catalog.allAdded") : t("catalog.none")}</p>

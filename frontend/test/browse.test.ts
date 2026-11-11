@@ -13,7 +13,7 @@ import {
   readPageSize,
 } from "../src/shared/browse.ts";
 import { catalogPath, inSection, presencePath } from "../src/shared/navigation.ts";
-import { catalogError, installsText, sizeText, stateKey, toAdd } from "../src/features/catalog/catalog.ts";
+import { catalogError, installsText, readOrder, sizeText, stateKey, toAdd } from "../src/features/catalog/catalog.ts";
 import type { CatalogItem } from "../src/shared/types.ts";
 
 const item = (name: string, kind: string | null, tags: string[] = []) => ({
@@ -145,4 +145,25 @@ test("installs read as a count in the language in use, or not at all", () => {
   // The counts did not arrive, or failed.
   assert.equal(installsText(null, "YouTube", "en", tn), null);
   assert.equal(installsText(undefined, "YouTube", "en", tn), null);
+});
+
+test("the most installed go first when asked, after favorites, and the rest by name", () => {
+  const item = (name: string) => ({ name, description: null, kind: null, author: null, tags: [] });
+  const items = ["Delta", "Alpha", "Charlie", "Bravo", "constructor"].map(item);
+  const names = (installs?: Record<string, number> | null, favorites: string[] = []) =>
+    browse(items, NO_FILTER, new Set(favorites), installs).map((entry) => entry.name);
+  const installs = { Charlie: 9, Delta: 9, Bravo: 2, Alpha: Number.NaN };
+
+  assert.deepEqual(names(), ["Alpha", "Bravo", "Charlie", "constructor", "Delta"]);
+  assert.deepEqual(names(null), names());
+  // Equal counts fall back to the name; no count, a bad one or an inherited name go last.
+  assert.deepEqual(names(installs), ["Charlie", "Delta", "Bravo", "Alpha", "constructor"]);
+  assert.deepEqual(names(installs, ["Bravo"]), ["Bravo", "Charlie", "Delta", "Alpha", "constructor"]);
+  assert.deepEqual(names({}), names());
+});
+
+test("a remembered order is one of the two, or the order by name", () => {
+  assert.equal(readOrder("installs"), "installs");
+  assert.equal(readOrder("name"), "name");
+  for (const other of [null, "", "INSTALLS", "size", "__proto__"]) assert.equal(readOrder(other), "name");
 });

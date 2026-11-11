@@ -30,6 +30,15 @@ export function installsText(
   return tn("catalog.installs", count, { n: count.toLocaleString(tag) });
 }
 
+/** How the Add tab is ordered, after favorites. */
+export const ORDERS = ["name", "installs"] as const;
+export type Order = (typeof ORDERS)[number];
+
+/** A remembered order; anything that is not one gives the order by name. */
+export function readOrder(stored: string | null): Order {
+  return (ORDERS as readonly string[]).includes(stored ?? "") ? (stored as Order) : "name";
+}
+
 /** The label for an item's state, or null for one not installed. */
 export function stateKey(state: CatalogState): string | null {
   switch (state) {

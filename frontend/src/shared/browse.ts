@@ -60,8 +60,23 @@ export interface Filter {
 
 export const NO_FILTER: Filter = { text: "", category: "", favoritesOnly: false };
 
-/** The items that pass the filter, favorites first, then by name. */
-export function browse<T extends Browsable>(items: readonly T[], filter: Filter, favorites: ReadonlySet<string>): T[] {
+/**
+ * The items that pass the filter, favorites first, then by name.
+ *
+ * @param installs Counts by name. When given, the most installed go before the
+ *   rest, after favorites; a name without a count goes last.
+ */
+export function browse<T extends Browsable>(
+  items: readonly T[],
+  filter: Filter,
+  favorites: ReadonlySet<string>,
+  installs?: Record<string, number> | null,
+): T[] {
+  // A name such as "constructor" must not find something inherited.
+  const count = (name: string) => {
+    const value = installs && Object.hasOwn(installs, name) ? installs[name] : 0;
+    return Number.isSafeInteger(value) && value > 0 ? value : 0;
+  };
   return items
     .filter(
       (item) =>
@@ -71,7 +86,9 @@ export function browse<T extends Browsable>(items: readonly T[], filter: Filter,
     )
     .sort(
       (a, b) =>
-        Number(favorites.has(b.name)) - Number(favorites.has(a.name)) || a.name.localeCompare(b.name),
+        Number(favorites.has(b.name)) - Number(favorites.has(a.name)) ||
+        count(b.name) - count(a.name) ||
+        a.name.localeCompare(b.name),
     );
 }
 

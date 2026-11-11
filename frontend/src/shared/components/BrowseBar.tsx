@@ -1,3 +1,4 @@
+import type { ComponentChildren } from "preact";
 import { CATEGORIES, PAGE_SIZES, rangeOf, type Category, type Filter } from "../browse";
 import { useT } from "../i18n";
 
@@ -6,6 +7,8 @@ interface Props {
   counts: Record<Category, number>;
   favoriteCount: number;
   onChange: (filter: Filter) => void;
+  /** A control of the page's own, at the end of the row of categories. */
+  extra?: ComponentChildren;
 }
 
 function Chip({ active, label, count, onClick }: { active: boolean; label: string; count: number; onClick: () => void }) {
@@ -28,7 +31,7 @@ function Chip({ active, label, count, onClick }: { active: boolean; label: strin
 }
 
 /** Search box, category chips and the favorites switch above a list. */
-export default function BrowseBar({ filter, counts, favoriteCount, onChange }: Props) {
+export default function BrowseBar({ filter, counts, favoriteCount, onChange, extra }: Props) {
   const { t } = useT();
   const total = CATEGORIES.reduce((sum, category) => sum + counts[category], 0);
   return (
@@ -41,7 +44,7 @@ export default function BrowseBar({ filter, counts, favoriteCount, onChange }: P
         className="w-full rounded-md border border-neutral-800 bg-neutral-900 px-3 py-2 text-[13px] text-neutral-100 placeholder:text-neutral-600"
         onInput={(event) => onChange({ ...filter, text: (event.target as HTMLInputElement).value })}
       />
-      <div className="flex flex-wrap gap-1.5" role="group" aria-label={t("browse.categories")}>
+      <div className="flex flex-wrap items-center gap-1.5" role="group" aria-label={t("browse.categories")}>
         <Chip
           active={filter.category === "" && !filter.favoritesOnly}
           label={t("browse.all")}
@@ -63,6 +66,7 @@ export default function BrowseBar({ filter, counts, favoriteCount, onChange }: P
             onClick={() => onChange({ ...filter, category: filter.category === category ? "" : category })}
           />
         ))}
+        {extra && <span className="ml-auto">{extra}</span>}
       </div>
     </div>
   );
