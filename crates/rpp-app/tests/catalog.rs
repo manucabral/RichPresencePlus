@@ -175,6 +175,59 @@ async fn an_installed_copy_changed_by_hand_stops_loading_until_it_is_reinstalled
     finish(controller).await;
 }
 
+/// The names chosen to run, as the settings file keeps them.
+fn kept_on(setup: &Setup) -> Vec<String> {
+    let text = fs::read_to_string(setup.data.path().join("settings.json")).unwrap();
+    let settings: serde_json::Value = serde_json::from_str(&text).unwrap();
+    settings["enabled"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|name| name.as_str().unwrap().to_owned())
+        .collect()
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_removed_presence_is_no_longer_kept_as_on() {
+    let setup = setup();
+    let (published, _source) = served();
+    published.publish(
+        100,
+        &[("Alpha", "alpha", "1.0.0"), ("Beta", "beta", "1.0.0")],
+    );
+    let controller = start(&setup, &published, true).await;
+    tokio::task::block_in_place(|| controller.install_presence("Alpha", &[])).unwrap();
+    tokio::task::block_in_place(|| controller.install_presence("Beta", &[])).unwrap();
+    assert_eq!(kept_on(&setup), ["Alpha", "Beta"]);
+
+    // Asked for in another case, as the catalog allows.
+    tokio::task::block_in_place(|| controller.remove_presence("alpha")).unwrap();
+    assert_eq!(names(&controller), ["Beta"]);
+    assert_eq!(kept_on(&setup), ["Beta"]);
+
+    // Adding it again starts it on, as the first time.
+    tokio::task::block_in_place(|| controller.install_presence("Alpha", &[])).unwrap();
+    assert_eq!(kept_on(&setup), ["Alpha", "Beta"]);
+    assert!(controller.presences().iter().all(|p| p.running));
+    finish(controller).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
+async fn a_bundled_copy_stays_on_when_the_installed_one_is_removed() {
+    let setup = setup();
+    bundle(setup.bundled.path(), "alpha", "Alpha", "1.0.0", "bundled");
+    let (published, _source) = served();
+    published.publish(100, &[("Alpha", "alpha", "1.1.0")]);
+    let controller = start(&setup, &published, true).await;
+    tokio::task::block_in_place(|| controller.install_presence("Alpha", &[])).unwrap();
+    tokio::task::block_in_place(|| controller.remove_presence("Alpha")).unwrap();
+    // Something with the name is still there, so the choice to run it stays.
+    assert_eq!(controller.presences()[0].version, "1.0.0");
+    assert!(controller.presences()[0].running);
+    assert_eq!(kept_on(&setup), ["Alpha"]);
+    finish(controller).await;
+}
+
 #[tokio::test(flavor = "multi_thread")]
 async fn a_changed_copy_found_at_start_up_is_not_loaded() {
     let setup = setup();

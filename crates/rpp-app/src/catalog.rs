@@ -98,6 +98,7 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         let removed = catalog.remove(name).map_err(|e| e.to_string())?;
         tracing::info!(presence = %removed, "removed a catalog presence");
         self.reload_presences();
+        self.turn_off_gone(&removed);
         Ok(())
     }
 

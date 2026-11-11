@@ -508,6 +508,22 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
         }
     }
 
+    /// Forgets that a presence was on once nothing with its name is left, so
+    /// the list of chosen presences does not keep what was removed.
+    pub(crate) fn turn_off_gone(&self, name: &str) {
+        // Settings, then library: the one order every method takes them in.
+        let mut settings = lock(&self.settings);
+        if !settings.enabled.contains(name) || lock(&self.library).find(name).is_some() {
+            return;
+        }
+        let mut changed = settings.clone();
+        changed.enabled.remove(name);
+        match self.store.save(&changed) {
+            Ok(()) => *settings = changed,
+            Err(error) => tracing::warn!(presence = %name, "cannot forget it was on: {error}"),
+        }
+    }
+
     /// Turns a presence on or off and remembers the choice.
     pub fn set_enabled(&self, name: &str, enabled: bool) -> Result<(), String> {
         {
