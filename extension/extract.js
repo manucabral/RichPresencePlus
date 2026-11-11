@@ -295,6 +295,7 @@
     if (!previous) return false;
     const keys = new Set([...Object.keys(previous.values), ...Object.keys(next.values)]);
     if (previous.url !== next.url || previous.title !== next.title) return false;
+    if (previous.visible !== next.visible || previous.focused !== next.focused) return false;
     for (const key of keys) {
       const a = previous.values[key];
       const b = next.values[key];

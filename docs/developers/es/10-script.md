@@ -38,6 +38,9 @@ function read(context) {
 | `url` | texto | Dirección completa de la página. |
 | `title` | texto | Título de la pestaña. |
 | `received_at` | número | Cuándo se leyó, en milisegundos Unix. |
+| `visible` | sí o no | Si la pestaña está en pantalla: no detrás de otra pestaña, minimizada ni tapada. |
+| `focused` | sí o no | Si la pestaña tiene el foco del teclado. |
+| `focused_at` | número | La última vez que se leyó con el foco, en milisegundos Unix; 0 si nunca. |
 | `values` | objeto | Lo que el manifiesto pide leer, bajo cada nombre. Mirá [Extractores](09-extractors.md). |
 
 **Devuelve** un objeto común de hasta 64 KB, o `null`. Solo pasan datos: las funciones se descartan.

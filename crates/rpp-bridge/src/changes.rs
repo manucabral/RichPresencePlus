@@ -74,6 +74,9 @@ mod tests {
             title: String::new(),
             values: Default::default(),
             received_at,
+            visible: false,
+            focused: false,
+            focused_at: 0,
         }
     }
 

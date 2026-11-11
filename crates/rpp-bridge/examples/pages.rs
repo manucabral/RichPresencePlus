@@ -136,7 +136,12 @@ async fn main() {
         let pages: Vec<_> = bridge
             .pages()
             .iter()
-            .map(|page| json!({"presence": page.presence, "url": page.url, "values": page.values}))
+            .map(|page| {
+                json!({
+                    "presence": page.presence, "url": page.url, "values": page.values,
+                    "tab": page.tab, "visible": page.visible, "focused": page.focused,
+                })
+            })
             .collect();
         let state = json!({"extensions": bridge.extensions(), "pages": pages}).to_string();
         if state != last {

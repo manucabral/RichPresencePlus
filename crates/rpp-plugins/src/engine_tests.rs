@@ -547,6 +547,63 @@ fn best_page_prefers_a_running_player() {
 }
 
 #[test]
+fn best_page_prefers_the_tab_on_screen_after_a_running_player() {
+    let source = r#"
+        function read(context) { const page = bestPage(context.pages); return page && { tab: page.tab }; }
+        function activity(snapshot) { return { details: "tab " + snapshot.tab }; }
+    "#;
+    let page = |tab: u32, visible: bool, focused_at: u64, paused: Option<bool>| {
+        let values = paused.map_or(json!({}), |paused| json!({"player": {"paused": paused}}));
+        json!({"tab": tab, "visible": visible, "focused_at": focused_at, "values": values})
+    };
+    let pick =
+        |pages: serde_json::Value| shown_by(source, json!({"pages": pages}))["details"].clone();
+
+    // The oldest tab no longer wins over the one being looked at.
+    assert_eq!(
+        pick(json!([page(1, false, 50, None), page(2, true, 90, None)])),
+        "tab 2"
+    );
+    // Sound from a tab behind still wins over a silent one in front.
+    assert_eq!(
+        pick(json!([
+            page(1, false, 10, Some(false)),
+            page(2, true, 90, None)
+        ])),
+        "tab 1"
+    );
+    // A paused player behind gives way to the tab in front.
+    assert_eq!(
+        pick(json!([
+            page(1, false, 10, Some(true)),
+            page(2, true, 90, None)
+        ])),
+        "tab 2"
+    );
+    // Two windows on screen, or two tabs behind: the one used last.
+    assert_eq!(
+        pick(json!([page(1, true, 40, None), page(2, true, 90, None)])),
+        "tab 2"
+    );
+    assert_eq!(
+        pick(json!([page(1, false, 90, None), page(2, false, 40, None)])),
+        "tab 1"
+    );
+    assert_eq!(
+        pick(json!([
+            page(1, true, 40, Some(false)),
+            page(2, true, 90, Some(false))
+        ])),
+        "tab 2"
+    );
+    // Nothing tells them apart: the first, as before.
+    assert_eq!(
+        pick(json!([page(1, true, 0, None), page(2, true, 0, None)])),
+        "tab 1"
+    );
+}
+
+#[test]
 fn playback_gives_a_progress_bar_only_while_playing() {
     let source = r#"
         function read(context) { return context; }

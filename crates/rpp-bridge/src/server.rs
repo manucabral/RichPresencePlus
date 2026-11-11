@@ -285,6 +285,8 @@ impl Connection<'_> {
                 url,
                 title,
                 values,
+                visible,
+                focused,
             } => {
                 let web = url.starts_with("http://") || url.starts_with("https://");
                 let (Some(url), Some(title)) = (short(url), short(title)) else {
@@ -293,20 +295,27 @@ impl Connection<'_> {
                 if !web || !self.shared.accepts_presence(&presence) {
                     return None;
                 }
-                let page = Page {
+                let now = unix_millis();
+                let mut page = Page {
                     browser: self.browser.clone(),
                     tab,
                     presence,
                     url,
                     title,
                     values,
-                    received_at: unix_millis(),
+                    received_at: now,
+                    visible,
+                    focused,
+                    focused_at: if focused { now } else { 0 },
                 };
                 let limit = self.shared.config.max_pages;
                 let id = self.id;
                 self.shared.with_pages(|pages| {
+                    let earlier = pages.get(&(id, tab)).map(|old| old.focused_at);
                     let mine = pages.keys().filter(|(owner, _)| *owner == id).count();
-                    if pages.contains_key(&(id, tab)) || mine < limit {
+                    if earlier.is_some() || mine < limit {
+                        // A tab that lost the focus keeps the moment it last had it.
+                        page.focused_at = page.focused_at.max(earlier.unwrap_or(0));
                         pages.insert((id, tab), page);
                     }
                 });

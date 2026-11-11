@@ -107,16 +107,27 @@
   });
 
   // `bestPage(pages)`: the page the user is most likely looking at. A page
-  // whose player is running wins, then any page with a player, then the first.
+  // whose player is running wins, then one on screen, then one with a player.
+  // Between equals, the tab that had the focus last wins, then the first.
+  // Pages from an extension that does not say what is on screen are all equal
+  // there, so the player and the order decide as before.
   define("bestPage", function bestPage(pages) {
     const list = Array.isArray(pages) ? pages : [];
-    const player = (page) => page.values && page.values.player;
-    return (
-      list.find((page) => player(page) && !player(page).paused) ||
-      list.find((page) => player(page)) ||
-      list[0] ||
-      null
-    );
+    const rank = (page) => {
+      const player = page.values && page.values.player;
+      return (player && !player.paused ? 4 : 0) + (page.visible === true ? 2 : 0) + (player ? 1 : 0);
+    };
+    const focusedAt = (page) => (typeof page.focused_at === "number" ? page.focused_at : 0);
+    let best = null;
+    let bestRank = -1;
+    for (const page of list) {
+      const own = rank(page);
+      if (own > bestRank || (own === bestRank && focusedAt(page) > focusedAt(best))) {
+        best = page;
+        bestRank = own;
+      }
+    }
+    return best;
   });
 
   // `playback(player, receivedAt)`: `{ playing, start, end }` for a `media`

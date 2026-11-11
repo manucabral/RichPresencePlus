@@ -143,6 +143,12 @@ pub enum FromExtension {
         title: String,
         /// Extracted values, by name.
         values: Map<String, Value>,
+        /// Whether the tab is on screen; older extensions omit it.
+        #[serde(default)]
+        visible: bool,
+        /// Whether the tab has the keyboard focus; older extensions omit it.
+        #[serde(default)]
+        focused: bool,
     },
     /// Someone clicked the texts of a new presence on a page.
     MakeSite {
@@ -208,6 +214,13 @@ pub struct Page {
     pub values: Map<String, Value>,
     /// Moment the application received the report, in Unix milliseconds.
     pub received_at: u64,
+    /// Whether the tab is on screen: not behind another tab, minimized or covered.
+    pub visible: bool,
+    /// Whether the tab has the keyboard focus.
+    pub focused: bool,
+    /// Last report that had the focus, in Unix milliseconds; 0 if none had it.
+    /// Among tabs on screen, the highest is the one the person used last.
+    pub focused_at: u64,
 }
 
 #[cfg(test)]
@@ -234,7 +247,29 @@ mod tests {
             "title": "T", "values": {"title": "x"}
         }))
         .unwrap();
-        assert!(matches!(page, FromExtension::Page { tab: 7, .. }));
+        // An extension from before the fields says nothing about the screen.
+        assert!(matches!(
+            page,
+            FromExtension::Page {
+                tab: 7,
+                visible: false,
+                focused: false,
+                ..
+            }
+        ));
+        let seen: FromExtension = serde_json::from_value(json!({
+            "type": "page", "tab": 7, "presence": "Video", "url": "https://a.io/",
+            "title": "T", "values": {}, "visible": true, "focused": true
+        }))
+        .unwrap();
+        assert!(matches!(
+            seen,
+            FromExtension::Page {
+                visible: true,
+                focused: true,
+                ..
+            }
+        ));
         assert!(
             serde_json::from_value::<FromExtension>(json!({"type": "eval", "code": "1"})).is_err()
         );

@@ -56,8 +56,12 @@ parseUrl("https://a.com/watch?v=1");   // { host: "a.com", path: "/watch", query
 
 ## bestPage(pages)
 
-Elige cuando coinciden varias pestañas: la que suena, después una con reproductor, después la
+Elige cuando coinciden varias pestañas: la que suena, después la que está en pantalla, después
+una con reproductor. Entre iguales toma la pestaña que tuvo el foco por última vez, después la
 primera. Busca el valor llamado `player`, así que usá ese nombre para un extractor `media`.
+
+Una extensión del navegador anterior a la 0.1.2 no dice qué pestaña está en pantalla; con ella
+deciden el reproductor y el orden.
 
 ```js
 const page = bestPage(context.pages);

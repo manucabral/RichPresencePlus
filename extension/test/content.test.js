@@ -38,6 +38,8 @@ function tab({ variables = false } = {}) {
     location: { href: "https://a.io/" },
     document: {
       title: "A",
+      visibilityState: "visible",
+      hasFocus: () => true,
       addEventListener: (type, listener) => (type === "rpp-values" ? answerListeners : documentListeners).add(listener),
       removeEventListener: (type, listener) =>
         (type === "rpp-values" ? answerListeners : documentListeners).delete(listener),
@@ -120,6 +122,21 @@ test("a page whose world never answers is reported after a short wait", async ()
   assert.equal(waited, 20);
   assert.equal(page.sent.length, 1);
   assert.equal(page.sent[0].values.episode, null);
+});
+
+test("a report says whether the tab is on screen, and a change of tab sends another", async () => {
+  const page = tab();
+  page.inject();
+  await settle();
+  assert.equal(page.sent[0].visible, true);
+  assert.equal(page.sent[0].focused, true);
+  page.scope.document.visibilityState = "hidden";
+  page.scope.document.hasFocus = () => false;
+  // The same function listens for the tab leaving the screen and for media events.
+  for (const listener of page.documentListeners) listener();
+  assert.equal(page.sent.length, 2);
+  assert.equal(page.sent[1].visible, false);
+  assert.equal(page.sent[1].focused, false);
 });
 
 test("an updated script replaces the one that was cut off", async () => {

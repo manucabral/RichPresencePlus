@@ -17,6 +17,7 @@
   let rules = [];
   const sent = new Map(); // presence -> { url, title, values, at }
   const MEDIA_EVENTS = ["play", "pause", "seeked", "ratechange", "loadedmetadata"];
+  const FOCUS_EVENTS = ["focus", "blur"];
   let timer = null;
 
   function alive() {
@@ -99,6 +100,9 @@
         url: address,
         title: document.title,
         values: extractValues(document, rule.extract, variables[index], responses[index]),
+        // With several tabs of one presence, the app shows the one being looked at.
+        visible: document.visibilityState === "visible",
+        focused: document.hasFocus(),
         at: Date.now(),
       };
       const previous = sent.get(rule.presence);
@@ -111,6 +115,8 @@
           url: state.url,
           title: state.title,
           values: state.values,
+          visible: state.visible,
+          focused: state.focused,
         })
         .catch(() => sent.delete(rule.presence));
     }
@@ -125,6 +131,8 @@
   function stop() {
     clearInterval(timer);
     for (const name of MEDIA_EVENTS) document.removeEventListener(name, report, true);
+    document.removeEventListener("visibilitychange", report);
+    for (const name of FOCUS_EVENTS) removeEventListener(name, report);
     removeEventListener("pagehide", leave);
     if (globalThis.__rppContent === handle) globalThis.__rppContent = null;
   }
@@ -149,5 +157,9 @@
   for (const name of MEDIA_EVENTS) {
     document.addEventListener(name, report, true);
   }
+  // Changing tab or window says which page is being looked at; waiting for the
+  // poll would show the old one for up to two seconds.
+  document.addEventListener("visibilitychange", report);
+  for (const name of FOCUS_EVENTS) addEventListener(name, report);
   addEventListener("pagehide", leave);
 })();

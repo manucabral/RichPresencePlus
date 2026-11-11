@@ -469,6 +469,8 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
           url: sender.tab.url || message.url,
           title: sender.tab.title || message.title || "",
           values: message.values,
+          visible: message.visible === true,
+          focused: message.focused === true,
         };
         lastPages.set(tab, page);
         publish(tab, page);

@@ -56,8 +56,12 @@ parseUrl("https://a.com/watch?v=1");   // { host: "a.com", path: "/watch", query
 
 ## bestPage(pages)
 
-Chooses when several tabs match: the one playing, then one with a player, then the first. It
-looks for the value named `player`, so use that name for a `media` extractor.
+Chooses when several tabs match: the one playing, then the one on screen, then one with a
+player. Between equals it takes the tab that had the focus last, then the first. It looks for
+the value named `player`, so use that name for a `media` extractor.
+
+A browser extension older than 0.1.2 does not say which tab is on screen; with it, the player
+and the order decide.
 
 ```js
 const page = bestPage(context.pages);

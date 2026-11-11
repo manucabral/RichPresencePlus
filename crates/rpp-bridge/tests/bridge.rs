@@ -429,6 +429,43 @@ async fn the_page_source_lists_only_the_pages_of_one_presence() {
 }
 
 #[tokio::test]
+async fn a_tab_keeps_the_moment_it_last_had_the_focus() {
+    let bridge = start().await;
+    let mut socket = session(&bridge).await;
+    let seen = |tab: i64, visible: bool, focused: bool| {
+        let mut report = page(tab, "Video", "https://a.io/one", "One");
+        report["visible"] = json!(visible);
+        report["focused"] = json!(focused);
+        report
+    };
+    // An extension from before the fields: nothing is known about the screen.
+    send(&mut socket, page(1, "Video", "https://a.io/one", "One")).await;
+    eventually(&bridge, |pages| pages.len() == 1).await;
+    let old = &bridge.pages()[0];
+    assert!(!old.visible && !old.focused);
+    assert_eq!(old.focused_at, 0);
+
+    send(&mut socket, seen(2, true, true)).await;
+    eventually(&bridge, |pages| pages.iter().any(|page| page.focused)).await;
+    let focused_at = bridge.pages()[1].focused_at;
+    assert!(focused_at > 1_700_000_000_000);
+
+    // Behind another tab now: the moment stays, the flags follow the report.
+    send(&mut socket, seen(2, false, false)).await;
+    eventually(&bridge, |pages| pages.iter().all(|page| !page.focused)).await;
+    let behind = &bridge.pages()[1];
+    assert!(!behind.visible);
+    assert_eq!(behind.focused_at, focused_at);
+
+    // A closed tab takes its moment with it.
+    send(&mut socket, json!({"type": "gone", "tab": 2})).await;
+    eventually(&bridge, |pages| pages.len() == 1).await;
+    send(&mut socket, seen(2, true, false)).await;
+    eventually(&bridge, |pages| pages.len() == 2).await;
+    assert_eq!(bridge.pages()[1].focused_at, 0);
+}
+
+#[tokio::test]
 async fn each_connection_reports_its_browser() {
     let bridge = start().await;
     assert!(bridge.browsers().is_empty());

@@ -10,6 +10,12 @@ interface Page {
   title: string;
   /** When the page was read, in Unix milliseconds. Pass it to `playback`. */
   received_at: number;
+  /** Whether the tab is on screen: not behind another tab, minimized or covered. */
+  visible: boolean;
+  /** Whether the tab has the keyboard focus. */
+  focused: boolean;
+  /** The last time it was read with the focus, in Unix milliseconds; 0 if never. */
+  focused_at: number;
   /** What the manifest asks to read, under `page.extract` and `page.frames.extract`. */
   values: Values;
 }
@@ -116,8 +122,9 @@ declare function cut(text: unknown, max?: number): string | null;
 declare function parseUrl(address: string): { host: string; path: string; query: Record<string, string> } | null;
 
 /**
- * Chooses when several tabs match: the one playing, then one with a player, then the
- * first. It looks for a value named `player`.
+ * Chooses when several tabs match: the one playing, then the one on screen, then one
+ * with a player. Between equals, the tab that had the focus last. It looks for a value
+ * named `player`.
  */
 declare function bestPage(pages: Page[]): Page | null;
 

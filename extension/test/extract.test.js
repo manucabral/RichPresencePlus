@@ -135,6 +135,13 @@ test("a new address, title or text value is sent", () => {
   assert.ok(!sameState(text("a"), text("b"), 1000));
 });
 
+test("a tab that comes to the screen or takes the focus is sent", () => {
+  const seen = (visible, focused) => ({ ...state(10), visible, focused });
+  assert.ok(sameState(seen(true, true), seen(true, true), 0));
+  assert.ok(!sameState(seen(false, false), seen(true, false), 0));
+  assert.ok(!sameState(seen(true, false), seen(true, true), 0));
+});
+
 test("the media session is read when the page publishes one", () => {
   const doc = page("<body></body>");
   const spec = { now: { from: "session" } };

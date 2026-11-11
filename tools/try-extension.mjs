@@ -303,6 +303,41 @@ async function main() {
     check(await until(() => reported("Video") === 1), "a presence for that site reads it");
     check(reported("Web Media") === 0, "the permission of that presence gives Web Media nothing");
 
+    // Two tabs of one presence: the app is told which one is on screen, and again when it changes.
+    const videoTabs = () => state.pages.filter((item) => item.presence === "Video");
+    const onScreen = () =>
+      videoTabs()
+        .filter((item) => item.visible)
+        .map((item) => /v=(\w+)/.exec(item.url)?.[1])
+        .join();
+    // What the app holds is what the page itself says, whichever tab the browser started in front.
+    const own = async () =>
+      (
+        await page.call("Runtime.evaluate", {
+          expression: `JSON.stringify([document.visibilityState === "visible", document.hasFocus()])`,
+          returnByValue: true,
+        })
+      ).result?.value;
+    const held = () => JSON.stringify([videoTabs()[0]?.visible, videoTabs()[0]?.focused]);
+    const first = await own();
+    check(await until(() => held() === first), `the app holds what the page says: ${held()} against ${first}`);
+    await page.call("Page.bringToFront");
+    check(await until(() => onScreen() === "1"), `a tab in front says it is on screen: ${JSON.stringify(videoTabs())}`);
+    const front = await (
+      await fetch(`http://127.0.0.1:${debug}/json/new?${base}/watch?v=front`, { method: "PUT" })
+    ).json();
+    check(
+      await until(() => videoTabs().length === 2 && onScreen() === "front"),
+      `a new tab in front takes the screen from the one behind: ${JSON.stringify(videoTabs())}`,
+    );
+    await page.call("Page.bringToFront");
+    check(
+      await until(() => onScreen() === "1"),
+      `coming back to a tab is told at once: ${JSON.stringify(videoTabs())}`,
+    );
+    await fetch(`http://127.0.0.1:${debug}/json/close/${front.id}`);
+    check(await until(() => videoTabs().length === 1), "the closed tab leaves");
+
     await store({ openSites: [SITE] });
     await open("/article", "Paso 3: sitio elegido para Web Media. Ahora sí debe leerlo.");
     check(await until(() => reported("Web Media") === 1), "Web Media reads a site chosen for it");

@@ -37,6 +37,9 @@ function read(context) {
 | `url` | text | Full address of the page. |
 | `title` | text | Title of the tab. |
 | `received_at` | number | When it was read, in Unix milliseconds. |
+| `visible` | yes or no | Whether the tab is on screen: not behind another tab, minimized or covered. |
+| `focused` | yes or no | Whether the tab has the keyboard focus. |
+| `focused_at` | number | The last time it was read with the focus, in Unix milliseconds; 0 if never. |
 | `values` | object | What the manifest asks to read, under each name. See [Extractors](09-extractors.md). |
 
 **Returns** a plain object of up to 64 KB, or `null`. Only data passes: functions are dropped.
