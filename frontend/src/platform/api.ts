@@ -52,6 +52,8 @@ export const getPairing = () => invoke<Pairing>("pairing");
 export const getLanguage = () => invoke<Language>("language");
 export const setLanguage = (tag: string) => invoke<void>("set_language", { tag });
 export const getCatalog = (refresh = false) => invoke<CatalogView>("catalog", { refresh });
+/** Installs of each catalog presence by name; empty while the counts cannot be had. */
+export const getCatalogInstalls = () => invoke<Record<string, number>>("catalog_installs");
 export const getLocalApi = () => invoke<LocalApiView>("local_api");
 export const setLocalApi = (on: boolean) => invoke<void>("set_local_api", { on });
 export const getUsage = () => invoke<UsageView>("usage");

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "preact/hooks";
 import { Link } from "../../shared/router";
-import { getCatalog, getIcons } from "../../platform/api";
+import { getCatalog, getCatalogInstalls, getIcons } from "../../platform/api";
 import BrowseBar, { FavoriteButton, Pager } from "../../shared/components/BrowseBar";
 import InfoCard from "../../shared/components/InfoCard";
 import Logo from "../../shared/components/Logo";
@@ -14,18 +14,20 @@ import { useT } from "../../shared/i18n";
 import type { CatalogItem } from "../../shared/types";
 import { catalogPath } from "../../shared/navigation";
 import PresenceTabs from "../presences/PresenceTabs";
-import { catalogError, stateKey, toAdd } from "./catalog";
+import { catalogError, installsText, stateKey, toAdd } from "./catalog";
 
 /** One line per item; installing and versions are on its own page. */
 interface RowProps {
   item: CatalogItem;
   /** The logo file of a presence that came with the app. */
   icon: string | null;
+  /** "1,234 installs", when the catalog counted any. */
+  installs: string | null;
   favorite: boolean;
   onFavorite: () => void;
 }
 
-function CatalogRow({ item, icon, favorite, onFavorite }: RowProps) {
+function CatalogRow({ item, icon, installs, favorite, onFavorite }: RowProps) {
   const { t } = useT();
   const state = stateKey(item.state);
   return (
@@ -36,6 +38,7 @@ function CatalogRow({ item, icon, favorite, onFavorite }: RowProps) {
           <span className="block truncate text-[13px] font-medium text-neutral-100">{item.name}</span>
           {item.description && <span className="block truncate text-xs text-neutral-500">{item.description}</span>}
         </span>
+        {installs && <span className="hidden shrink-0 text-xs tabular-nums text-neutral-500 sm:inline">{installs}</span>}
         {item.too_new && item.state === "available" && <Chip>{t("catalog.needsAppChip")}</Chip>}
         {state && (
           <Chip tone={item.state === "installed" ? "neutral" : "accent"}>{t(state)}</Chip>
@@ -47,8 +50,10 @@ function CatalogRow({ item, icon, favorite, onFavorite }: RowProps) {
 }
 
 export default function CatalogPage() {
-  const { t } = useT();
+  const { t, tn, tag } = useT();
   const catalog = useLoaded(() => getCatalog(false));
+  // Asked for apart from the list: the numbers show when they arrive, or not at all.
+  const installs = useLoaded(getCatalogInstalls).data;
   // Logos are files of each presence; the ones that came with the app are known here.
   const icons = useLoaded(getIcons).data ?? {};
   const { favorites, toggle } = useFavorites();
@@ -98,6 +103,7 @@ export default function CatalogPage() {
                   key={item.name}
                   item={item}
                   icon={icons[item.name] ?? null}
+                  installs={installsText(installs, item.name, tag, tn)}
                   favorite={favorites.has(item.name)}
                   onFavorite={() => toggle(item.name)}
                 />

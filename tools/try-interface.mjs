@@ -98,6 +98,7 @@ const ANSWERS = {
   language: { setting: "es", system: "es" },
   favorites: [],
   catalog: { available: false, items: [] },
+  catalog_installs: {},
   extension_sessions: {
     live: [
       {
@@ -1020,8 +1021,13 @@ async function run(page, shots) {
     tags: [],
     icon: null,
   };
-  await answer(`a.catalog = { available: true, items: [${JSON.stringify(update)}] };`);
+  await answer(
+    `a.catalog = { available: true, items: [${JSON.stringify(update)}] }; a.catalog_installs = { Alfa: 12345 };`,
+  );
+  await visit("/catalog");
+  check(await shows("12.345 instalaciones"), "the list says how many times a presence was installed");
   await visit("/catalog/Alfa");
+  check(await shows("12.345 instalaciones"), "and so does the page of the presence");
   check(await shows("Actualización disponible"), "the catalog offers the update");
   check(await pressSoon("Actualizar"), "the update can be started");
   check(await shows("Esta actualización pide más acceso"), "an update that asks for more stops and says so");
@@ -1045,7 +1051,7 @@ async function run(page, shots) {
     await waitFor(`!document.querySelector("main").innerText.includes("pide más acceso")`),
     "the question closes once accepted",
   );
-  await answer(`a.catalog = { available: false, items: [] };`);
+  await answer(`a.catalog = { available: false, items: [] }; a.catalog_installs = {};`);
 
   const left = await read(`JSON.stringify([...new Set(window.__desktop.unknown)])`);
   check(left === "[]", `no flow asked for a command without an answer: ${left}`);

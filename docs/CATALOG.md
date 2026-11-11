@@ -1,52 +1,83 @@
 # The catalog
 
-Approved presences live in this repository, under `presences/`. The
-application lists them under Presences, Add more, and installs them from GitHub.
+Approved presences live in this repository, under `presences/`, where they
+are reviewed. What is published from them lives in a repository of its own,
+[RichPresencePlus-catalog](https://github.com/manucabral/RichPresencePlus-catalog):
+the signed index, the bundles and the install counts. The application lists
+the presences under Presences, Add more, and installs them from GitHub.
 
 ## How trust works
 
 1. A maintainer runs the `catalog` workflow. After a maintainer approves the
    `catalog-publication` environment, it builds an index of every file of every
    presence (path, size, SHA-256) at one commit and signs it with an Ed25519 key.
-   The signed `catalog.json` goes to the `catalog` branch (`catalog-experimental`
-   for pre-releases). The branch holds one commit, the newest index; each
-   publish replaces it.
+   The signed `catalog.json` goes to the `catalog` branch of the catalog
+   repository (`catalog-experimental` for pre-releases). The branch holds one
+   commit, the newest index; each publish replaces it.
 2. The application downloads that file and checks the signature against the
    public key built into it. It refuses an index that is unsigned, signed by
    another key, for another channel, or older than one it accepted before. It
    keeps the verified copy for five minutes, then asks again with the tag
    GitHub gave it; an index that did not change is not downloaded again.
 3. Each presence version is also uploaded as one bundle file to a GitHub
-   release, and the index names it: `catalog-files` for the stable channel and
-   `catalog-files-experimental` for the other. GitHub holds at most 1000 files
-   per release, so one release holds about 500 presences with two versions
-   each; before the catalog grows near that, it moves to a repository of its
-   own. Version 0.2.0 of the application looked for bundles in 16 releases per
-   channel (`catalog-files-0` to `-f`); they were deleted on 2026-11-09, their
-   download counts kept in the ledger, and 0.2.0 now downloads each file by
-   itself. Each presence keeps its current bundle and the one before. The application downloads the bundle and checks every file
-   in it against the size and SHA-256 the index gives; a bundle with any other
-   file, a missing one or a changed one is refused. When the index names no
-   bundle, or the bundle cannot be used, each file is downloaded from the exact
-   commit in the index and checked the same way. The manifest has to match the
-   index, and the script has to be one of the signed files.
+   release of the catalog repository, and the index names it: `catalog-files`
+   for the stable channel and `catalog-files-experimental` for the other.
+   GitHub holds at most 1000 files per release, so one release holds about 500
+   presences with two versions each. Each presence keeps its current bundle
+   and the one before. The application downloads the bundle and checks every
+   file in it against the size and SHA-256 the index gives; a bundle with any
+   other file, a missing one or a changed one is refused. When the index names
+   no bundle, or the bundle cannot be used, each file is downloaded from this
+   repository, at the exact commit in the index, and checked the same way. The
+   manifest has to match the index, and the script has to be one of the signed
+   files.
 4. The presence is staged in a hidden folder and swapped in with a rename. If
    any step fails, the installed copy is left as it was.
 
 A merge into `main` publishes nothing: only a signed index makes a presence
 installable.
 
+### Versions 0.2.0 and 0.2.1
+
+Those versions read everything from this repository. The workflow still
+writes the same index to this repository's `catalog` branch for them. A
+bundle published before the move is still in this repository's
+`catalog-files` release; one published after is not, and those versions then
+download its files one by one. Version 0.2.0 looked for bundles in 16
+releases per channel (`catalog-files-0` to `-f`), deleted on 2026-11-09 with
+their download counts kept in the ledger.
+
+When few copies of those versions remain: remove the step that writes the
+index here, run `retire` so the counts of the old release reach the ledger,
+delete the release, and drop `--also` from the `catalog-stats` workflow.
+
+```
+node tools/catalog-releases.mjs retire --channel stable --repo manucabral/RichPresencePlus --ledger retired.json --plan plan.json
+node tools/catalog-branch.mjs add --repo manucabral/RichPresencePlus-catalog --branch catalog-stats --file retired.json --message "chore: record downloads of the old release"
+node tools/catalog-releases.mjs delete --repo manucabral/RichPresencePlus --plan plan.json
+```
+
+`retired.json` is first read from the `catalog-stats` branch of the catalog
+repository, so the counts already there are kept.
+
 ## Install statistics
 
 GitHub counts the downloads of each release file. The `catalog-stats`
 workflow runs once a day, adds the counts of every bundle of a presence (all
 versions, installs and updates together) and commits the result as
-`stats.json` to the `catalog-stats` branch; the run's summary shows the table.
-To read it by hand:
+`stats.json` to the `catalog-stats` branch of the catalog repository; the
+run's summary shows the table. To read it by hand:
 
 ```
-node tools/catalog-releases.mjs stats --repo manucabral/RichPresencePlus
+node tools/catalog-releases.mjs stats --repo manucabral/RichPresencePlus-catalog --also manucabral/RichPresencePlus
 ```
+
+The website shows the counts on each presence's page, and the application
+next to each presence under Add more. The application asks for `stats.json`
+at most once an hour, apart from the list, so the list never waits for it.
+The file is not signed: the numbers are only shown, never used to decide
+what is installed, and anything in it that is not a folder name with a count
+is left out.
 
 GitHub forgets a file's count when the file is deleted. Before the publish
 workflow deletes old bundles, it writes their counts to `retired.json` on the

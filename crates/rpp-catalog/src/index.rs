@@ -16,7 +16,7 @@ pub const SCHEMA_VERSION: u64 = 1;
 /// Largest index accepted, in bytes.
 pub const MAX_INDEX: u64 = 8 * 1024 * 1024;
 /// Most presences in one index.
-const MAX_PRESENCES: usize = 4096;
+pub(crate) const MAX_PRESENCES: usize = 4096;
 /// Most files in one presence.
 const MAX_FILES: usize = 128;
 /// Largest file of a presence, in bytes.
@@ -45,8 +45,9 @@ impl Channel {
         }
     }
 
-    /// Tag of the GitHub release that holds the channel's bundles. One release
-    /// holds 1000 files, about 500 presences with two versions each.
+    /// Tag of the GitHub release that holds the channel's bundles, in the
+    /// catalog's repository. One release holds 1000 files, about 500
+    /// presences with two versions each.
     pub fn release(self) -> &'static str {
         match self {
             Channel::Stable => "catalog-files",

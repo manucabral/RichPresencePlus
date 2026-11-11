@@ -16,7 +16,11 @@ use crate::logging::Logging;
 
 /// The signed catalog of approved presences, installed into the user's folder.
 fn open_catalog(data_dir: &std::path::Path) -> Option<Arc<Catalog>> {
-    let source = Github::new(keys::REPOSITORY_OWNER, keys::REPOSITORY_NAME).ok()?;
+    let source = Github::new(
+        (keys::REPOSITORY_OWNER, keys::REPOSITORY_NAME),
+        (keys::REPOSITORY_OWNER, keys::CATALOG_REPOSITORY_NAME),
+    )
+    .ok()?;
     let trusted = Keys::parse(keys::TRUSTED).ok()?;
     Some(Arc::new(Catalog::new(
         Box::new(source),
@@ -138,6 +142,7 @@ pub fn run() {
             commands::language,
             commands::set_language,
             commands::catalog,
+            commands::catalog_installs,
             commands::install_presence,
             commands::delete_presence,
             commands::local_api,

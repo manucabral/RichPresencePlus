@@ -2,8 +2,9 @@ name: catalog-stats
 
 # Adds up the downloads GitHub counts for each presence bundle, plus the
 # counts of deleted bundles kept in retired.json, and keeps the result in
-# stats.json on the catalog-stats branch, one commit a day, so the history
-# shows which presences grow. The application sends nothing for this.
+# stats.json on the catalog-stats branch of the catalog's repository, one
+# commit a day, so the history shows which presences grow. The application
+# sends nothing for this.
 
 on:
   schedule:
@@ -11,11 +12,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: catalog-stats
   cancel-in-progress: false
+
+env:
+  CATALOG_REPOSITORY: manucabral/RichPresencePlus-catalog
 
 jobs:
   stats:
@@ -23,28 +27,28 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
       - name: Count installs
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.CATALOG_REPOSITORY_TOKEN }}
         run: |
-          git fetch origin catalog-stats || true
-          git show origin/catalog-stats:retired.json > "$RUNNER_TEMP/retired.json" 2>/dev/null || echo '{"assets":{}}' > "$RUNNER_TEMP/retired.json"
-          node tools/catalog-releases.mjs stats --repo "$GITHUB_REPOSITORY" --ledger "$RUNNER_TEMP/retired.json" --out "$RUNNER_TEMP/stats.json"
-      - name: Keep the result on the catalog-stats branch
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@users.noreply.github.com"
-          git fetch origin catalog-stats || true
-          if git rev-parse --verify origin/catalog-stats >/dev/null 2>&1; then
-            git switch --detach origin/catalog-stats
-          else
-            git switch --orphan catalog-stats
-            git rm -rf --quiet . || true
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "::error::The CATALOG_REPOSITORY_TOKEN secret is not set; nothing can be written to $CATALOG_REPOSITORY."
+            exit 1
           fi
-          cp "$RUNNER_TEMP/stats.json" stats.json
-          git add stats.json
-          git commit -m "chore: catalog installs on $(date -u +%F)"
-          git push origin HEAD:refs/heads/catalog-stats
+          node tools/catalog-branch.mjs read --repo "$CATALOG_REPOSITORY" --branch catalog-stats \
+            --name retired.json --out "$RUNNER_TEMP/retired.json" \
+            --else-repo "$GITHUB_REPOSITORY" --default '{"assets":{}}'
+          # The ledger comes from this repository until the catalog's has one.
+          # `--also` counts the bundles still live in this repository, where the
+          # catalog was until version 0.2.1. Drop it once that release is retired.
+          node tools/catalog-releases.mjs stats --repo "$CATALOG_REPOSITORY" --also "$GITHUB_REPOSITORY" \
+            --ledger "$RUNNER_TEMP/retired.json" --out "$RUNNER_TEMP/stats.json"
+          node tools/catalog-branch.mjs add --repo "$CATALOG_REPOSITORY" --branch catalog-stats \
+            --file "$RUNNER_TEMP/retired.json" --message "chore: keep the ledger of deleted bundles"
+          node tools/catalog-branch.mjs add --repo "$CATALOG_REPOSITORY" --branch catalog-stats \
+            --file "$RUNNER_TEMP/stats.json" --message "chore: catalog installs on $(date -u +%F)"

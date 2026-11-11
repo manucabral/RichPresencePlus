@@ -1,5 +1,7 @@
 //! Listing, installing and removing presences of the signed catalog.
 
+use std::collections::BTreeMap;
+
 use rpp_catalog::{Catalog, Error};
 use rpp_plugins::{Grant, Host};
 
@@ -30,6 +32,18 @@ impl<H: Host + Clone + Send + 'static> Controller<H> {
             available: true,
             items,
         })
+    }
+
+    /// How many times each presence of the catalog was installed, by name.
+    ///
+    /// Asked for apart from the list, so the list never waits for it. Empty
+    /// when the counts cannot be had; a presence without one is left out.
+    pub fn catalog_installs(&self) -> BTreeMap<String, u64> {
+        self.catalog
+            .as_ref()
+            .filter(|c| c.enabled())
+            .map(|catalog| catalog.installs())
+            .unwrap_or_default()
     }
 
     /// Installs a presence from the catalog, or updates it, and starts it.

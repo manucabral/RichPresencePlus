@@ -278,6 +278,14 @@ pub async fn catalog(state: State<'_, Shared>, refresh: bool) -> Result<CatalogV
     blocking(&state, move |app| app.catalog(refresh)).await?
 }
 
+/// How many times each presence of the catalog was installed, by name.
+#[tauri::command]
+pub async fn catalog_installs(
+    state: State<'_, Shared>,
+) -> Result<std::collections::BTreeMap<String, u64>, String> {
+    blocking(&state, |app| app.catalog_installs()).await
+}
+
 /// Installs or updates a presence from the catalog.
 #[tauri::command]
 pub async fn install_presence(

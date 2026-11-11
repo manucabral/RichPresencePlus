@@ -3,16 +3,21 @@
 //   node tools/catalog-releases.mjs upload --channel <c> --repo <owner/name> --dir <bundles>
 //   node tools/catalog-releases.mjs prune  --channel <c> --repo <owner/name> --dir <bundles>
 //                                          --ledger retired.json --plan plan.json
+//   node tools/catalog-releases.mjs retire --channel <c> --repo <owner/name>
+//                                          --ledger retired.json --plan plan.json
 //   node tools/catalog-releases.mjs delete --repo <owner/name> --plan plan.json
-//   node tools/catalog-releases.mjs stats  --repo <owner/name> [--ledger retired.json] [--out stats.json]
+//   node tools/catalog-releases.mjs stats  --repo <owner/name> [--also <owner/name>]
+//                                          [--ledger retired.json] [--out stats.json]
 //
-// Bundles are spread over 16 releases per channel by the folder name, because
-// GitHub holds at most 1000 files per release; the application computes the
-// same release (Channel::release in crates/rpp-catalog/src/index.rs). Each
-// presence keeps its current bundle and the one before; older ones are
-// deleted. GitHub forgets a deleted file's download count, so `prune` first
-// writes that count to a ledger kept on the catalog-stats branch, and `stats`
-// adds the ledger to the live counts. The token comes from GITHUB_TOKEN.
+// A channel's bundles share one release of the catalog's repository; the
+// application asks for the same one (Channel::release in
+// crates/rpp-catalog/src/index.rs). Each presence keeps its current bundle
+// and the one before; older ones are deleted. GitHub forgets a deleted file's
+// download count, so `prune` first writes that count to a ledger kept on the
+// catalog-stats branch, and `stats` adds the ledger to the live counts.
+// `retire` does the same for every bundle of a channel, before a release that
+// is no longer used is deleted. `--also` counts the bundles still live in the
+// repository the catalog moved from. The token comes from GITHUB_TOKEN.
 import { appendFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -197,16 +202,19 @@ async function main(argv) {
     return;
   }
 
-  if (command === "prune") {
+  if (command === "prune" || command === "retire") {
     const channel = channelOf(args);
-    const current = new Set(readdirSync(option(args, "dir")).filter((name) => folderOf(name)));
+    // Retiring keeps nothing: no bundle is current, and none is spared.
+    const retiring = command === "retire";
+    const current = retiring ? new Set() : new Set(readdirSync(option(args, "dir")).filter((name) => folderOf(name)));
     const ledgerPath = option(args, "ledger");
+    if (!ledgerPath) throw new Error("give --ledger <retired.json>");
     const ledger = readLedger(ledgerPath);
     const plan = [];
     for (const tag of releasesOf(channel)) {
       const release = await gh.release(tag);
       if (!release) continue;
-      for (const asset of prunePlan(await gh.assets(release.id), current)) {
+      for (const asset of prunePlan(await gh.assets(release.id), current, retiring ? 0 : KEEP)) {
         ledger.assets[String(asset.id)] = {
           channel,
           folder: folderOf(asset.name),
@@ -235,11 +243,16 @@ async function main(argv) {
   if (command === "stats") {
     const ledger = Object.entries(readLedger(option(args, "ledger")).assets).map(([id, entry]) => ({ id, ...entry }));
     const stats = { generated_at: Math.floor(Date.now() / 1000) };
+    // Asset ids are unique across GitHub, so files of two repositories never collide.
+    const also = option(args, "also");
+    const sources = also ? [gh, github(also)] : [gh];
     for (const channel of CHANNELS) {
       const live = [];
-      for (const tag of releasesOf(channel)) {
-        const release = await gh.release(tag);
-        if (release) live.push(...(await gh.assets(release.id)));
+      for (const source of sources) {
+        for (const tag of releasesOf(channel)) {
+          const release = await source.release(tag);
+          if (release) live.push(...(await source.assets(release.id)));
+        }
       }
       stats[channel] = tally(
         live,
@@ -259,7 +272,7 @@ async function main(argv) {
     return;
   }
 
-  throw new Error("commands: upload, prune, delete, stats");
+  throw new Error("commands: upload, prune, retire, delete, stats");
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1] ?? "").href) {

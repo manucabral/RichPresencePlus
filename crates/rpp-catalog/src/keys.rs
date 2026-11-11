@@ -4,11 +4,16 @@
 /// a new key can be introduced before the old one is retired.
 pub const TRUSTED: &[(&str, &str)] = &[("main", "nTtJ5MYzwpQuf//kwTGB7QvB5I7VT+bQtjbjYGStTuU=")];
 
-/// Owner of the GitHub repository that holds the approved presences.
+/// Owner of the GitHub repositories the catalog is read from.
 pub const REPOSITORY_OWNER: &str = "manucabral";
 
-/// Name of the GitHub repository that holds the approved presences.
+/// Name of the GitHub repository where presences are reviewed; the index
+/// names a commit of it.
 pub const REPOSITORY_NAME: &str = "RichPresencePlus";
+
+/// Name of the GitHub repository that holds what is published: the signed
+/// index, the bundles and the install counts.
+pub const CATALOG_REPOSITORY_NAME: &str = "RichPresencePlus-catalog";
 
 #[cfg(test)]
 mod tests {

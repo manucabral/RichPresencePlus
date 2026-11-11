@@ -4,6 +4,7 @@ use std::time::Duration;
 
 use crate::error::Error;
 use crate::index::{Channel, MAX_INDEX};
+use crate::installs::MAX_INSTALLS;
 
 /// Time allowed for one download.
 const TIMEOUT: Duration = Duration::from_secs(30);
@@ -68,6 +69,16 @@ pub trait Source: Send + Sync {
         let _ = (tag, name, limit);
         Err(Error::Network("this source has no bundles".into()))
     }
+
+    /// Downloads the install counts unless they are still the copy named by
+    /// `known`. The file is not signed; see [`crate::installs`].
+    ///
+    /// Raises:
+    ///     Error: The download fails. A source without counts always fails.
+    fn installs(&self, known: Option<&str>) -> Result<Fetched, Error> {
+        let _ = known;
+        Err(Error::Network("this source has no install counts".into()))
+    }
 }
 
 /// Hosts a GitHub release download may redirect to. GitHub serves release
@@ -87,11 +98,44 @@ fn release_host(location: &str) -> bool {
     RELEASE_HOSTS.contains(&authority)
 }
 
-/// Serves the catalog from a public GitHub repository.
+/// Branch of the catalog repository that holds the install counts.
+const INSTALLS_BRANCH: &str = "catalog-stats";
+
+/// A public GitHub repository, as it is written in an address.
+#[derive(Debug, Clone)]
+struct Repository {
+    owner: String,
+    name: String,
+}
+
+impl Repository {
+    fn new((owner, name): (&str, &str)) -> Result<Self, Error> {
+        if !plain(owner) || !plain(name) {
+            return Err(Error::Invalid("the repository name is not plain".into()));
+        }
+        Ok(Self {
+            owner: owner.to_owned(),
+            name: name.to_owned(),
+        })
+    }
+
+    /// Address of a file at a branch or commit.
+    fn raw(&self, reference: &str, path: &str) -> String {
+        format!(
+            "https://raw.githubusercontent.com/{}/{}/{reference}/{path}",
+            self.owner, self.name
+        )
+    }
+}
+
+/// Serves the catalog from public GitHub repositories: one holds the presences
+/// people review, the other what is published from them.
 #[derive(Debug, Clone)]
 pub struct Github {
-    owner: String,
-    repo: String,
+    /// Where each file of a presence is, at the commit the index names.
+    presences: Repository,
+    /// Where the signed index, the bundles and the install counts are.
+    catalog: Repository,
 }
 
 fn plain(name: &str) -> bool {
@@ -105,27 +149,23 @@ fn plain(name: &str) -> bool {
 }
 
 impl Github {
-    /// Points at a repository.
+    /// Points at the two repositories, each as `(owner, name)`.
+    ///
+    /// Args:
+    ///     presences: Holds `presences/<folder>` at the commits the index names.
+    ///     catalog: Holds the index branches, the bundle releases and the counts.
     ///
     /// Raises:
-    ///     Error: Either name could change the address it is placed in.
-    pub fn new(owner: &str, repo: &str) -> Result<Self, Error> {
-        if !plain(owner) || !plain(repo) {
-            return Err(Error::Invalid("the repository name is not plain".into()));
-        }
+    ///     Error: A name could change the address it is placed in.
+    pub fn new(presences: (&str, &str), catalog: (&str, &str)) -> Result<Self, Error> {
         Ok(Self {
-            owner: owner.to_owned(),
-            repo: repo.to_owned(),
+            presences: Repository::new(presences)?,
+            catalog: Repository::new(catalog)?,
         })
     }
 
     fn index_url(&self, channel: Channel) -> String {
-        format!(
-            "https://raw.githubusercontent.com/{}/{}/{}/catalog.json",
-            self.owner,
-            self.repo,
-            channel.branch()
-        )
+        self.catalog.raw(channel.branch(), "catalog.json")
     }
 
     fn get(&self, url: &str, limit: u64) -> Result<Vec<u8>, Error> {
@@ -181,39 +221,48 @@ fn read(mut response: ureq::http::Response<ureq::Body>, limit: u64) -> Result<Ve
         .map_err(|e| Error::Network(e.to_string()))
 }
 
+/// Downloads a file unless it is still the copy named by `known`.
+fn get_if_changed(url: &str, known: Option<&str>, limit: u64) -> Result<Fetched, Error> {
+    let response = call(url, known)?;
+    let status = response.status().as_u16();
+    // A 304 only counts as an answer to a tag that was sent.
+    if status == 304 && known.is_some_and(usable_tag) {
+        return Ok(Fetched::Unchanged);
+    }
+    if status != 200 {
+        return Err(refused(status, url));
+    }
+    let tag = response
+        .headers()
+        .get("etag")
+        .and_then(|value| value.to_str().ok())
+        .filter(|tag| usable_tag(tag))
+        .map(str::to_owned);
+    Ok(Fetched::New {
+        bytes: read(response, limit)?,
+        tag,
+    })
+}
+
 impl Source for Github {
     fn index(&self, channel: Channel) -> Result<Vec<u8>, Error> {
         self.get(&self.index_url(channel), MAX_INDEX)
     }
 
     fn index_if_changed(&self, channel: Channel, known: Option<&str>) -> Result<Fetched, Error> {
-        let url = self.index_url(channel);
-        let response = call(&url, known)?;
-        let status = response.status().as_u16();
-        // A 304 only counts as an answer to a tag that was sent.
-        if status == 304 && known.is_some_and(usable_tag) {
-            return Ok(Fetched::Unchanged);
-        }
-        if status != 200 {
-            return Err(refused(status, &url));
-        }
-        let tag = response
-            .headers()
-            .get("etag")
-            .and_then(|value| value.to_str().ok())
-            .filter(|tag| usable_tag(tag))
-            .map(str::to_owned);
-        Ok(Fetched::New {
-            bytes: read(response, MAX_INDEX)?,
-            tag,
-        })
+        get_if_changed(&self.index_url(channel), known, MAX_INDEX)
+    }
+
+    fn installs(&self, known: Option<&str>) -> Result<Fetched, Error> {
+        let url = self.catalog.raw(INSTALLS_BRANCH, "stats.json");
+        // One byte over the limit tells a file that is too long from one that fits.
+        get_if_changed(&url, known, MAX_INSTALLS + 1)
     }
 
     fn file(&self, commit: &str, folder: &str, path: &str, size: u64) -> Result<Vec<u8>, Error> {
-        let url = format!(
-            "https://raw.githubusercontent.com/{}/{}/{commit}/presences/{folder}/{path}",
-            self.owner, self.repo
-        );
+        let url = self
+            .presences
+            .raw(commit, &format!("presences/{folder}/{path}"));
         self.get(&url, size.saturating_add(1))
     }
 
@@ -225,7 +274,7 @@ impl Source for Github {
         // host. That redirect is followed by hand, once, and only to GitHub.
         let url = format!(
             "https://github.com/{}/{}/releases/download/{tag}/{name}",
-            self.owner, self.repo
+            self.catalog.owner, self.catalog.name
         );
         let first = call(&url, None)?;
         let status = first.status().as_u16();
@@ -257,8 +306,8 @@ mod tests {
 
     #[test]
     fn repository_names_cannot_change_the_address() {
-        assert!(Github::new("manucabral", "RichPresencePlus").is_ok());
-        assert!(Github::new("some.org", "my_repo-2.0").is_ok());
+        let good = ("some.org", "my_repo-2.0");
+        assert!(Github::new(good, ("manucabral", "RichPresencePlus")).is_ok());
         for bad in [
             "",
             "a/b",
@@ -270,9 +319,29 @@ mod tests {
             "a@b",
             &"a".repeat(101),
         ] {
-            assert!(Github::new(bad, "repo").is_err(), "{bad:?}");
-            assert!(Github::new("owner", bad).is_err(), "{bad:?}");
+            for pair in [(bad, "repo"), ("owner", bad)] {
+                assert!(Github::new(pair, good).is_err(), "{bad:?}");
+                assert!(Github::new(good, pair).is_err(), "{bad:?}");
+            }
         }
+    }
+
+    #[test]
+    fn each_download_goes_to_the_repository_that_holds_it() {
+        let github = Github::new(("owner", "app"), ("owner", "app-catalog")).unwrap();
+        assert_eq!(
+            github.index_url(Channel::Stable),
+            "https://raw.githubusercontent.com/owner/app-catalog/catalog/catalog.json"
+        );
+        assert_eq!(
+            github.catalog.raw(INSTALLS_BRANCH, "stats.json"),
+            "https://raw.githubusercontent.com/owner/app-catalog/catalog-stats/stats.json"
+        );
+        // Files come from the commit of the repository where they were reviewed.
+        assert_eq!(
+            github.presences.raw("abc", "presences/demo/main.js"),
+            "https://raw.githubusercontent.com/owner/app/abc/presences/demo/main.js"
+        );
     }
 
     #[test]

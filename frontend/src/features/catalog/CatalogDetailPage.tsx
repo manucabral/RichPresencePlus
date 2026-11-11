@@ -2,7 +2,7 @@ import { useState } from "preact/hooks";
 import { useParams } from "../../shared/router";
 import BackLink from "../../shared/components/BackLink";
 import { toast } from "../../shared/toast";
-import { getCatalog, installPresence, removePresence, restorePresence } from "../../platform/api";
+import { getCatalog, getCatalogInstalls, installPresence, removePresence, restorePresence } from "../../platform/api";
 import { FavoriteButton } from "../../shared/components/BrowseBar";
 import Button from "../../shared/components/Button";
 import Logo from "../../shared/components/Logo";
@@ -13,13 +13,14 @@ import { useLoaded } from "../../shared/hooks";
 import { useT } from "../../shared/i18n";
 import type { Access, Grant } from "../../shared/types";
 import { accessLines } from "../presences/access";
-import { catalogError, sizeText, stateKey } from "./catalog";
+import { catalogError, installsText, sizeText, stateKey } from "./catalog";
 
 /** One presence of the catalog: what it is, and installing, updating or going back. */
 export default function CatalogDetailPage() {
-  const { t } = useT();
+  const { t, tn, tag } = useT();
   const { name = "" } = useParams();
   const catalog = useLoaded(() => getCatalog(false));
+  const installs = installsText(useLoaded(getCatalogInstalls).data, name, tag, tn);
   const { favorites, toggle } = useFavorites();
   const [busy, setBusy] = useState(false);
   const [version, setVersion] = useState("");
@@ -141,6 +142,11 @@ export default function CatalogDetailPage() {
           <SettingRow title={t("catalog.size")}>
             <span className="text-[13px] text-neutral-300">{sizeText(item.size)}</span>
           </SettingRow>
+          {installs && (
+            <SettingRow title={t("catalog.popularity")}>
+              <span className="text-[13px] tabular-nums text-neutral-300">{installs}</span>
+            </SettingRow>
+          )}
         </Panel>
         {installed && <p className="mt-2 text-xs text-neutral-500">{t("catalog.settingsHint")}</p>}
       </Section>

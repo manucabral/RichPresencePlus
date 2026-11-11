@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use base64::Engine;
 use base64::engine::general_purpose::STANDARD;
 use ed25519_dalek::{Signer, SigningKey};
-use rpp_catalog::{Channel, Error, Keys, Source};
+use rpp_catalog::{Channel, Error, Fetched, Keys, Source};
 use serde_json::json;
 use sha2::{Digest, Sha256};
 
@@ -29,6 +29,7 @@ pub struct Published {
     files: Mutex<HashMap<String, Vec<u8>>>,
     index: Mutex<Option<Vec<u8>>>,
     index_calls: AtomicUsize,
+    installs: Mutex<Option<Vec<u8>>>,
 }
 
 impl Published {
@@ -107,6 +108,16 @@ impl Published {
             .insert(format!("{COMMIT}/{folder}/{path}"), bytes.to_vec());
     }
 
+    /// Publishes install counts, as `(folder, installs)` of the stable channel.
+    pub fn count_installs(&self, counts: &[(&str, u64)]) {
+        let rows: Vec<_> = counts
+            .iter()
+            .map(|(folder, installs)| json!({"folder": folder, "installs": installs}))
+            .collect();
+        let stats = json!({"generated_at": 1, "stable": rows});
+        *self.installs.lock().unwrap() = Some(stats.to_string().into_bytes());
+    }
+
     /// Makes the index unreachable, as when the network is down.
     pub fn go_offline(&self) {
         *self.index.lock().unwrap() = None;
@@ -141,6 +152,13 @@ impl Source for Server {
             .get(&key)
             .cloned()
             .ok_or_else(|| Error::Network(format!("404 {key}")))
+    }
+
+    fn installs(&self, _: Option<&str>) -> Result<Fetched, Error> {
+        let bytes = self.0.installs.lock().unwrap().clone();
+        bytes
+            .map(|bytes| Fetched::New { bytes, tag: None })
+            .ok_or_else(|| Error::Network("404 stats.json".into()))
     }
 }
 

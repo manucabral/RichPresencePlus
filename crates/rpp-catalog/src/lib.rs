@@ -7,6 +7,7 @@ pub mod freshness;
 pub mod history;
 pub mod index;
 pub mod install;
+pub mod installs;
 pub mod keys;
 pub mod seal;
 pub mod source;

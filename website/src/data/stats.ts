@@ -1,10 +1,11 @@
 /**
  * How many times each presence was installed from the catalog, asked for when
  * the site is built. The numbers come from stats.json, which a daily workflow
- * writes on the catalog-stats branch; the site is built again each day after it.
+ * writes on the catalog-stats branch of the catalog repository; the site is built
+ * again each day after it.
  */
 
-const STATS = "https://raw.githubusercontent.com/manucabral/RichPresencePlus/catalog-stats/stats.json";
+const STATS = "https://raw.githubusercontent.com/manucabral/RichPresencePlus-catalog/catalog-stats/stats.json";
 
 /** Installs by presence folder, from the stable channel; anything malformed is left out. */
 export function installsOf(stats: unknown): Map<string, number> {

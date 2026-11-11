@@ -1,5 +1,6 @@
 //! The catalog as the application uses it: list, install, update, remove.
 
+use std::collections::BTreeMap;
 use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -14,12 +15,19 @@ use crate::freshness::Seen;
 use crate::history;
 use crate::index::{Channel, Entry, Index, Keys};
 use crate::install::{self, Installed, Standing};
+use crate::installs;
 use crate::seal::Key;
 use crate::source::Fetched;
 use crate::source::Source;
 
 /// How long a verified index is reused before it is downloaded again.
 const CACHE: Duration = Duration::from_secs(300);
+
+/// How long install counts are reused; the catalog publishes them once a day.
+const COUNTS_CACHE: Duration = Duration::from_secs(3600);
+
+/// Wait before asking for the counts again after a download that failed.
+const COUNTS_RETRY: Duration = Duration::from_secs(300);
 
 /// Where a catalog presence stands on this computer.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize)]
@@ -64,6 +72,14 @@ struct Cached {
     tag: Option<String>,
 }
 
+/// The install counts last asked for.
+struct Counts {
+    /// When to ask again.
+    until: Instant,
+    by_folder: BTreeMap<String, u64>,
+    tag: Option<String>,
+}
+
 /// The signed catalog of one channel, bound to a presences folder.
 pub struct Catalog {
     source: Box<dyn Source>,
@@ -74,6 +90,7 @@ pub struct Catalog {
     key: Key,
     seen: Seen,
     cached: Mutex<Option<Cached>>,
+    counts: Mutex<Option<Counts>>,
     /// The last index that verified, as downloaded.
     saved: PathBuf,
 }
@@ -113,6 +130,7 @@ impl Catalog {
             key: seal,
             seen: Seen::new(data_dir),
             cached: Mutex::new(None),
+            counts: Mutex::new(None),
             saved: data_dir.join(format!("{}.json", channel.branch())),
         }
     }
@@ -255,6 +273,55 @@ impl Catalog {
                 }
             })
             .collect())
+    }
+
+    /// How many times each listed presence was installed, by name.
+    ///
+    /// The counts come unsigned and are for display only. They are asked for
+    /// at most once an hour, and a presence without one is left out.
+    ///
+    /// Returns:
+    ///     Empty when the catalog or the counts cannot be had.
+    pub fn installs(&self) -> BTreeMap<String, u64> {
+        let Ok(index) = self.index(false) else {
+            return BTreeMap::new();
+        };
+        let by_folder = self.counts_at(Instant::now());
+        index
+            .presences
+            .into_iter()
+            .filter_map(|entry| Some((entry.name, *by_folder.get(&entry.folder)?)))
+            .collect()
+    }
+
+    /// The counts by folder, downloaded when the copy is old at `now`.
+    fn counts_at(&self, now: Instant) -> BTreeMap<String, u64> {
+        let kept = {
+            let counts = self.counts.lock().unwrap_or_else(|e| e.into_inner());
+            match counts.as_ref() {
+                Some(kept) if now < kept.until => return kept.by_folder.clone(),
+                Some(kept) => Some((kept.by_folder.clone(), kept.tag.clone())),
+                None => None,
+            }
+        };
+        let known = kept.as_ref().and_then(|(_, tag)| tag.as_deref());
+        // The download runs without the lock, like the one of the index.
+        let answer = self.source.installs(known);
+        let (by_folder, tag, wait) = match (answer, kept) {
+            (Ok(Fetched::New { bytes, tag }), _) => {
+                (installs::parse(&bytes, self.channel), tag, COUNTS_CACHE)
+            }
+            (Ok(Fetched::Unchanged), Some((by_folder, tag))) => (by_folder, tag, COUNTS_CACHE),
+            // No answer: what was known stays on display until the next try.
+            (_, Some((by_folder, tag))) => (by_folder, tag, COUNTS_RETRY),
+            (_, None) => (BTreeMap::new(), None, COUNTS_RETRY),
+        };
+        *self.counts.lock().unwrap_or_else(|e| e.into_inner()) = Some(Counts {
+            until: now + wait,
+            by_folder: by_folder.clone(),
+            tag,
+        });
+        by_folder
     }
 
     /// Installs a presence, or updates it to the version in the catalog, and

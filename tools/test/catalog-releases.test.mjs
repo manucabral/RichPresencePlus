@@ -37,6 +37,13 @@ test("each presence keeps the bundle in use and the one before", () => {
     prunePlan(assets, new Set()).map((a) => a.id),
     [1],
   );
+  // Retiring a release keeps no bundle, so every count reaches the ledger before the delete.
+  assert.deepEqual(
+    prunePlan(assets, new Set(), 0)
+      .map((a) => a.id)
+      .sort(),
+    [1, 2, 3, 4],
+  );
 });
 
 test("installs add live downloads and deleted bundles once", () => {
@@ -57,23 +64,4 @@ test("installs add live downloads and deleted bundles once", () => {
     { folder: "netflix", installs: 4 },
     { folder: "roblox", installs: 0 },
   ]);
-});
-
-test("the cleanup loads from a copy of the tools without the schema", async () => {
-  // The workflow copies tools/ out of the checkout before switching branches.
-  const { cpSync, mkdtempSync, rmSync } = await import("node:fs");
-  const { tmpdir } = await import("node:os");
-  const { join } = await import("node:path");
-  const { pathToFileURL } = await import("node:url");
-  const home = mkdtempSync(join(tmpdir(), "rpp-tools-"));
-  try {
-    cpSync(new URL("..", import.meta.url), join(home, "tools"), {
-      recursive: true,
-      filter: (path) => !path.includes("node_modules"),
-    });
-    const copy = await import(pathToFileURL(join(home, "tools", "catalog-releases.mjs")).href);
-    assert.equal(copy.releaseFor("stable"), "catalog-files");
-  } finally {
-    rmSync(home, { recursive: true, force: true });
-  }
 });

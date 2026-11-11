@@ -22,6 +22,10 @@ impl Source for Shared {
     fn file(&self, commit: &str, folder: &str, path: &str, size: u64) -> Result<Vec<u8>, Error> {
         self.0.file(commit, folder, path, size)
     }
+
+    fn installs(&self, known: Option<&str>) -> Result<Fetched, Error> {
+        self.0.installs(known)
+    }
 }
 
 const SCRIPT: &[u8] = b"function read(){return null} function activity(){return null}";
@@ -427,4 +431,83 @@ fn a_saved_index_that_was_changed_or_replaced_is_not_used() {
         restarted(&f).listing(true),
         Err(Error::Network(_))
     ));
+}
+
+fn serve_installs(memory: &Memory, rows: serde_json::Value) {
+    let stats = serde_json::json!({"generated_at": 1, "stable": rows});
+    *memory.installs_bytes.lock().unwrap() = Some(stats.to_string().into_bytes());
+}
+
+#[test]
+fn installs_are_listed_by_name_for_the_presences_of_the_index() {
+    let f = fixture();
+    publish(
+        &f.memory,
+        100,
+        &[("Alpha", "alpha", "1.0.0"), ("Beta", "beta", "1.0.0")],
+    );
+    serve_installs(
+        &f.memory,
+        serde_json::json!([
+            {"folder": "alpha", "installs": 42},
+            {"folder": "left-the-catalog", "installs": 7},
+        ]),
+    );
+    let installs = f.catalog.installs();
+    // Beta has no count and the third folder is not listed: both are left out.
+    assert_eq!(installs.len(), 1);
+    assert_eq!(installs["Alpha"], 42);
+}
+
+#[test]
+fn installs_are_asked_for_once_an_hour_and_not_downloaded_again_unchanged() {
+    let f = fixture();
+    serve_installs(
+        &f.memory,
+        serde_json::json!([{"folder": "alpha", "installs": 1}]),
+    );
+    let start = Instant::now();
+    assert_eq!(f.catalog.counts_at(start)["alpha"], 1);
+    serve_installs(
+        &f.memory,
+        serde_json::json!([{"folder": "alpha", "installs": 2}]),
+    );
+    // Within the hour the copy answers, with no request at all.
+    assert_eq!(f.catalog.counts_at(start + COUNTS_CACHE / 2)["alpha"], 1);
+    assert_eq!(f.memory.installs_calls.load(Ordering::SeqCst), 1);
+
+    let later = start + COUNTS_CACHE;
+    assert_eq!(f.catalog.counts_at(later)["alpha"], 2);
+    assert_eq!(f.memory.installs_calls.load(Ordering::SeqCst), 2);
+
+    // The same file an hour later is confirmed by its tag, not downloaded.
+    assert_eq!(f.catalog.counts_at(later + COUNTS_CACHE)["alpha"], 2);
+    assert_eq!(f.memory.installs_calls.load(Ordering::SeqCst), 2);
+    assert_eq!(f.memory.installs_unchanged.load(Ordering::SeqCst), 1);
+}
+
+#[test]
+fn installs_that_cannot_be_downloaded_leave_what_was_known() {
+    let f = fixture();
+    publish(&f.memory, 100, &[("Alpha", "alpha", "1.0.0")]);
+    // Nothing served and nothing known: no counts, and no error for the page.
+    let start = Instant::now();
+    assert!(f.catalog.installs().is_empty());
+    assert!(f.catalog.counts_at(start).is_empty());
+
+    serve_installs(
+        &f.memory,
+        serde_json::json!([{"folder": "alpha", "installs": 5}]),
+    );
+    // A failure is not asked again at once, so a page that opens often costs nothing.
+    assert!(f.catalog.counts_at(start + COUNTS_RETRY / 2).is_empty());
+    let known = start + COUNTS_RETRY + COUNTS_RETRY;
+    assert_eq!(f.catalog.counts_at(known)["alpha"], 5);
+
+    *f.memory.installs_bytes.lock().unwrap() = None;
+    let offline = known + COUNTS_CACHE;
+    assert_eq!(f.catalog.counts_at(offline)["alpha"], 5);
+    // A file that is not what it should be clears the counts instead of failing.
+    *f.memory.installs_bytes.lock().unwrap() = Some(b"<html>".to_vec());
+    assert!(f.catalog.counts_at(offline + COUNTS_RETRY).is_empty());
 }

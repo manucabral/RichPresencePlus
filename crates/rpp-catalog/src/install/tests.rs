@@ -28,6 +28,11 @@ pub(crate) struct Memory {
     pub unchanged: AtomicUsize,
     /// Release bundles by name.
     pub bundles: Mutex<HashMap<String, Vec<u8>>>,
+    /// What `stats.json` serves; nothing means a network failure.
+    pub installs_bytes: Mutex<Option<Vec<u8>>>,
+    /// Downloads of the install counts, and requests answered with "unchanged".
+    pub installs_calls: AtomicUsize,
+    pub installs_unchanged: AtomicUsize,
 }
 
 impl Memory {
@@ -84,6 +89,25 @@ impl Source for Memory {
             .get(name)
             .cloned()
             .ok_or_else(|| Error::Network(format!("404 {name}")))
+    }
+
+    fn installs(&self, known: Option<&str>) -> Result<Fetched, Error> {
+        let bytes = self
+            .installs_bytes
+            .lock()
+            .unwrap()
+            .clone()
+            .ok_or_else(|| Error::Network("offline".into()))?;
+        let tag = format!("\"{}\"", tag_of(&bytes));
+        if known == Some(tag.as_str()) {
+            self.installs_unchanged.fetch_add(1, Ordering::SeqCst);
+            return Ok(Fetched::Unchanged);
+        }
+        self.installs_calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Fetched::New {
+            bytes,
+            tag: Some(tag),
+        })
     }
 }
 

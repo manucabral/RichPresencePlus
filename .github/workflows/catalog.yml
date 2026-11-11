@@ -3,6 +3,11 @@ name: catalog
 # Pull requests that change a presence build and sign the index with a key made
 # on the spot, with no secret. Publishing is manual and waits for a maintainer
 # to approve the `catalog-publication` environment, which holds the real key.
+#
+# What is published goes to the catalog's own repository: the signed index on a
+# branch, the bundles on a release, the install counts on another branch. The
+# CATALOG_REPOSITORY_TOKEN secret is a token that can write the contents of
+# that repository and nothing else.
 
 on:
   pull_request:
@@ -20,6 +25,9 @@ on:
 
 permissions:
   contents: read
+
+env:
+  CATALOG_REPOSITORY: manucabral/RichPresencePlus-catalog
 
 jobs:
   validate:
@@ -60,61 +68,68 @@ jobs:
       CHANNEL: ${{ inputs.channel }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
       - run: node --test "tools/test/*.test.mjs"
+      - name: Check the token of the catalog repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.CATALOG_REPOSITORY_TOKEN }}
+        run: |
+          if [ -z "$GITHUB_TOKEN" ]; then
+            echo "::error::The CATALOG_REPOSITORY_TOKEN secret is not set; nothing can be written to $CATALOG_REPOSITORY."
+            exit 1
+          fi
       # Bundles go up before the index that names them, so a live index never
       # points at missing files.
-      - name: Upload the bundles to the channel's releases
+      - name: Upload the bundles to the channel's release
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.CATALOG_REPOSITORY_TOKEN }}
         run: |
           node tools/catalog.mjs bundles --channel "$CHANNEL" --out "$RUNNER_TEMP/bundles"
-          node tools/catalog-releases.mjs upload --channel "$CHANNEL" --repo "$GITHUB_REPOSITORY" --dir "$RUNNER_TEMP/bundles"
+          node tools/catalog-releases.mjs upload --channel "$CHANNEL" --repo "$CATALOG_REPOSITORY" --dir "$RUNNER_TEMP/bundles"
       - name: Build and sign the index
         env:
           RPP_CATALOG_KEY: ${{ secrets.RPP_CATALOG_KEY }}
         run: node tools/catalog.mjs build --bundles --commit "$GITHUB_SHA" --channel "$CHANNEL" --out "$RUNNER_TEMP/catalog.json"
+      # Only the newest index is kept: each publish is a single commit with no
+      # history, so old catalogs do not pile up. The application reads the
+      # branch's file and refuses an index older than one it accepted.
       - name: Publish on the channel branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.CATALOG_REPOSITORY_TOKEN }}
         run: |
           branch=catalog
           [ "$CHANNEL" = "experimental" ] && branch=catalog-experimental
-          git config user.name "github-actions"
-          git config user.email "actions@users.noreply.github.com"
-          # Only the newest index is kept: each publish is a single commit with no
-          # history, so old catalogs do not pile up. The application reads the
-          # branch's file and refuses an index older than one it accepted.
-          git switch --orphan "publish-$branch"
-          git rm -rf --quiet . || true
-          cp "$RUNNER_TEMP/catalog.json" catalog.json
-          git add catalog.json
-          git commit -m "chore: publish the $CHANNEL catalog for ${GITHUB_SHA::8}"
-          git push --force origin "HEAD:refs/heads/$branch"
+          node tools/catalog-branch.mjs replace --repo "$CATALOG_REPOSITORY" --branch "$branch" \
+            --file "$RUNNER_TEMP/catalog.json" --message "chore: publish the $CHANNEL catalog for ${GITHUB_SHA::8}"
+      # Versions 0.2.0 and 0.2.1 of the application read the index from this
+      # repository. They get the same file; a bundle they do not find here is
+      # installed file by file. Remove this step when few copies of them remain.
+      - name: Publish the same index where the first versions look
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          branch=catalog
+          [ "$CHANNEL" = "experimental" ] && branch=catalog-experimental
+          node tools/catalog-branch.mjs replace --repo "$GITHUB_REPOSITORY" --branch "$branch" \
+            --file "$RUNNER_TEMP/catalog.json" --message "chore: publish the $CHANNEL catalog for ${GITHUB_SHA::8}"
       # Old bundles go once the new index is live, and their download counts
       # reach the ledger on catalog-stats before any delete.
       - name: Record and delete old bundles
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ secrets.CATALOG_REPOSITORY_TOKEN }}
         run: |
-          # The tools come from the published commit; this step switches branches.
-          git switch --detach "$GITHUB_SHA"
-          cp -r tools "$RUNNER_TEMP/tools"
-          git fetch origin catalog-stats || true
-          git show origin/catalog-stats:retired.json > "$RUNNER_TEMP/retired.json" 2>/dev/null || echo '{"assets":{}}' > "$RUNNER_TEMP/retired.json"
-          node "$RUNNER_TEMP/tools/catalog-releases.mjs" prune --channel "$CHANNEL" --repo "$GITHUB_REPOSITORY" \
+          node tools/catalog-branch.mjs read --repo "$CATALOG_REPOSITORY" --branch catalog-stats \
+            --name retired.json --out "$RUNNER_TEMP/retired.json" \
+            --else-repo "$GITHUB_REPOSITORY" --default '{"assets":{}}'
+          node tools/catalog-releases.mjs prune --channel "$CHANNEL" --repo "$CATALOG_REPOSITORY" \
             --dir "$RUNNER_TEMP/bundles" --ledger "$RUNNER_TEMP/retired.json" --plan "$RUNNER_TEMP/plan.json"
           if [ "$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1])).length)' "$RUNNER_TEMP/plan.json")" = "0" ]; then
             exit 0
           fi
-          if git rev-parse --verify origin/catalog-stats >/dev/null 2>&1; then
-            git switch --detach origin/catalog-stats
-          else
-            git switch --orphan catalog-stats
-            git rm -rf --quiet . || true
-          fi
-          cp "$RUNNER_TEMP/retired.json" retired.json
-          git add retired.json
-          git commit -m "chore: record downloads of retired $CHANNEL bundles"
-          git push origin HEAD:refs/heads/catalog-stats
-          node "$RUNNER_TEMP/tools/catalog-releases.mjs" delete --repo "$GITHUB_REPOSITORY" --plan "$RUNNER_TEMP/plan.json"
+          node tools/catalog-branch.mjs add --repo "$CATALOG_REPOSITORY" --branch catalog-stats \
+            --file "$RUNNER_TEMP/retired.json" --message "chore: record downloads of retired $CHANNEL bundles"
+          node tools/catalog-releases.mjs delete --repo "$CATALOG_REPOSITORY" --plan "$RUNNER_TEMP/plan.json"

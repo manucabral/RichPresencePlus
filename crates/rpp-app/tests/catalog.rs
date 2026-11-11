@@ -232,6 +232,34 @@ async fn a_tampered_download_is_refused_and_the_installed_copy_keeps_running() {
 }
 
 #[tokio::test(flavor = "multi_thread")]
+async fn installs_are_counted_by_name_and_missing_counts_are_not_an_error() {
+    let setup = setup();
+    let (published, _source) = served();
+    published.publish(
+        100,
+        &[("Alpha", "alpha", "1.0.0"), ("Beta", "beta", "1.0.0")],
+    );
+    let controller = start(&setup, &published, true).await;
+    // Nothing published yet: the list still works and there are no numbers.
+    assert_eq!(controller.catalog(true).unwrap().items.len(), 2);
+    assert!(controller.catalog_installs().is_empty());
+    finish(controller).await;
+
+    published.count_installs(&[("alpha", 1234), ("gone", 9)]);
+    let controller = start(&setup, &published, true).await;
+    let installs = controller.catalog_installs();
+    assert_eq!(installs.len(), 1);
+    assert_eq!(installs["Alpha"], 1234);
+    finish(controller).await;
+
+    // A build without keys asks for nothing.
+    let controller = start(&setup, &published, false).await;
+    assert!(controller.catalog_installs().is_empty());
+    assert_eq!(published.index_downloads(), 2);
+    finish(controller).await;
+}
+
+#[tokio::test(flavor = "multi_thread")]
 async fn without_keys_the_catalog_reports_itself_unavailable_and_installs_nothing() {
     let setup = setup();
     let (published, _source) = served();

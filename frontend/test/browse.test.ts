@@ -13,7 +13,7 @@ import {
   readPageSize,
 } from "../src/shared/browse.ts";
 import { catalogPath, inSection, presencePath } from "../src/shared/navigation.ts";
-import { catalogError, sizeText, stateKey, toAdd } from "../src/features/catalog/catalog.ts";
+import { catalogError, installsText, sizeText, stateKey, toAdd } from "../src/features/catalog/catalog.ts";
 import type { CatalogItem } from "../src/shared/types.ts";
 
 const item = (name: string, kind: string | null, tags: string[] = []) => ({
@@ -130,4 +130,19 @@ test("GitHub's limit on a network reads in the interface's language", () => {
   const limited = "cannot install: GitHub is limiting downloads from this network for a while; try again later";
   assert.equal(catalogError(new Error(limited), t), "[catalog.rateLimited]");
   assert.equal(catalogError("the catalog signature is missing", t), "the catalog signature is missing");
+});
+
+test("installs read as a count in the language in use, or not at all", () => {
+  const tn = (key: string, count: number, values?: Record<string, string | number>) =>
+    `${key}:${count === 1 ? "one" : "other"}:${values?.n}`;
+  const installs = { YouTube: 12345, Roblox: 1, Zero: 0, Odd: 1.5, Text: "9" as unknown as number };
+  assert.equal(installsText(installs, "YouTube", "en", tn), "catalog.installs:other:12,345");
+  assert.equal(installsText(installs, "YouTube", "es", tn), "catalog.installs:other:12.345");
+  assert.equal(installsText(installs, "Roblox", "en", tn), "catalog.installs:one:1");
+  for (const name of ["Zero", "Odd", "Text", "Missing", "constructor", "toString"]) {
+    assert.equal(installsText(installs, name, "en", tn), null, name);
+  }
+  // The counts did not arrive, or failed.
+  assert.equal(installsText(null, "YouTube", "en", tn), null);
+  assert.equal(installsText(undefined, "YouTube", "en", tn), null);
 });
