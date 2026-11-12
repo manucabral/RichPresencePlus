@@ -30,7 +30,7 @@ Free and open source, for Windows.
 1. Download the installer from the [latest release](https://github.com/manucabral/RichPresencePlus/releases/latest) and run it. Windows may warn that the publisher is unknown while the installer is not signed yet: choose **More info** and then **Run anyway**.
 2. Open Discord for desktop.
 3. In the app, go to **Presences, Add more** and install the ones you want. Each starts on when you add it, and you can turn it off at any time.
-4. For websites such as YouTube or Netflix, add the browser extension. It is in review in the Chrome, Edge and Firefox stores; the links will be here and on the app's **Browser** page once it is approved.
+4. For websites, add the extension for [Chrome and Edge](https://chromewebstore.google.com/detail/cjdkaikgiokfekdbckccmlbffinaknib) or [Firefox](https://addons.mozilla.org/firefox/addon/rich-presence-plus/).
 
 The app updates itself: when a new version comes out, the Panel offers it.
 
@@ -48,7 +48,7 @@ Everything stays on your computer: the app talks to Discord through Discord's ow
 
 ## Browsers
 
-The extension works in Chrome, Edge and Firefox, and finds the app by itself. Other Chromium browsers that install extensions from the Chrome Web Store can connect with the pairing code from the app's **Browser** page.
+The extension works in Chrome, Edge and Firefox. If it does not connect by itself, paste the code from the app's **Browser** page.
 
 ## Ask for a presence
 
@@ -84,7 +84,7 @@ Before sending a change, `cargo fmt --check`, `cargo clippy --all-targets` and `
 ## Roadmap
 
 - A signed installer.
-- The browser extension in the Chrome, Edge and Firefox stores.
+- The browser extension in the Edge store.
 - More presences in the catalog.
 - More languages, starting with Portuguese and Russian.
 
