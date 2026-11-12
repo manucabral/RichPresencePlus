@@ -19,15 +19,18 @@ app's Browser page (`port:token`) under "Pair with a code".
 ## How it finds the app
 
 The `key` in `manifest.json` fixes the extension ID of an unpacked copy
-(`iijcphjgahgdkdeaibcgagjfoaedajjk`). The desktop app writes host manifests
-that allow only that ID and the Firefox add-on ID, and points Chrome, Edge and
+(`iijcphjgahgdkdeaibcgagjfoaedajjk`). The Chrome Web Store copy has
+`cjdkaikgiokfekdbckccmlbffinaknib`, and Firefox uses the add-on ID
+`richpresenceplus@manucabral.dev` from the manifest. The desktop app writes host
+manifests that allow only those IDs, and points Chrome, Edge and
 Firefox to them in `HKEY_CURRENT_USER`. The browser starts the app with the
 extension's origin; the app answers with the port and token it recorded in
 `pairing.json` and exits without opening a window. The protocol is in
 `crates/rpp-bridge/src/native.rs`.
 
 The stores assign their own IDs and reject a manifest with a `key`, so the
-packaged extension drops it and the store IDs join the allowed list.
+packaged extension drops it. A store ID pairs by itself only with an app
+version that lists it; older versions connect with the pairing code.
 
 ## The popup
 

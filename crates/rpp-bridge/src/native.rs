@@ -10,7 +10,13 @@ use serde_json::{Value, json};
 pub const HOST_NAME: &str = "com.manucabral.richpresenceplus";
 
 /// Chrome and Edge extension IDs that may ask for the pairing.
-pub const CHROMIUM_EXTENSIONS: [&str; 1] = ["iijcphjgahgdkdeaibcgagjfoaedajjk"];
+///
+/// The first is the copy loaded by hand, fixed by `key` in the manifest; the
+/// second is the one the Chrome Web Store assigned.
+pub const CHROMIUM_EXTENSIONS: [&str; 2] = [
+    "iijcphjgahgdkdeaibcgagjfoaedajjk",
+    "cjdkaikgiokfekdbckccmlbffinaknib",
+];
 
 /// Firefox add-on IDs that may ask for the pairing (`browser_specific_settings.gecko.id`).
 pub const FIREFOX_EXTENSIONS: [&str; 1] = ["richpresenceplus@manucabral.dev"];
@@ -306,6 +312,15 @@ mod tests {
     }
 
     #[test]
+    fn the_chrome_web_store_copy_may_pair() {
+        let found = caller(&args(&[
+            "chrome-extension://cjdkaikgiokfekdbckccmlbffinaknib/",
+        ]))
+        .unwrap();
+        assert!(found.allowed());
+    }
+
+    #[test]
     fn firefox_passes_the_manifest_and_the_add_on_id() {
         let found = caller(&args(&[
             r"C:\Users\a\AppData\Local\rpp\native-host-firefox.json",
@@ -461,7 +476,10 @@ mod tests {
         assert_eq!(chromium["path"], exe.to_string_lossy().as_ref());
         assert_eq!(
             chromium["allowed_origins"],
-            json!([format!("chrome-extension://{}/", CHROMIUM_EXTENSIONS[0])])
+            json!([
+                "chrome-extension://iijcphjgahgdkdeaibcgagjfoaedajjk/",
+                "chrome-extension://cjdkaikgiokfekdbckccmlbffinaknib/",
+            ])
         );
         assert!(chromium.get("allowed_extensions").is_none());
         let firefox = host_manifest(Family::Firefox, exe);
