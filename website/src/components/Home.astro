@@ -3,6 +3,7 @@ import { join } from "node:path";
 import Icon from "./Icon.astro";
 import Logo from "./Logo.astro";
 import Shell from "./Shell.astro";
+import Stores from "./Stores.astro";
 import { STRINGS, type Language } from "../i18n/strings";
 import { docsPath } from "../data/docs";
 import { loadPresences, oneOfEach, type Listed } from "../data/presences";
@@ -259,10 +260,11 @@ const downloadNote = installer
   <section class="block wrap reveal">
     <h2>{t.steps.title}</h2>
     <ol class="steps">
-      {t.steps.items.map(([name, text]) => (
+      {t.steps.items.map(([name, text], index) => (
         <li class="panel">
           <h3>{name}</h3>
           <p>{text}</p>
+          {index === 1 && <Stores chrome={t.stores.chrome} firefox={t.stores.firefox} base={base} />}
         </li>
       ))}
     </ol>
@@ -285,5 +287,6 @@ const downloadNote = installer
     <a class="button primary large" href={download}>{downloadLabel}</a>
     <p>{downloadNote}</p>
     <p>{t.download.needs}</p>
+    <Stores chrome={t.stores.chrome} firefox={t.stores.firefox} base={base} />
   </section>
 </Shell>

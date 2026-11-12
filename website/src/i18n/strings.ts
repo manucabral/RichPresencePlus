@@ -137,7 +137,7 @@ const en = {
     title: "Three steps to start",
     items: [
       ["Install the app", "It runs in the background and needs no administrator rights."],
-      ["Add the extension", "It finds the app by itself, for presences on the web."],
+      ["Add the extension", "For presences on websites. Edge installs it from the Chrome Web Store."],
       ["Choose your presences", "Install the ones you want from Presences, Add more, and open the site or the game."],
     ],
   },
@@ -155,6 +155,7 @@ const en = {
       ["Can I show it on stream?", "Yes. Turn on Overlays in Settings and add the address to OBS."],
     ],
   },
+  stores: { chrome: "Available in the Chrome Web Store", firefox: "Get the add-on for Firefox" },
   download: {
     title: "Rich Presence Plus for Windows",
     ready: "Download for Windows",
@@ -338,7 +339,7 @@ const es: typeof en = {
     title: "Lista en tres pasos",
     items: [
       ["Instalá la app", "Queda en segundo plano y no pide permisos de administrador."],
-      ["Agregá la extensión", "Encuentra la app sola, para las presencias web."],
+      ["Agregá la extensión", "Para las presencias web. Edge la instala desde la Chrome Web Store."],
       ["Elegí tus presencias", "Instalá las que quieras desde Presencias, Agregar más, y abrí el sitio o el juego."],
     ],
   },
@@ -356,6 +357,7 @@ const es: typeof en = {
       ["¿Puedo mostrarlo en stream?", "Sí. Activá Overlays en Ajustes y agregá la dirección a OBS."],
     ],
   },
+  stores: { chrome: "Disponible en Chrome Web Store", firefox: "Obtener el complemento para Firefox" },
   download: {
     title: "Rich Presence Plus para Windows",
     ready: "Descargar para Windows",

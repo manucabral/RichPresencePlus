@@ -1,0 +1,27 @@
+---
+/**
+ * Official store badges for the browser extension.
+ *
+ * The images are the stores' own badges, served from this site so the page
+ * loads nothing from other servers. Their rules allow resizing only.
+ */
+interface Props {
+  /** Alternative text of the Chrome Web Store badge. */
+  chrome: string;
+  /** Alternative text of the Firefox Add-ons badge. */
+  firefox: string;
+  /** The site's base path, ending without a slash. */
+  base: string;
+}
+
+const { chrome, firefox, base } = Astro.props;
+---
+
+<p class="stores">
+  <a href="https://chromewebstore.google.com/detail/cjdkaikgiokfekdbckccmlbffinaknib" rel="noopener">
+    <img src={`${base}/stores/chrome-web-store.png`} width="170" height="48" alt={chrome} loading="lazy" />
+  </a>
+  <a href="https://addons.mozilla.org/firefox/addon/rich-presence-plus/" rel="noopener">
+    <img src={`${base}/stores/firefox-add-ons.svg`} width="138" height="48" alt={firefox} loading="lazy" />
+  </a>
+</p>

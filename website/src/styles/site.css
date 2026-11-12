@@ -654,6 +654,29 @@ h3 {
   font-weight: 600;
 }
 
+.stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.stores img {
+  display: block;
+  width: auto;
+  height: 40px;
+}
+
+.steps .stores {
+  margin-top: 1rem;
+}
+
+.closing .stores {
+  justify-content: center;
+  margin-top: 1.25rem;
+}
+
 /* From the page to the status */
 
 .flow {
