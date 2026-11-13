@@ -22,8 +22,9 @@ function read(context) {
   return {
     id: videoId(url),
     browsing: url.path === "/" || !values.player,
-    title: isShort ? values.shorts_title : values.title || page.title,
-    author: isShort ? values.shorts_author : values.author,
+    // Old Shorts open in the regular player, so they fall back to its fields.
+    title: (isShort && values.shorts_title) || values.title || page.title,
+    author: (isShort && values.shorts_author) || values.author,
     author_url: values.author_url,
     thumbnail: context.options.image !== "logo",
     ad,

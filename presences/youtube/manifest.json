@@ -1,6 +1,6 @@
 {
   "name": "YouTube",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Shows the YouTube video you are watching.",
   "client_id": "1113646725408772176",
   "kind": "video",
@@ -16,7 +16,7 @@
       },
       "shorts_title": {
         "from": "text",
-        "selector": "yt-shorts-video-title-view-model h2"
+        "selector": "yt-shorts-video-title-view-model h1, yt-shorts-video-title-view-model h2"
       },
       "author": {
         "from": "text",
