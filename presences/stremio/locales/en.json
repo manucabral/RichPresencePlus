@@ -1,0 +1,9 @@
+{
+  "description": "Shows the movie or episode you are watching on Stremio.",
+  "browsing": "Browsing Stremio",
+  "watching": "Watching Stremio",
+  "episode": "Season {season}, episode {episode}",
+  "playing": "Playing",
+  "paused": "Paused",
+  "open": "Open in Stremio"
+}

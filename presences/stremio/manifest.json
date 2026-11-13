@@ -1,0 +1,40 @@
+{
+  "name": "Stremio",
+  "version": "1.0.0",
+  "description": "Shows the movie or episode you are watching on Stremio.",
+  "client_id": "1567580382377803786",
+  "kind": "video",
+  "interval": 5,
+  "entry": "main.js",
+  "domains": ["stremio.com"],
+  "page": {
+    "matches": ["*://web.stremio.com/*"],
+    "extract": {
+      "title": {
+        "from": "text",
+        "selector": "span[class^='player-title-']"
+      },
+      "current": {
+        "from": "text",
+        "selector": "[class^='seek-bar-'] > [class^='label-']"
+      },
+      "duration": {
+        "from": "text",
+        "selector": "[class^='seek-bar-'] [class^='button-container-'] [class^='label-']"
+      },
+      "player": {
+        "from": "media",
+        "selector": "video"
+      },
+      "button": {
+        "from": "attr",
+        "selector": "[class^='control-bar-button-']",
+        "name": "title"
+      }
+    }
+  },
+  "author": "manucabral",
+  "color": "#7B5BF5",
+  "tags": ["video", "streaming", "movie", "series"],
+  "icon": "icon.webp"
+}
