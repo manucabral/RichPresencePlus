@@ -1,0 +1,10 @@
+{
+  "description": "Shows the Kick stream or video you are watching.",
+  "browsing": "Browsing Kick",
+  "watching": "Watching Kick",
+  "live": "Live",
+  "playing": "Playing",
+  "paused": "Paused",
+  "watch": "Watch on Kick",
+  "watch_live": "Watch the stream"
+}
