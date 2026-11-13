@@ -1,0 +1,10 @@
+{
+  "description": "Muestra el stream o el video de Kick que estás viendo.",
+  "browsing": "Navegando en Kick",
+  "watching": "Viendo Kick",
+  "live": "En vivo",
+  "playing": "Reproduciendo",
+  "paused": "En pausa",
+  "watch": "Ver en Kick",
+  "watch_live": "Ver el stream"
+}

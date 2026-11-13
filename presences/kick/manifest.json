@@ -1,0 +1,39 @@
+{
+  "name": "Kick",
+  "version": "1.0.0",
+  "description": "Shows the Kick stream or video you are watching.",
+  "client_id": "1567580382377803786",
+  "kind": "video",
+  "interval": 5,
+  "entry": "main.js",
+  "domains": ["kick.com"],
+  "page": {
+    "matches": ["*://kick.com/*"],
+    "extract": {
+      "player": {
+        "from": "media",
+        "selector": "video"
+      },
+      "channel": {
+        "from": "text",
+        "selector": "h1"
+      },
+      "title": {
+        "from": "text",
+        "selector": "[data-testid='livestream-title']"
+      },
+      "category": {
+        "from": "text",
+        "selector": "a[href^='/category/']"
+      },
+      "image": {
+        "from": "meta",
+        "name": "og:image"
+      }
+    }
+  },
+  "author": "manucabral",
+  "color": "#53FC18",
+  "tags": ["video", "streaming"],
+  "icon": "icon.webp"
+}
