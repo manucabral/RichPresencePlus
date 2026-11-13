@@ -38,6 +38,7 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 24
@@ -48,6 +49,10 @@ jobs:
       - run: pnpm exec biome ci presences tools
       - run: node --test "tools/test/*.test.mjs"
       - run: node tools/check-locales.mjs
+      - name: Check that changed presences raise their version
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: node tools/check-versions.mjs "origin/$BASE_REF"
       - name: Build an index with a throwaway key
         run: |
           node tools/catalog.mjs keygen "$RUNNER_TEMP/throwaway.pem"
