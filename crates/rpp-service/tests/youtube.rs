@@ -161,6 +161,21 @@ fn shorts_use_their_own_title_and_channel() {
 }
 
 #[test]
+fn shorts_in_the_regular_player_use_its_title_and_channel() {
+    let mut plugin = start();
+    let shorts = json!({
+        "browser": "chrome", "tab": 1, "presence": "YouTube",
+        "url": "https://www.youtube.com/shorts/abc123", "title": "Old clip - YouTube",
+        "received_at": RECEIVED,
+        "values": {"title": "Old clip", "author": "Archive",
+                   "player": {"paused": false, "current": 1.0, "duration": 30.0, "rate": 1.0}}
+    });
+    let shown = tick(&mut plugin, json!([shorts])).activity.unwrap();
+    assert_eq!(shown.details.as_deref(), Some("Old clip"));
+    assert_eq!(shown.state.as_deref(), Some("By Archive"));
+}
+
+#[test]
 fn very_long_titles_are_shortened_to_fit_discord() {
     let mut plugin = start();
     let long = "x".repeat(300);
