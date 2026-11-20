@@ -11,11 +11,17 @@
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.3.0",
-    "astro": "7.4.7"
+    "astro": "7.4.11"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "@types/node": "^24.19.2",
     "typescript": "^5.9.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@emnapi/core": "^1.11.3",
+      "@emnapi/runtime": "^1.11.3"
+    }
   }
 }
