@@ -17,11 +17,5 @@
     "@astrojs/check": "^0.9.12",
     "@types/node": "^24.19.2",
     "typescript": "^5.9.3"
-  },
-  "pnpm": {
-    "overrides": {
-      "@emnapi/core": "^1.11.3",
-      "@emnapi/runtime": "^1.11.3"
-    }
   }
 }
